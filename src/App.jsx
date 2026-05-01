@@ -27,24 +27,33 @@ const TT = () => <svg width="16" height="18" viewBox="0 0 16 18"><path d="M11.30
 const IG = () => <svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="4" stroke="url(#ig)" strokeWidth="1.5" fill="none"/><circle cx="9" cy="9" r="3.5" stroke="url(#ig)" strokeWidth="1.5" fill="none"/><circle cx="13" cy="5" r="1" fill="url(#ig)"/><defs><linearGradient id="ig" x1="0" y1="18" x2="18" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="50%" stopColor="#dc2743"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs></svg>;
 
 // ── DATA ──────────────────────────────────────────────────
-const TICKER = ["🔥 GPT-5.5 yayınlandı","⚡ Claude Opus 4.7 — %87.6 SWE-bench","🌐 Gemini 3.1 Ultra — 2M token","🇹🇷 Türkiye AI trafiğinde #1 — %94.49","💰 $267M Q1 AI yatırımı","🎨 Midjourney v7 fotorealizm çıtasını aştı","🎵 Suno v5 gerçek enstrüman sesi","✨ Sora Enterprise global açıldı"];
+const TICKER = ["🔥 GPT-5.5 yayınlandı — süper uygulama dönemi başladı","⚡ Claude Opus 4.7 — SWE-bench %87.6, kodlamada #1","🌐 Gemini 3.1 Ultra — 2 milyon token dünya rekoru","🇹🇷 Türkiye AI trafiğinde dünya #1 — %94.49","💰 2026 Q1'de AI'ya $267 milyar yatırım","🎨 Midjourney v7 fotorealizm çıtasını aştı","🎵 Suno v5 gerçek enstrüman sesi üretiyor","✨ Sora Enterprise küresel kullanıma açıldı","🦙 Meta Llama 4 açık kaynak devrim","💻 Cursor 3 Background Agents ile otonom geliştirme","📱 Apple Intelligence 2.0 cihaz üstünde AI","🔬 DeepSeek V4 ABD modelleriyle başa baş","🏥 Doktorların %72'si AI kullanıyor","🎯 MCP protokolü 97 milyon kurulum aştı"];
 
 const NEWS = [
-  {tag:"🔥",hot:true,color:"#00dcff",title:"GPT-5.5: Süper Uygulama Çağı",desc:"ChatGPT, Codex ve tarayıcıyı tek platformda topladı. Enterprise ve bilimsel görevlerde devrim.",src:"OpenAI",time:"1 gün",read:"3 dk",emoji:"🤖"},
-  {tag:"🆕",hot:true,color:"#a855f7",title:"Claude Opus 4.7 ile Kodlama Devrimi",desc:"SWE-bench %87.6, 1M token context, task budget ile ajan kontrolü.",src:"Anthropic",time:"2 gün",read:"4 dk",emoji:"🧠"},
-  {tag:"🌐",hot:false,color:"#34d399",title:"Gemini 3.1 Ultra: 2M Token",desc:"Google'ın en büyük güncelleme. Gerçek zamanlı multimodal, sandbox kod.",src:"Google",time:"3 gün",read:"3 dk",emoji:"🌟"},
-  {tag:"🇹🇷",hot:true,color:"#fb923c",title:"Türkiye AI Trafiğinde Dünya 1.",desc:"Digital 2026: Türkiye'de AI trafiğinin %94.49'u ChatGPT kaynaklı.",src:"We Are Social",time:"4 gün",read:"2 dk",emoji:"🏆"},
-  {tag:"💰",hot:false,color:"#60a5fa",title:"AI'ya Q1'de $267 Milyar",desc:"OpenAI $25B, Anthropic $19B yıllık gelir. Halka arz sinyalleri güçleniyor.",src:"Bloomberg",time:"5 gün",read:"3 dk",emoji:"💹"},
-  {tag:"🎨",hot:false,color:"#f472b6",title:"Midjourney v7: Yeni Çıta",desc:"Fotorealizm ve insan anatomisinde çarpıcı iyileşme. Archival quality.",src:"Midjourney",time:"6 gün",read:"3 dk",emoji:"🎨"},
+  {tag:"🔥",hot:true,color:"#00dcff",title:"GPT-5.5: Süper Uygulama Çağı",desc:"ChatGPT, Codex ve tarayıcıyı tek platformda topladı. Enterprise ve bilimsel görevlerde devrim. Türkiye erişimi aktif.",src:"OpenAI",time:"1 gün",read:"3 dk",emoji:"🤖"},
+  {tag:"🆕",hot:true,color:"#a855f7",title:"Claude Opus 4.7 ile Kodlama Devrimi",desc:"SWE-bench Verified %87.6'ya yükseldi. Task budget ile ajan maliyetleri kontrol altında. 1M token context.",src:"Anthropic",time:"2 gün",read:"4 dk",emoji:"🧠"},
+  {tag:"🌐",hot:false,color:"#34d399",title:"Gemini 3.1 Ultra: 2M Token Rekoru",desc:"Google'ın en büyük güncelleme. Ses, görüntü, metin eş zamanlı işleme. Sandbox kod çalıştırma özelliği.",src:"Google",time:"3 gün",read:"3 dk",emoji:"🌟"},
+  {tag:"🇹🇷",hot:true,color:"#fb923c",title:"Türkiye AI Trafiğinde Dünya 1.",desc:"Digital 2026: Türkiye'de AI trafiğinin %94.49'u ChatGPT kaynaklı. Küresel ortalama %80.92'yi geride bıraktık.",src:"We Are Social",time:"4 gün",read:"2 dk",emoji:"🏆"},
+  {tag:"💰",hot:false,color:"#60a5fa",title:"AI'ya Q1'de $267 Milyar Yatırım",desc:"OpenAI $25B, Anthropic $19B yıllık gelire ulaştı. Her iki şirket halka arz sinyali veriyor.",src:"Bloomberg",time:"5 gün",read:"3 dk",emoji:"💹"},
+  {tag:"🎨",hot:false,color:"#f472b6",title:"Midjourney v7: Fotorealizm Çıtası",desc:"Yeni model insan anatomisini mükemmelleştiriyor. Archival quality fotoğraf üretimi artık mümkün.",src:"Midjourney",time:"6 gün",read:"3 dk",emoji:"🎨"},
+  {tag:"🤖",hot:false,color:"#34d399",title:"Meta Llama 4: Açık Kaynak Devrim",desc:"Meta'nın yeni açık kaynak modeli Llama 4, kapalı kaynak modellerle rekabet ediyor. Ücretsiz kullanım.",src:"Meta AI",time:"1 hafta",read:"3 dk",emoji:"🦙"},
+  {tag:"🎵",hot:false,color:"#a855f7",title:"Suno v5: Gerçek Enstrüman Sesi",desc:"AI müzik üretiminde yeni çığır. Gerçek gitarist, piyanist sesi. Ticari kullanım lisansı dahil.",src:"Suno",time:"1 hafta",read:"2 dk",emoji:"🎵"},
+  {tag:"💻",hot:false,color:"#00dcff",title:"Cursor 3: Ajan Çağı Başladı",desc:"Paralel AI ajanlar, izole VM'lerde Background Agents. Geliştirici artık mimar — ajanlar inşaatçı. 4M+ kullanıcı.",src:"Cursor",time:"1 hafta",read:"4 dk",emoji:"💻"},
+  {tag:"🏥",hot:false,color:"#fb923c",title:"Sağlıkta AI: Doktorların %72'si Kullanıyor",desc:"AMA 2026 raporu: hekimlerin AI kullanımı 1 yılda %48'den %72'ye çıktı. Tanı doğruluğu artıyor.",src:"AMA",time:"10 gün",read:"3 dk",emoji:"🏥"},
+  {tag:"🔬",hot:false,color:"#60a5fa",title:"DeepSeek V4: ABD Modelleriyle Başa Baş",desc:"Çin'in önde gelen AI şirketi yeni modeliyle rekabeti kızıştırıyor. Açık kaynak versiyonu mevcut.",src:"DeepSeek",time:"10 gün",read:"3 dk",emoji:"🔬"},
+  {tag:"📱",hot:false,color:"#f472b6",title:"Apple Intelligence 2.0: Cihaz Üstünde AI",desc:"Apple'ın yeni AI motoru, kişisel verileri buluta göndermeden işliyor. iPhone 16 ve üstü için.",src:"Apple",time:"12 gün",read:"3 dk",emoji:"📱"},
 ];
 
 const TRENDING = [
-  {rank:1,icon:"🤖",topic:"Agentic AI",heat:98,desc:"Otonom çalışan AI ajanları her sektörü değiştiriyor.",tag:"🔥 Sıcak"},
+  {rank:1,icon:"🤖",topic:"Agentic AI",heat:98,desc:"Otonom çalışan AI ajanları her sektörü değiştiriyor. 2026'nın #1 trendi.",tag:"🔥 Çok Sıcak"},
   {rank:2,icon:"💻",topic:"Vibe Coding",heat:95,desc:"Cursor ve Claude Code ile kod yazmak yerine söylüyorsun.",tag:"⚡ Trend"},
-  {rank:3,icon:"🎬",topic:"AI Video",heat:92,desc:"Sora, HeyGen ile profesyonel video dakikalar içinde.",tag:"📈 Yükseliyor"},
-  {rank:4,icon:"🇹🇷",topic:"Türkçe AI",heat:89,desc:"Türkiye pazarına özel AI çözümleri artıyor.",tag:"🎯 Fırsat"},
-  {rank:5,icon:"💰",topic:"AI ile Gelir",heat:86,desc:"AI bilen kişilere talep patladı.",tag:"💡 Popüler"},
+  {rank:3,icon:"🎬",topic:"AI Video Üretimi",heat:92,desc:"Sora, HeyGen ile profesyonel video dakikalar içinde hazır.",tag:"📈 Yükseliyor"},
+  {rank:4,icon:"🇹🇷",topic:"Türkçe AI Araçları",heat:89,desc:"Türkiye pazarına özel AI çözümleri artıyor. Fırsat penceresi açık.",tag:"🎯 Fırsat"},
+  {rank:5,icon:"💰",topic:"AI ile Gelir",heat:86,desc:"AI bilen kişilere talep patladı. Freelance ve danışmanlık artıyor.",tag:"💡 Popüler"},
   {rank:6,icon:"🔊",topic:"AI Ses & Müzik",heat:83,desc:"ElevenLabs ve Suno v5 profesyonel seviyeye taşıdı.",tag:"🎵 Büyüyor"},
+  {rank:7,icon:"🧬",topic:"AI ve Sağlık",heat:80,desc:"Doktorların %72'si AI kullanıyor. Tanı ve tedavide devrim.",tag:"🏥 Kritik"},
+  {rank:8,icon:"🔒",topic:"AI Güvenliği",heat:77,desc:"Deepfake, hallüsinasyon ve veri gizliliği en büyük gündem.",tag:"⚠️ Önemli"},
+  {rank:9,icon:"🌍",topic:"AI Düzenlemeleri",heat:74,desc:"AB AI Yasası, Türkiye KVKK güncellemeleri. Hukuki çerçeve şekilleniyor.",tag:"📜 Gelişiyor"},
 ];
 
 // Araç Detay Verileri (6 araç için tam sayfa)
@@ -389,25 +398,132 @@ Türkiye AI pazarı yıllık %30 büyüme ile $900 milyarlık küresel pastadan 
 4. 6 ayda AI uzmanı ol`,
     views: 0, likes: 0
   },
+  {
+    id:"gemini-kullanim-rehberi", slug:"gemini-kullanim-rehberi",
+    tag:"🌟 Rehber", color:"#34d399", readTime:"6 dk", date:"Mayıs 2026",
+    title:"Gemini 2026 Rehberi: Google'ın AI'ı ile Neler Yapabilirsiniz?",
+    summary:"2 milyon token, Google entegrasyonu ve ücretsiz erişim. Gemini'yi doğru kullanmak için bilmeniz gerekenler.",
+    content:`## Gemini Nedir?
+
+Google DeepMind tarafından geliştirilen Gemini, metin, görsel, ses ve videoyu aynı anda işleyebilen multimodal bir AI modelidir. 2024'te çıktı, 2026'da Gemini 3.1 Ultra ile 2 milyon token context window rekoru kırdı.
+
+## Gemini'nin Rakipsiz Özellikleri
+
+**2 Milyon Token Context Window**
+ChatGPT'nin 128K, Claude'un 1M tokenına karşılık Gemini 2 milyon token işleyebiliyor. Bu yaklaşık 1500 sayfalık bir kitap demek.
+
+**Google Ekosistemi Entegrasyonu**
+Gmail, Drive, Docs, Sheets, YouTube — tümüne erişim. "Drive'ımdaki geçen ayki raporları özetle" diyebilirsin.
+
+**Gerçek Zamanlı Web Araması**
+Güncel bilgiye ihtiyaç duyduğunda Gemini web'e bağlanır. ChatGPT bunu sınırlı yapar.
+
+## Ne Zaman Gemini Kullan?
+
+- **Uzun belge analizi**: 2M token kapasitesi sayesinde
+- **Google Workspace**: Drive, Gmail, Docs içinde
+- **Araştırma**: Güncel web verisiyle anlık sonuç
+- **Görsel analiz**: Fotoğraf, grafik, tablo yorumlama
+
+## Ücretsiz Plan ile Başla
+
+Gemini Ücretsiz plan oldukça güçlü. AI Pro ($19.99/ay) planında ek Google depolama ve daha hızlı yanıt alırsın.`,
+    views: 0, likes: 0
+  },
+  {
+    id:"cursor-vibe-coding-rehberi", slug:"cursor-vibe-coding-rehberi",
+    tag:"💻 Teknik", color:"#34d399", readTime:"7 dk", date:"Mayıs 2026",
+    title:"Cursor ile Vibe Coding: Kod Yazmadan Uygulama Geliştirin",
+    summary:"2026'nın en büyük geliştirici trendi: Cursor ile kod yazmak yerine ne istediğinizi söyleyerek uygulama yapmak.",
+    content:`## Vibe Coding Nedir?
+
+Vibe coding, Andrej Karpathy'nin öne sürdüğü kavramla 2026'nın en popüler geliştirici yaklaşımı haline geldi. Temel fikir: Kod yazmak yerine ne istediğinizi AI'a anlatırsınız, AI yazar.
+
+## Cursor ile Başlamak
+
+1. cursor.com'dan indirin (VS Code tabanlı, ücretsiz plan var)
+2. Mevcut VS Code ayarlarınızı tek tıkla aktarın
+3. **Ctrl+K**: Seçili kodu düzenle
+4. **Ctrl+L**: Cursor Chat — projenizi sorgulayın
+
+## Temel Vibe Coding Komutları
+
+**Yeni özellik ekle:**
+"Bu sayfaya kullanıcı giriş sistemi ekle, JWT token kullan, hata durumlarını handle et"
+
+**Bug düzelt:**
+"Bu fonksiyon çalışmıyor, neden olduğunu açıkla ve düzelt"
+
+**Refactor:**
+"Bu kodu daha okunabilir ve bakımı kolay hale getir, TypeScript tiplerini ekle"
+
+## Background Agents ile Otonom Geliştirme
+
+Cursor 3'ün yeni özelliği: Background Agents. Slack'ten veya GitHub Issue'dan görev tanımlarsınız, ajan cloud'da çalışır, PR açar. Siz sadece review yaparsınız.`,
+    views: 0, likes: 0
+  },
+  {
+    id:"elevenlabs-turkce-ses-rehberi", slug:"elevenlabs-turkce-ses-rehberi",
+    tag:"🔊 Araç", color:"#fb923c", readTime:"5 dk", date:"Mayıs 2026",
+    title:"ElevenLabs Türkçe Seslendirme Rehberi — Podcast ve YouTube için",
+    summary:"İnsan sesinden ayırt edilemeyen AI seslendirme. Ücretsiz planla başlayın, içerik üretimine hız katın.",
+    content:`## ElevenLabs Neden Lider?
+
+ElevenLabs, 29 dilde %95+ doğallık oranıyla seslendirme üretiyor. Türkçe kalitesi rakiplerden açık ara üstün. 10 milyondan fazla kullanıcı, içerik üreticilerinden kurumsal şirketlere kadar kullanıyor.
+
+## Türkçe Ses Kalitesi
+
+Test sonuçlarımıza göre ElevenLabs Türkçe: 
+- Doğal vurgu ve tonlama ✅
+- Yabancı kelime telaffuzu doğru ✅
+- Duygusal ton kontrolü mevcut ✅
+- Hızlı üretim (30 saniye metin = 5 saniye) ✅
+
+## Ücretsiz Plan ile Ne Yapabilirsiniz?
+
+Ayda 10.000 karakter ücretsiz. Bu yaklaşık:
+- 3-4 dakikalık YouTube video seslendirmesi
+- 5-6 podcast tanıtım metni
+- 10-15 kısa sosyal medya içeriği
+
+## İçerik Üreticileri için İş Akışı
+
+1. ChatGPT ile senaryo yaz
+2. ElevenLabs'a yapıştır, ses üret
+3. Audacity ile düzenle
+4. YouTube/Podcast'e yükle
+
+Starter plan ($5/ay) ile 30.000 karakter ve daha fazla ses seçeneği.`,
+    views: 0, likes: 0
+  },
 ];
 
 // AI Görsel Galerisi (açıklamalı örnekler)
 const GALLERY = [
-  {cat:"📸 Fotorealizm",tool:"Midjourney v7",color:"#f472b6",emoji:"🌅",title:"İstanbul Gün Batımı",prompt:"/imagine Istanbul Bosphorus at golden hour, drone photography, photorealistic, stunning colors --ar 16:9 --v 7",desc:"Midjourney v7 ile gerçek fotoğraftan ayırt etmek neredeyse imkânsız hale geldi."},
+  {cat:"📸 Fotorealizm",tool:"Midjourney v7",color:"#f472b6",emoji:"🌅",title:"İstanbul Gün Batımı",prompt:"/imagine Istanbul Bosphorus at golden hour, drone photography, photorealistic --ar 16:9 --v 7",desc:"Midjourney v7 ile gerçek fotoğraftan ayırt etmek neredeyse imkânsız hale geldi."},
   {cat:"🎨 Dijital Sanat",tool:"DALL-E 3",color:"#00dcff",emoji:"🦅",title:"Türk Mitolojisi",prompt:"Turkish mythology eagle spirit, ethereal, watercolor style, ancient symbols, dramatic lighting",desc:"DALL-E 3 kültürel ve mitolojik temalarda güçlü sonuçlar üretiyor."},
-  {cat:"🏢 Mimari",tool:"Midjourney v7",color:"#a855f7",emoji:"🏛️",title:"Gelecek İstanbul",prompt:"futuristic Istanbul 2050, sustainable architecture, floating gardens, solar panels, Bosphorus view --ar 21:9 --v 7",desc:"AI ile mimari konsept tasarımı artık dakikalar sürüyor."},
-  {cat:"🎭 Karakter",tool:"Midjourney v7",color:"#34d399",emoji:"👩",title:"AI Portre",prompt:"professional headshot of a Turkish businesswoman, studio lighting, confident expression, modern office --ar 2:3 --v 7",desc:"Karakter tutarlılığı (--cref) ile aynı kişiyi farklı sahnelerde kullanabilirsin."},
-  {cat:"🍽️ Ürün",tool:"DALL-E 3",color:"#fb923c",emoji:"☕",title:"Ürün Fotoğrafı",prompt:"Turkish coffee in elegant ceramic cup, marble surface, steam rising, professional product photography, white background",desc:"E-ticaret için profesyonel ürün fotoğrafı — fotoğrafçı tutmana gerek yok."},
-  {cat:"📱 UI/UX",tool:"Midjourney v7",color:"#60a5fa",emoji:"📱",title:"App Arayüzü",prompt:"minimal mobile app UI, dark mode, AI assistant interface, neon accents, glassmorphism --ar 9:16 --v 7",desc:"UI tasarım konseptleri için Midjourney'i kullanmak giderek yaygınlaşıyor."},
+  {cat:"🏢 Mimari",tool:"Midjourney v7",color:"#a855f7",emoji:"🏛️",title:"Gelecek İstanbul 2050",prompt:"futuristic Istanbul 2050, sustainable architecture, floating gardens, solar panels --ar 21:9 --v 7",desc:"AI ile mimari konsept tasarımı artık dakikalar sürüyor."},
+  {cat:"🎭 Karakter",tool:"Midjourney v7",color:"#34d399",emoji:"👩",title:"Profesyonel Portre",prompt:"professional headshot Turkish businesswoman, studio lighting, confident, modern office --ar 2:3 --v 7",desc:"Karakter tutarlılığı ile aynı kişiyi farklı sahnelerde kullanabilirsin."},
+  {cat:"🍽️ Ürün",tool:"DALL-E 3",color:"#fb923c",emoji:"☕",title:"Türk Kahvesi Ürün Fotoğrafı",prompt:"Turkish coffee in elegant ceramic cup, marble surface, steam rising, professional product photography",desc:"E-ticaret için profesyonel ürün fotoğrafı — fotoğrafçı tutmana gerek yok."},
+  {cat:"📱 UI/UX",tool:"Midjourney v7",color:"#60a5fa",emoji:"📱",title:"Mobil App Arayüzü",prompt:"minimal mobile app UI, dark mode, AI assistant, neon accents, glassmorphism --ar 9:16 --v 7",desc:"UI tasarım konseptleri için Midjourney giderek yaygınlaşıyor."},
+  {cat:"🌿 Doğa",tool:"Midjourney v7",color:"#34d399",emoji:"🌋",title:"Kapadokya Peri Bacaları",prompt:"Cappadocia fairy chimneys sunrise, hot air balloons, golden light, photorealistic --ar 16:9 --v 7",desc:"Türkiye'nin doğal güzelliklerini AI ile yeniden keşfet."},
+  {cat:"🚀 Sci-Fi",tool:"Midjourney v7",color:"#a855f7",emoji:"🚀",title:"Uzay İstasyonu",prompt:"orbital space station, Earth view, futuristic design, solar panels, cinematic --ar 21:9 --v 7",desc:"Bilim kurgu sahneleri için Midjourney ölçüsüz bir hayal gücü sunuyor."},
+  {cat:"⚔️ Karakter Tasarım",tool:"Midjourney v7",color:"#f472b6",emoji:"⚔️",title:"Fantastik Savaşçı",prompt:"fantasy warrior, Anatolian armor, detailed character concept art, 4K --ar 2:3 --v 7",desc:"Oyun ve film karakteri tasarımı için hızlı konsept üretimi."},
+  {cat:"🍕 Yemek",tool:"DALL-E 3",color:"#fb923c",emoji:"🥘",title:"Türk Mutfağı",prompt:"traditional Turkish cuisine spread, baklava, kebab, colorful spices, overhead shot, food photography",desc:"Restoran ve yemek blogları için profesyonel yemek fotoğrafçılığı."},
+  {cat:"🌆 Şehir",tool:"Midjourney v7",color:"#60a5fa",emoji:"🌃",title:"Ankara Gece Manzarası",prompt:"Ankara Turkey night cityscape, long exposure, city lights, aerial view --ar 16:9 --v 7",desc:"Şehir manzaraları için uzun pozlama ve gece efektleri."},
+  {cat:"🎨 Soyut",tool:"Adobe Firefly",color:"#00dcff",emoji:"🌈",title:"Soyut Renk Patlaması",prompt:"abstract colorful explosion, digital art, vibrant neon colors, flowing liquid, smooth gradient",desc:"Adobe Firefly, ticari kullanım için güvenli görsel üretimi sağlıyor."},
 ];
 
 // Before/After örnekleri
 const BEFORE_AFTER = [
-  {icon:"📝",title:"Blog Yazısı",time:"3 saat → 20 dk",tools:["ChatGPT","Claude"],before:"Araştırma, yazma, düzenleme, görsel bulma ile 3 saat emek gerektiren 1500 kelimelik blog yazısı.",after:"Claude'a konuyu ver, outline oluştur, her bölümü genişlet, Hemingway ile düzenle. 20 dk, daha iyi içerik."},
-  {icon:"💻",title:"Kod Debug",time:"4 saat → 15 dk",tools:["Cursor","Claude"],before:"Stack Overflow'u didik didik aramak, 3-4 saat hata avcılığı, bazen sonuç bile yok.",after:"Hatalı kodu Cursor'a yapıştır. 'Hata nerede, neden oluşuyor, düzelt ve açıkla' de. 15 dakika."},
-  {icon:"🎨",title:"Logo Tasarım",time:"1 hafta → 1 gün",tools:["Midjourney","Canva"],before:"Grafik tasarımcıya brief ver, bekleme süreci, revizyonlar, fatura — 1 hafta ve 2000-5000 TL.",after:"Midjourney ile 50+ konsept üret, Canva'da düzenle, vektöre dönüştür. 1 gün, 200 TL."},
-  {icon:"📊",title:"Pazar Araştırması",time:"2 gün → 3 saat",tools:["Perplexity","ChatGPT"],before:"Kaynak okuma, not alma, sentezleme, sunum hazırlama — 2 tam iş günü.",after:"Perplexity'de sorular sor, kaynakları kaydet. ChatGPT'de sentezle. Gamma'da sunum yap. 3 saat."},
-  {icon:"🎬",title:"Tanıtım Videosu",time:"1 ay → 1 gün",tools:["HeyGen","ElevenLabs"],before:"Senaryo yazımı, çekim organizasyonu, kameraman, ses, kurgu — 1 ay ve büyük bütçe.",after:"ChatGPT ile senaryo yaz, ElevenLabs ile seslendir, HeyGen avatar videosu oluştur. 1 gün, $30."},
+  {icon:"📝",title:"Blog Yazısı",time:"3 saat → 20 dk",tools:["ChatGPT","Claude"],before:"Araştırma, yazma, düzenleme ile 3 saat emek gerektiren 1500 kelimelik blog yazısı.",after:"Claude'a konuyu ver, outline oluştur, her bölümü genişlet. 20 dk, daha iyi içerik."},
+  {icon:"💻",title:"Kod Debug",time:"4 saat → 15 dk",tools:["Cursor","Claude"],before:"Stack Overflow'u didik didik aramak, 3-4 saat hata avcılığı, bazen sonuç bile yok.",after:"Hatalı kodu Cursor'a yapıştır, 'düzelt ve açıkla' de. 15 dakika, çözüm garantili."},
+  {icon:"🎨",title:"Logo Tasarım",time:"1 hafta → 1 gün",tools:["Midjourney","Canva"],before:"Tasarımcıya brief ver, bekleme, revizyonlar, fatura — 1 hafta ve 2000-5000 TL.",after:"Midjourney ile 50+ konsept, Canva'da düzenle. 1 gün, sadece 200 TL."},
+  {icon:"📊",title:"Pazar Araştırması",time:"2 gün → 3 saat",tools:["Perplexity","ChatGPT"],before:"Kaynak okuma, not alma, sentezleme, sunum — 2 tam iş günü.",after:"Perplexity'de kaynaklı sor, ChatGPT'de sentezle, Gamma'da sun. 3 saat."},
+  {icon:"🎬",title:"Tanıtım Videosu",time:"1 ay → 1 gün",tools:["HeyGen","ElevenLabs"],before:"Senaryo, çekim, kameraman, ses, kurgu — 1 ay ve büyük bütçe.",after:"ChatGPT senaryo yazar, ElevenLabs seslendirir, HeyGen avatar video yapar. 1 gün, $30."},
+  {icon:"📧",title:"E-posta Kampanyası",time:"1 hafta → 2 saat",tools:["ChatGPT","Claude"],before:"Metin yazarına brief, birden fazla revizyon, onay süreci — 1 hafta.",after:"ChatGPT ile 10 farklı e-posta varyasyonu üret, A/B test için hazır. 2 saat."},
+  {icon:"📖",title:"CV Hazırlama",time:"2 gün → 30 dk",tools:["ChatGPT","Claude"],before:"Template bulmak, içerik yazmak, düzenlemek, formatlama — 2 gün.",after:"Claude'a deneyimlerini söyle, ATS uyumlu profesyonel CV anında hazır. 30 dk."},
+  {icon:"🎓",title:"Sunum Hazırlama",time:"3 gün → 1 saat",tools:["Gamma","ChatGPT"],before:"İçerik araştırması, tasarım yapımı, uyum kontrolü — 3 gün, tasarımcı ücreti.",after:"Gamma'ya konuyu ver, AI otomatik tasarlar ve içerik önerir. 1 saat, profesyonel."},
 ];
 
 // Kullanıcı sistemi (in-memory simülasyon)
@@ -421,6 +537,12 @@ const COMMUNITY_PROMPTS = [
   { user:"Elif S.", avatar:"👩‍🔬", cat:"Araştırma", title:"Kaynak analizci", prompt:"Bu araştırma makalesini oku: [metin]. Bana ver: 1) Ana iddia 2) Metodoloji güçlü/zayıf yönleri 3) Sınırlılıklar 4) Gerçek hayat uygulaması 5) Eleştirel değerlendirme 1-10.", likes:0, uses:0, date:"5 gün önce" },
   { user:"Burak Y.", avatar:"👨‍🏫", cat:"Eğitim", title:"Sokratik öğretmen", prompt:"[Konu] öğrenmek istiyorum ama cevap verme. Bunun yerine, beni düşündürecek Sokratik sorular sor. Ben cevapladıkça rehberlik et ve anlayışımı derinleştir.", likes:0, uses:0, date:"1 hafta önce" },
   { user:"Ayşe D.", avatar:"👩‍💻", cat:"Yazarlık", title:"Karakter sesi üretici", prompt:"[Karakter]: [yaş], [meslek], [kişilik]. Bu karakterin sesini ve konuşma tarzını benim için örnekle. Sonra [sahne]'de bu karakteri konuştur. 3 farklı duygu durumu için.", likes:0, uses:0, date:"1 hafta önce" },
+  { user:"Kerem A.", avatar:"👨‍🎨", cat:"Tasarım", title:"Marka kimliği oluşturucu", prompt:"[Marka adı] için kapsamlı marka kimliği oluştur: 1) Marka kişiliği (5 sıfat) 2) Hedef kitle profili 3) Renk paleti önerisi (hex kodlarıyla) 4) Yazı tipi önerisi 5) Marka sesi ve ton kılavuzu.", likes:0, uses:0, date:"2 hafta önce" },
+  { user:"Selin K.", avatar:"👩‍💼", cat:"İş", title:"Rakip analizi", prompt:"[Şirket/ürün] için kapsamlı rakip analizi yap. Rakipler: [liste]. Her biri için: güçlü yönler, zayıf yönler, fiyatlandırma stratejisi, hedef kitle. Sonunda boşluklar ve fırsatlar.", likes:0, uses:0, date:"2 hafta önce" },
+  { user:"Okan B.", avatar:"👨‍🔧", cat:"Teknik", title:"Sistem mimarı", prompt:"[Uygulama] için sistem mimarisi tasarla. Beklenen kullanıcı sayısı: [sayı]. Öner: 1) Teknoloji stack 2) Veritabanı seçimi ve gerekçesi 3) Ölçeklenme stratejisi 4) Güvenlik önlemleri 5) Tahmini maliyet.", likes:0, uses:0, date:"2 hafta önce" },
+  { user:"Naz T.", avatar:"👩‍🎓", cat:"Eğitim", title:"Ders planı oluşturucu", prompt:"[Konu] için [yaş grubu] öğrencilere yönelik 1 saatlik ders planı hazırla. İçersin: giriş aktivitesi (10dk), ana konu (30dk), grup çalışması (15dk), değerlendirme (5dk). Her bölümde öğretmen notu.", likes:0, uses:0, date:"3 hafta önce" },
+  { user:"Emre C.", avatar:"👨‍💻", cat:"Kod", title:"Kod dokümantasyon yazıcı", prompt:"Bu [dil] kodunu profesyonelce dokümante et:\n```[kod]```\nEkle: 1) JSDoc/docstring formatında her fonksiyon 2) Parametre açıklamaları 3) Return değerleri 4) Kullanım örnekleri 5) Olası hatalar.", likes:0, uses:0, date:"3 hafta önce" },
+  { user:"Derya M.", avatar:"👩‍💰", cat:"İş", title:"Yatırım sunumu yapıcı", prompt:"[Startup/proje] için yatırımcı sunumu içeriği oluştur. Slaytlar: Problem, Çözüm, Pazar büyüklüğü, İş modeli, Rekabet, Ekip, Finansal projeksiyon, İstenen yatırım. Her slayt için 3 anahtar nokta.", likes:0, uses:0, date:"1 ay önce" },
 ];
 
 // Haftalık Challenge
@@ -437,12 +559,26 @@ const WEEKLY_CHALLENGE = {
 
 // Quiz sistemi
 const QUIZ_DATA = [
-  { q: "ChatGPT'nin güncel model versiyonu nedir?", opts: ["GPT-4","GPT-4o","GPT-5.5","GPT-3.5"], ans: 2, exp: "GPT-5.5, Nisan 2026'da yayınlanan en güncel OpenAI modelidir." },
-  { q: "Claude Opus 4.7'nin SWE-bench skoru nedir?", opts: ["%72.3","%80.8","%87.6","%91.2"], ans: 2, exp: "Claude Opus 4.7, Nisan 2026'da SWE-bench Verified'da %87.6 skor elde etti." },
-  { q: "Türkiye AI trafiğinde kaçıncı sırada?", opts: ["3.","5.","1.","2."], ans: 2, exp: "Digital 2026 raporu: Türkiye %94.49 ChatGPT trafiğiyle dünya birincisi." },
-  { q: "Gemini 3.1 Ultra'nın context window'u nedir?", opts: ["128K","500K","1M","2M"], ans: 3, exp: "Gemini 3.1 Ultra, 2 milyon token context window ile şu an rekor tutucusu." },
-  { q: "Cursor hangi editörü temel alıyor?", opts: ["Vim","Emacs","VS Code","JetBrains"], ans: 2, exp: "Cursor, VS Code üzerine inşa edilmiştir ve tüm VS Code eklentilerini destekler." },
-  { q: "Prompt mühendisliğinde 'CoT' ne anlama gelir?", opts: ["Code of Testing","Chain of Thought","Context of Task","Core of Text"], ans: 1, exp: "Chain of Thought — AI'dan adım adım düşünmesini istemek. Özellikle matematiksel problemlerde çok etkili." },
+  {q:"ChatGPT'nin 2026'daki en güncel modeli hangisi?",opts:["GPT-4","GPT-4o","GPT-5.5","GPT-3.5"],ans:2,exp:"GPT-5.5, Nisan 2026'da yayınlanan OpenAI'ın en güncel modelidir. Süper uygulama dönemini başlattı."},
+  {q:"Claude Opus 4.7'nin SWE-bench skoru nedir?",opts:["%72.3","%80.8","%87.6","%91.2"],ans:2,exp:"Claude Opus 4.7, SWE-bench Verified'da %87.6 ile kodlama testlerinde lider konumda."},
+  {q:"Türkiye AI web trafiğinde kaçıncı sıradadır?",opts:["3.","5.","1.","2."],ans:2,exp:"Digital 2026 raporu: Türkiye %94.49 ChatGPT kaynaklı trafikle dünya birincisi."},
+  {q:"Gemini 3.1 Ultra'nın context window'u nedir?",opts:["128K","500K","1M","2M"],ans:3,exp:"Gemini 3.1 Ultra, 2 milyon token context window ile şu an rekor tutucusu."},
+  {q:"Cursor hangi kod editörünü temel alıyor?",opts:["Vim","Emacs","VS Code","JetBrains"],ans:2,exp:"Cursor, VS Code üzerine inşa edilmiş. Tüm VS Code eklentileri çalışır."},
+  {q:"'Chain of Thought' prompting tekniği ne sağlar?",opts:["Daha kısa cevap","Adım adım düşünme","Görsel üretim","Daha hızlı yanıt"],ans:1,exp:"CoT, AI'ın adım adım düşünmesini sağlar. Matematik ve mantık sorularında %30 daha doğru."},
+  {q:"Constitutional AI hangi şirketin güvenlik yaklaşımıdır?",opts:["OpenAI","Google","Anthropic","Meta"],ans:2,exp:"Constitutional AI, Anthropic'in Claude için geliştirdiği güvenlik yaklaşımıdır."},
+  {q:"1 token yaklaşık kaç kelimeye eşittir?",opts:["3-4 kelime","1 kelime","¾ kelime","5 kelime"],ans:2,exp:"1 token ≈ ¾ İngilizce kelime. Türkçe'de kelime başı 1-3 token düşer."},
+  {q:"MCP protokolünü hangi şirket geliştirdi?",opts:["OpenAI","Google","Anthropic","Microsoft"],ans:2,exp:"Model Context Protocol (MCP), Anthropic tarafından geliştirildi. 97M+ kurulum var."},
+  {q:"RAG ne anlama gelir?",opts:["Random AI Generator","Retrieval-Augmented Generation","Rapid API Gateway","Real AI Graph"],ans:1,exp:"RAG: Dış veri kaynaklarına erişerek güncel bilgiyle cevap üretme. Hallüsinasyonu azaltır."},
+  {q:"Midjourney v7'de karakter tutarlılığı için hangi parametre kullanılır?",opts:["--style","--cref","--quality","--chaos"],ans:1,exp:"--cref (character reference) parametresi, aynı karakteri farklı sahnelerde tutarlı tutar."},
+  {q:"ChatGPT Plus planının aylık ücreti nedir?",opts:["$10","$20","$50","$100"],ans:1,exp:"ChatGPT Plus $20/ay. GPT-5.5 erişimi, DALL-E 3 ve daha hızlı yanıtlar sağlar."},
+  {q:"Hangi AI aracı metin-to-video üretiminde öne çıkıyor?",opts:["ElevenLabs","Gamma","Sora","Perplexity"],ans:2,exp:"OpenAI'ın Sora'sı metin-video üretiminde lider. HeyGen ve Runway da güçlü alternatifler."},
+  {q:"'Hallüsinasyon' AI bağlamında ne demektir?",opts:["AI'ın yavaşlaması","Uydurma bilgiyi gerçekmiş gibi sunmak","Görsel üretim hatası","Ses kalitesi sorunu"],ans:1,exp:"AI hallüsinasyonu: Modelin güvenle yanlış veya uydurma bilgi vermesi. En kritik risk."},
+  {q:"ElevenLabs'ın ücretsiz planında kaç karakter hakkı var?",opts:["5.000","10.000","50.000","Sınırsız"],ans:1,exp:"ElevenLabs ücretsiz plan ayda 10.000 karakter. Starter $5/ay ile 30.000 karaktere çıkıyor."},
+  {q:"Türkiye'de AI kullanımında en popüler araç hangisi?",opts:["Gemini","Claude","ChatGPT","Copilot"],ans:2,exp:"Türkiye'de AI kullananların %90.24'ü ChatGPT tercih ediyor (Digital 2026 raporu)."},
+  {q:"'Fine-tuning' ne demektir?",opts:["Sesi ince ayarlamak","Modeli özel verilerle yeniden eğitmek","API hızını artırmak","Prompt düzenlemek"],ans:1,exp:"Fine-tuning: Önceden eğitilmiş modeli kendi verilerinle yeniden eğitmek. Genel → Uzman."},
+  {q:"Vibe Coding hangi yaklaşımı ifade eder?",opts:["Müzik dinleyerek kod yazmak","Kod yazmak yerine ne istediğini söylemek","Gece geç saatte kod yazmak","Takım halinde kodlamak"],ans:1,exp:"Vibe Coding: Cursor ve Claude Code gibi araçlarla kod yazmak yerine ne istediğini tarif etmek. 2026 trendi."},
+  {q:"Hangi AI aracı akademik araştırma için kaynaklı cevap verir?",opts:["Midjourney","Suno","Perplexity","HeyGen"],ans:2,exp:"Perplexity, her cevabı gerçek kaynaklara dayandırır. Akademik araştırma için ideal."},
+  {q:"Claude'un en uzun context window'u kaçtır?",opts:["32K","128K","500K","1M"],ans:3,exp:"Claude Opus 4.7, 1 milyon token context window ile rakiplerinden çok daha uzun metin işleyebilir."},
 ];
 
 // Sosyal kanıt sayaçları
@@ -485,9 +621,12 @@ function HomePage({setPage,user,setUser}){
   const[email,setEmail]=useState("");const[sent,setSent]=useState(false);
   const[gameIdx,setGameIdx]=useState(0);const[gameAns,setGameAns]=useState(null);const[gScore,setGScore]=useState({d:0,w:0});
   const GAME=[
-    {text:"Güneş batarken denizin mavisi gökyüzünün turuncusuyla dans ederken sahilde yürüyen iki sevgili ellerini tutmuş uzaklara bakıyordu.",isAI:true,reveal:"ChatGPT yazdı",hint:"Mükemmel akış ve klişe metafor"},
-    {text:"Bugün patronumla kötü bir gün geçirdim toplantıda fikirlerim alınmadı eve gelince çantamı köşeye fırlattım.",isAI:false,reveal:"Gerçek Twitter kullanıcısı",hint:"Düzensiz anlatım, duygusal patlama"},
-    {text:"Kuantum mekaniği parçacıkların aynı anda birden fazla durumda bulunabildiği fikrini içerir.",isAI:true,reveal:"Claude yazdı",hint:"Ansiklopedik netlik"},
+    {text:"Güneş batarken denizin mavisi gökyüzünün turuncusuyla dans ederken sahilde yürüyen iki sevgili ellerini tutmuş uzaklara bakıyordu.",isAI:true,reveal:"ChatGPT (GPT-5.5) yazdı",hint:"Mükemmel akış, klişe metafor ve duygusal ton AI izlenimi veriyor"},
+    {text:"Bugün patronumla kötü bir gün geçirdim toplantıda fikirlerim alınmadı eve gelince çantamı köşeye fırlattım.",isAI:false,reveal:"Gerçek Twitter kullanıcısı yazdı",hint:"Düzensiz anlatım ve duygusal patlama insan yazısı"},
+    {text:"Kuantum mekaniği parçacıkların aynı anda birden fazla durumda bulunabildiği fikrini içerir. Schrödinger kedisi bu ilkeyi simgeler.",isAI:true,reveal:"Claude Opus 4.7 yazdı",hint:"Ansiklopedik netlik ve doğru referans AI izlenimi"},
+    {text:"Arkadaşım 3 yıldır borçlu. 500 lira için bozuşmak olmaz ama bu ilk kez değil. Ne yapayım bilmiyorum.",isAI:false,reveal:"Gerçek Ekşi Sözlük entry'si",hint:"Spesifik rakam ve sosyal dilema tipik insan yazısı"},
+    {text:"Yapay zeka, insan zekasını taklit eden ve öğrenme, problem çözme gibi bilişsel işlevleri gerçekleştirebilen bilgisayar sistemleridir.",isAI:true,reveal:"Gemini 2.5 Pro yazdı",hint:"Akademik tanım formatı ve eksiksiz cümle yapısı"},
+    {text:"Bu sabah kahvemi içerken düşündüm de neden hep böyle olur ki? Bir şeyler yoluna girince başka bir şey çıkar.",isAI:false,reveal:"Gerçek bir WhatsApp mesajı",hint:"Belirsiz şikayet ve kesik düşünce akışı insan yazısı"},
   ];
   const g=GAME[gameIdx%GAME.length];
   function guess(isAI){const c=isAI===g.isAI;if(c)setGScore(s=>({...s,d:s.d+1}));else setGScore(s=>({...s,w:s.w+1}));setGameAns({correct:c});}
@@ -1098,11 +1237,17 @@ function DizinPage({setPage}){
 function OyunPage(){
   const GAME=[
     {text:"Güneş batarken denizin mavisi, gökyüzünün turuncusuyla dans ederken, sahilde yürüyen iki sevgili ellerini tutmuş uzaklara bakıyordu.",isAI:true,reveal:"ChatGPT (GPT-5.5) yazdı",hint:"Mükemmel akış ve klişe metafor AI izlenimi veriyor"},
-    {text:"Bugün patronumla kötü bir gün geçirdim. Toplantıda fikirlerim alınmadı, eve gelince çantamı köşeye fırlattım. Zaten her şey böyle gidiyor.",isAI:false,reveal:"Gerçek Twitter kullanıcısı",hint:"Düzensiz anlatım ve duygusal patlama insan izlenimi"},
-    {text:"Kuantum mekaniği, parçacıkların aynı anda birden fazla durumda bulunabildiği fikrini içerir. Schrödinger'in kedisi bu ilkeyi simgeler.",isAI:true,reveal:"Claude Opus 4.7 yazdı",hint:"Ansiklopedik netlik ve doğru referans"},
+    {text:"Bugün patronumla kötü bir gün geçirdim. Toplantıda fikirlerim alınmadı, eve gelince çantamı köşeye fırlattım. Zaten her şey böyle gidiyor.",isAI:false,reveal:"Gerçek Twitter kullanıcısı yazdı",hint:"Düzensiz anlatım ve duygusal patlama insan izlenimi"},
+    {text:"Kuantum mekaniği, parçacıkların aynı anda birden fazla durumda bulunabildiği fikrini içerir. Schrödinger'in kedisi bu ilkeyi simgeler.",isAI:true,reveal:"Claude Opus 4.7 yazdı",hint:"Ansiklopedik netlik ve doğru referans AI izlenimi"},
     {text:"Arkadaşım 3 yıldır borçlu. 500 lira için bozuşmak olmaz ama bu ilk kez değil. Ne yapayım bilmiyorum.",isAI:false,reveal:"Gerçek Ekşi Sözlük entry'si",hint:"Spesifik rakam ve sosyal dilema tipik insan yazısı"},
-    {text:"Bu pasta tarifini deneyin. Malzemeler: 200g un, 3 yumurta, 150g şeker. Önce kuru malzemeleri karıştırın.",isAI:true,reveal:"Gemini 2.5 yazdı",hint:"Kusursuz ölçüler ve format AI izlenimi"},
-    {text:"Bunu yazan sen misin? Yok artık emin misin? Bir daha bak bence. Ben sana söyledim hep ama dinlemedin işte.",isAI:false,reveal:"Gerçek WhatsApp mesajı",hint:"Kesik cümleler ve tekrar eden 'bak' insan yazısı"},
+    {text:"Bu pasta tarifini deneyin. Malzemeler: 200g un, 3 yumurta, 150g şeker. Önce kuru malzemeleri karıştırın, ardından yaş malzemeleri ekleyin.",isAI:true,reveal:"Gemini 2.5 Pro yazdı",hint:"Kusursuz ölçüler ve mükemmel format AI izlenimi"},
+    {text:"Bunu yazan sen misin? Yok artık emin misin? Bir daha bak bence. Ben sana söyledim hep ama dinlemedin işte.",isAI:false,reveal:"Gerçek WhatsApp mesajı",hint:"Kesik cümleler ve tekrar eden ifadeler insan yazısı"},
+    {text:"Yapay zekanın 2026'daki en önemli gelişmesi, çok ajanlı sistemlerin gerçek dünya görevlerinde otonom olarak çalışabilmesidir.",isAI:true,reveal:"ChatGPT (GPT-5.5) yazdı",hint:"Akademik ton, kesin tarih ve teknik terim AI izlenimi"},
+    {text:"Bugün market alışverişi yaparken fiyatlara baktım. Geçen ay 200 liraydı şimdi 350. İnsanlar nasıl geçiniyor anlayamıyorum.",isAI:false,reveal:"Gerçek Facebook yorumu",hint:"Şikayet tonu, kişisel deneyim ve belirsiz karşılaştırma"},
+    {text:"İstanbul'un kalabalık sokaklarında, tarih ile modernliğin iç içe geçtiği o eşsiz atmosfer, ziyaretçileri büyülemeye devam etmektedir.",isAI:true,reveal:"Claude Opus 4.7 yazdı",hint:"Resmi dil, akıcı cümle yapısı ve evrensel genelleme"},
+    {text:"Kapı komşumuz her gece müzik açıyor. Defalarca söyledim ama ne fayda. Apartman yönetimine yazsam mı acaba.",isAI:false,reveal:"Gerçek bir forum yazısı",hint:"Pratik sorun arayışı ve kararsızlık insan özelliği"},
+    {text:"Türkiye ekonomisi, 2025 yılında %4.2 büyüme oranıyla beklentilerin üzerinde bir performans sergiledi.",isAI:true,reveal:"Gemini 2.5 Pro yazdı",hint:"İstatistik, kesin rakam ve nesnel sunum AI izlenimi"},
+    {text:"Sabah 6'da uyandım, spor yapmaya karar verdim ama yataktan kalkmak zor oldu. Yarın kesinlikle yapacağım diyorum yine.",isAI:false,reveal:"Gerçek Instagram hikayesi",hint:"Erteleme davranışı ve özeleştiri çok insani bir özellik"},
   ];
   const[idx,setIdx]=useState(0);const[ans,setAns]=useState(null);const[score,setScore]=useState({d:0,w:0});const[done,setDone]=useState(false);
   const g=GAME[idx];
@@ -1214,6 +1359,15 @@ const GLOSSARY_DATA = [
   {term:"KVKK",cat:"TR Özel",en:"Turkish Data Law",def:"Kişisel Verilerin Korunması Kanunu. AI uygulamalarında veri işleme için önemli."},
   {term:"BTK",cat:"TR Özel",en:"Turkish ICT Authority",def:"Bilgi Teknolojileri ve İletişim Kurumu. Türkiye'de dijital düzenlemelerden sorumlu."},
   {term:"TÜBİTAK AI",cat:"TR Özel",en:"TUBITAK AI",def:"Türkiye'nin ulusal AI araştırma destekleri. Yerli model geliştirme projeleri."},
+  {term:"Prompt Injection",cat:"Güvenlik",en:"Prompt Injection",def:"Kötü niyetli talimatları prompt'a gömerek AI'ı manipüle etme saldırısı. Üretim sistemlerinde büyük risk."},
+  {term:"Grounding",cat:"Teknik",en:"Grounding",def:"AI'ın cevaplarını doğrulanabilir kaynaklara dayandırma. Hallüsinasyonu azaltmanın en etkili yöntemi."},
+  {term:"Tokenizer",cat:"Teknik",en:"Tokenizer",def:"Metni token'lara bölen yazılım. Her modelin farklı tokenizer'ı var. GPT ve Claude farklı böler."},
+  {term:"MMLU",cat:"Modeller",en:"MMLU",def:"Massive Multitask Language Understanding. 57 farklı alanda AI bilgisini ölçen popüler benchmark."},
+  {term:"Mixture of Experts",cat:"Teknik",en:"Mixture of Experts (MoE)",def:"Her sorgu için farklı 'uzman' modeller devreye girer. Daha verimli, daha az hesaplama. GPT-4 bu yapıyı kullanıyor."},
+  {term:"Constitutional AI",cat:"Güvenlik",en:"Constitutional AI",def:"Anthropic'in güvenlik yaklaşımı. AI, kural seti (anayasa) ile kendi davranışını değerlendirip düzeltir."},
+  {term:"Emergent Behavior",cat:"Modeller",en:"Emergent Behavior",def:"Modeller belirli büyüklüğe ulaşınca beklenmedik yetenekler ortaya çıkması. Eğitimde verilmeyen özellikler."},
+  {term:"Synthetic Data",cat:"Teknik",en:"Synthetic Data",def:"AI tarafından üretilen eğitim verisi. Gerçek veri yetersizliğinde kullanılır. Özellikle tıp ve finans alanında."},
+  {term:"RLVR",cat:"Teknik",en:"RL with Verifiable Rewards",def:"Doğrulanabilir ödüllü pekiştirmeli öğrenme. DeepSeek'in başarısında kilit teknik. Doğru/yanlış yanıtları otomatik doğrular."},
 ];
 
 const AI_MODELS_DATA = {
@@ -1284,23 +1438,27 @@ const PROMPTS_DATA = [
 ];
 
 const MYTHS_DATA = [
-  {myth:"AI işleri elimizden alacak",reality:"AI bazı görevleri değiştiriyor ama yeni işler yaratıyor. 'AI kullanan biri, kullanmayan birinin işini alacak.' Her teknoloji devrimi böyle işledi.",verdict:"Kısmen",color:"#fb923c"},
-  {myth:"AI her şeyi biliyor",reality:"AI'lar eğitim verilerine bağlı. Güncel bilgi bilmeyebilir, hallüsinasyon yapabilir. Kritik bilgileri başka kaynakla doğrula.",verdict:"Yanlış",color:"#34d399"},
-  {myth:"AI insan gibi düşünüyor",reality:"AI istatistiksel örüntü tanıma yapıyor. Anlama, bilinç, duygu yok. 'Sanki düşünüyor gibi' görünüyor — gerçek düşünme değil.",verdict:"Yanlış",color:"#34d399"},
-  {myth:"AI tamamen güvenilir",reality:"Hallüsinasyon, bias ve hatalar hâlâ var. Tıp, hukuk, finans gibi kritik alanlarda mutlaka uzman doğrulaması şart.",verdict:"Yanlış",color:"#34d399"},
-  {myth:"AI özel bilgilerimi saklar",reality:"API üzerinden kullanılan AI'lar (doğru ayarlarla) konuşmayı eğitime katmaz. Yine de hassas veri paylaşma.",verdict:"Kısmen",color:"#60a5fa"},
-  {myth:"En pahalı AI en iyisidir",reality:"Görev bağımlı. Kod için Claude, araştırma için Gemini, genel kullanım için ChatGPT. Doğru araç > Pahalı araç.",verdict:"Yanlış",color:"#34d399"},
-  {myth:"Türkiye'de AI için çok geç",reality:"Türkiye AI trafiğinde dünya #1. Türkçe içerik ve yerel ihtiyaçlar için erken girişimci avantajı hâlâ büyük.",verdict:"Yanlış",color:"#34d399"},
-  {myth:"AI yakında her şeyi yapacak",reality:"Agentic AI güçleniyor ama bağlam, etik ve güven sorunları gerçek. 2026'da AI çok güçlü ama insan denetimi hâlâ şart.",verdict:"Kısmen",color:"#fb923c"},
+  {myth:"AI işleri elimizden alacak",reality:"AI bazı görevleri değiştiriyor ama yeni işler yaratıyor. 'AI kullanan biri, kullanmayan birinin işini alacak.' Her teknoloji devrimi böyle işledi. Matbaa, kamera, bilgisayar da aynı korkuyu yaşattı.",verdict:"Kısmen",color:"#fb923c"},
+  {myth:"AI her şeyi biliyor",reality:"AI'lar eğitim verilerine bağlı. Güncel bilgi bilmeyebilir, hallüsinasyon yapabilir. Kritik bilgileri mutlaka başka kaynakla doğrula. Tıp, hukuk, finans konularında özellikle dikkatli ol.",verdict:"Yanlış",color:"#34d399"},
+  {myth:"AI insan gibi düşünüyor",reality:"AI istatistiksel örüntü tanıma yapıyor. Anlama, bilinç, duygu yok. 'Sanki düşünüyor gibi' çıktı üretiyor — bu matematiğin gücü, gerçek düşünme değil.",verdict:"Yanlış",color:"#34d399"},
+  {myth:"AI tamamen güvenilir",reality:"Hallüsinasyon, bias ve hatalar hâlâ var. Tıp, hukuk, finans gibi kritik alanlarda mutlaka uzman doğrulaması şart. AI'ı asistan gibi kullan, karar verici değil.",verdict:"Yanlış",color:"#34d399"},
+  {myth:"AI özel bilgilerimi saklar",reality:"API üzerinden kullanılan AI'lar (doğru ayarlarla) konuşmayı eğitime katmaz. Yine de hassas veri, şifre veya kişisel bilgi paylaşma. Gizlilik politikasını oku.",verdict:"Kısmen",color:"#60a5fa"},
+  {myth:"En pahalı AI en iyisidir",reality:"Görev bağımlı. Kod için Claude, araştırma için Gemini, genel kullanım için ChatGPT. Basit görevler için ücretsiz GPT-4o mini çoğu zaman yeterli. Doğru araç > Pahalı araç.",verdict:"Yanlış",color:"#34d399"},
+  {myth:"Türkiye'de AI için çok geç",reality:"Türkiye AI trafiğinde dünya #1. Türkçe içerik, yerel uygulamalar ve eğitimde devasa boşluk var. 2026'da başlayanlar hâlâ erken adaptör sayılır.",verdict:"Yanlış",color:"#34d399"},
+  {myth:"AI yakında her şeyi yapacak",reality:"Agentic AI güçleniyor ama bağlam, etik ve güven sorunları gerçek. 2026'da AI çok güçlü ama insan denetimi ve yaratıcılığı hâlâ şart.",verdict:"Kısmen",color:"#fb923c"},
+  {myth:"AI öğrenmek çok zor",reality:"ChatGPT'yi ücretsiz açıp kullanmaya başlamak 5 dakika alıyor. Temel prompt tekniklerini öğrenmek 1 hafta. Profesyonel seviyeye ulaşmak 1-3 ay. Herkes öğrenebilir.",verdict:"Yanlış",color:"#34d399"},
+  {myth:"AI içerik özgün değil",reality:"AI araç, özgünlük kullanıcıdan gelir. Doğru prompt, kişisel deneyim ve eleştirel değerlendirmeyle AI çıktılarını benzersiz içeriğe dönüştürebilirsin.",verdict:"Kısmen",color:"#fb923c"},
 ];
 
 const KARIYER_DATA = [
-  {icon:"💡",title:"Prompt Mühendisi",salary:"₺20K-60K/ay",level:"Başlangıç",time:"1-2 ay",desc:"Şirketlere özel prompt sistemleri kur, optimize et. En hızlı öğrenilebilen AI mesleklerinden biri.",skills:["Prompt teknikleri","Model farkları","Test metodolojisi"],url:"https://promptingguide.ai"},
+  {icon:"💡",title:"Prompt Mühendisi",salary:"₺20K-60K/ay",level:"Başlangıç",time:"1-2 ay",desc:"Şirketlere özel prompt sistemleri kur, optimize et. Türkiye'de bu unvanla çalışan sayısı henüz çok az.",skills:["Prompt teknikleri","Model farkları","Test metodolojisi"],url:"https://promptingguide.ai"},
   {icon:"🤖",title:"AI Danışmanı",salary:"₺30K-80K/ay",level:"Orta",time:"3-6 ay",desc:"KOBİ ve kurumsal şirketlere AI entegrasyonu danışmanlığı. Türkiye'de talep patlamış, arz çok az.",skills:["İş analizi","AI araçları","Proje yönetimi"],url:"https://coursera.org"},
-  {icon:"💻",title:"ML Mühendisi",salary:"₺40K-120K/ay",level:"İleri",time:"1-2 yıl",desc:"Makine öğrenmesi modelleri geliştir, üretim ortamına al. Python, PyTorch/TensorFlow bilgisi şart.",skills:["Python","PyTorch","MLOps","Matematik"],url:"https://fast.ai"},
-  {icon:"📊",title:"AI Ürün Yöneticisi",salary:"₺35K-100K/ay",level:"Orta",time:"6-12 ay",desc:"AI ürünlerini planla, geliştir, piyasaya sun. Teknik ve iş dünyası arasında köprü kur.",skills:["Ürün yönetimi","AI temelleri","Veri analizi"],url:"https://producthunt.com"},
-  {icon:"✍️",title:"AI İçerik Stratejisti",salary:"₺15K-40K/ay",level:"Başlangıç",time:"2-4 hafta",desc:"AI araçlarıyla içerik üret, marka sesi oluştur, içerik stratejisi kur.",skills:["ChatGPT","Claude","İçerik pazarlama"],url:"https://hubspot.com"},
+  {icon:"💻",title:"ML Mühendisi",salary:"₺40K-120K/ay",level:"İleri",time:"1-2 yıl",desc:"Makine öğrenmesi modelleri geliştir, üretim ortamına al. Python ve matematik temeli şart.",skills:["Python","PyTorch","MLOps","Matematik"],url:"https://fast.ai"},
+  {icon:"📊",title:"AI Ürün Yöneticisi",salary:"₺35K-100K/ay",level:"Orta",time:"6-12 ay",desc:"AI ürünlerini planla, geliştir, piyasaya sun. Teknik ve iş dünyası arasında köprü.",skills:["Ürün yönetimi","AI temelleri","Veri analizi"],url:"https://producthunt.com"},
+  {icon:"✍️",title:"AI İçerik Stratejisti",salary:"₺15K-40K/ay",level:"Başlangıç",time:"2-4 hafta",desc:"AI araçlarıyla içerik üret, marka sesi oluştur, içerik stratejisi kur. En hızlı başlangıç noktası.",skills:["ChatGPT","Claude","İçerik pazarlama"],url:"https://hubspot.com"},
   {icon:"🎨",title:"AI Tasarımcı",salary:"₺10K-35K/ay",level:"Başlangıç",time:"2-4 hafta",desc:"Midjourney, DALL-E, Firefly ile görsel üret. UI/UX tasarımında AI'ı entegre et.",skills:["Midjourney","Canva AI","Prompt yazımı"],url:"https://midjourney.com"},
+  {icon:"🔧",title:"AI Otomasyon Uzmanı",salary:"₺25K-70K/ay",level:"Orta",time:"2-4 ay",desc:"n8n, Make ve Zapier ile AI destekli iş akışları oluştur. Şirketlerin tekrarlayan işlerini otomatize et.",skills:["n8n","Make","Zapier","API"],url:"https://n8n.io"},
+  {icon:"🎤",title:"AI Eğitimci",salary:"₺20K-80K/ay",level:"Orta",time:"1-3 ay",desc:"Kurumsal eğitimler, online kurslar ve workshop'larla AI bilgini paylaş. Türkiye'de bu alan çok boş.",skills:["Sunum","Pedagoji","AI araçları"],url:"https://udemy.com"},
 ];
 
 // ══════════════════════════════════════════════════════════
