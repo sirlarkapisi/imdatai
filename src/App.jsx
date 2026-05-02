@@ -697,6 +697,41 @@ function HomePage({setPage,user,setUser}){
       </div>
     </section>
 
+    {/* CLAUDE ÖNE ÇIKAR — Ana Sayfa */}
+    <section style={{padding:"0 20px 32px"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.1),rgba(0,220,255,0.05))",border:"1px solid rgba(168,85,247,0.3)",borderRadius:18,padding:"24px",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-20,right:-20,fontSize:120,opacity:.05}}>🧠</div>
+          <div style={{position:"relative",zIndex:1}}>
+            <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
+              <span style={{fontSize:36}}>🧠</span>
+              <div>
+                <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:3}}>ÖZEL BÖLÜM</div>
+                <div style={{fontSize:20,fontWeight:900,color:"#e2e8f0"}}>Claude — Neden Herkesin Konuştuğu AI?</div>
+              </div>
+            </div>
+            <div style={{fontSize:13,color:"#64748b",lineHeight:1.8,marginBottom:20}}>
+              Anthropic'in geliştirdiği Claude, 2026'da kodlama testlerinde dünya birincisi oldu. <strong style={{color:"#a855f7"}}>SWE-bench %87.6</strong> — bu rakam Claude'un gerçek yazılım problemlerini insanlardan daha iyi çözebileceği anlamına geliyor. <strong style={{color:"#a855f7"}}>1 milyon token</strong> ile kitap boyutu belgeleri analiz edebilir. Ve <strong style={{color:"#a855f7"}}>Constitutional AI</strong> sayesinde en az hallüsinasyon yapan model.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10,marginBottom:20}}>
+              {[["🏆","Kodlamada #1","SWE-bench %87.6 dünya rekoru","claude"],["📚","1M Token","750.000 kelime, kitap boyutu analiz","claude"],["🔒","En Güvenli","Constitutional AI, en az hallüsinasyon","claude"],["🤖","Agentic AI","Task Budget ile otonom görev kontrolü","claude"]].map(([e,t,d,p])=>(
+                <div key={t} onClick={()=>setPage(p)} style={{background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:10,padding:"12px",cursor:"pointer",transition:"all .15s"}} onMouseEnter={ev=>ev.currentTarget.style.background="rgba(168,85,247,0.15)"} onMouseLeave={ev=>ev.currentTarget.style.background="rgba(168,85,247,0.08)"}>
+                  <div style={{fontSize:20,marginBottom:6}}>{e}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:"#a855f7",marginBottom:3}}>{t}</div>
+                  <div style={{fontSize:10,color:"#64748b"}}>{d}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button onClick={()=>setPage("claude")} style={{padding:"11px 24px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#a855f7,#7c3aed)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🧠 Claude Tam Rehber →</button>
+              <button onClick={()=>setPage("chatgpt")} style={{padding:"11px 20px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.06)",color:"#00dcff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🤖 ChatGPT Rehberi</button>
+              <button onClick={()=>setPage("gemini")} style={{padding:"11px 20px",borderRadius:10,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.06)",color:"#34d399",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🌟 Gemini Rehberi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     {/* HABERLER */}
     <section style={{padding:"0 20px 32px",background:"rgba(0,0,0,0.1)"}}>
       <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
@@ -1287,7 +1322,206 @@ function OyunPage(){
 
 // Diğer basit sayfalar (Haberler, Para, Hakkımızda, vs.)
 function HaberlerPage({setPage}){return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}><div style={{marginBottom:22}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>HABERLER</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>📰 AI Haberleri</div></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))",gap:13}}>{NEWS.map((n,i)=><Card key={i} color={n.color} style={{padding:"19px"}} onClick={()=>{}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><Tag text={n.tag} color={n.color}/>{n.hot&&<Tag text="🔥" color="#ff6b6b" size={8}/>}</div><div style={{fontSize:20,marginBottom:8}}>{n.emoji}</div><div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",marginBottom:7,lineHeight:1.4}}>{n.title}</div><div style={{fontSize:12,color:"#64748b",lineHeight:1.65,marginBottom:11}}>{n.desc}</div><div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#334155"}}><span>📰 {n.src}</span><span>{n.time} · {n.read}</span></div></Card>)}</div></div>;}
-function ParaPage(){return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}><div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#34d399",marginBottom:5}}>REHBER</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>💰 AI ile Para Kazan</div></div><div style={{background:"rgba(52,211,153,0.07)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:12,padding:"14px 18px",marginBottom:20,fontSize:12,color:"#34d399"}}>🇹🇷 Türkiye'de AI bilen kişi az, talep çok. Bu pencere kapanmadan başla.</div>{[{icon:"✍️",t:"AI İçerik Üreticisi",e:"₺5K-30K/ay",d:"Kolay",desc:"Blog, YouTube, sosyal medya. AI ile 10x içerik üret."},{icon:"💻",t:"AI Freelancer",e:"₺8K-50K/ay",d:"Orta",desc:"Cursor ile 3x hızlı kod yaz, 3x fazla müşteri al."},{icon:"🎨",t:"AI Tasarımcı",e:"₺3K-20K/ay",d:"Kolay",desc:"Midjourney ile logo, görsel, sunum sat."},{icon:"📚",t:"AI Eğitimci",e:"₺5K-40K/ay",d:"Orta",desc:"Kurs, workshop, kurumsal eğitim. TR'de boş alan."}].map(m=><div key={m.t} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(52,211,153,0.15)",borderRadius:14,padding:"18px",marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:8,flexWrap:"wrap",gap:6}}><div style={{display:"flex",gap:10,alignItems:"center"}}><span style={{fontSize:28}}>{m.icon}</span><div><div style={{fontSize:14,fontWeight:700,color:"#e2e8f0"}}>{m.t}</div></div></div><div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:800,color:"#34d399"}}>{m.e}</div><Tag text={m.d} color={m.d==="Kolay"?"#34d399":"#fb923c"}/></div></div><div style={{fontSize:12,color:"#64748b",lineHeight:1.7}}>{m.desc}</div></div>)}</div>;}
+function ParaPage(){
+  const[aktif,setAktif]=useState(0);
+  const yollar=[
+    {
+      icon:"✍️",baslik:"AI İçerik Üreticisi",kazanc:"₺5.000 - ₺30.000/ay",sure:"2-4 hafta",seviye:"Başlangıç",renk:"#00dcff",
+      ozet:"YouTube, blog, Instagram ve TikTok'ta AI araçlarıyla içerik üret. Reklam geliri + sponsorluk + affiliate ile para kazan.",
+      gercekOrnek:"Ahmet, yazılım blog'u açtı. ChatGPT ile haftada 5 makale üretiyor. 6 ayda 12.000 aylık okuyucu, Google AdSense'den aylık ₺3.500 kazanıyor.",
+      adimlar:[
+        {no:1,baslik:"Niş Seç",aciklama:"Para kazanan niş seç: Fintech, sağlık, eğitim, teknoloji. Çok geniş değil, çok dar değil. 'AI araçları' iyi bir niş."},
+        {no:2,baslik:"Platform Belirle",aciklama:"YouTube: Reklam geliri en yüksek. Blog: SEO ile organik trafik. Instagram/TikTok: Hızlı büyüme. En az 2 platform."},
+        {no:3,baslik:"AI Workflow Kur",aciklama:"ChatGPT ile konu araştır → Claude ile yaz → Canva AI ile görsel yap → Buffer ile paylaş. Günde 2 saat yeterli."},
+        {no:4,baslik:"İlk 1000 Takipçi",aciklama:"Nişindeki topluluklarda yorum yap, değer katacak içerikler paylaş, tutarlı ol. 60-90 gün sabret."},
+        {no:5,baslik:"Monetizasyon",aciklama:"YouTube: 1000 abone + 4000 saat → AdSense. Blog: AdSense + affiliate. Instagram: 10K+ → sponsorluk."},
+      ],
+      araclar:["ChatGPT (içerik)","Claude (uzun yazı)","Canva AI (görsel)","ElevenLabs (ses)","Buffer (planlama)"],
+      kazancDetay:"Başlangıç: ₺500-2000/ay | Orta: ₺3000-10000/ay | İleri: ₺15000-30000+/ay",
+      affiliateler:["Google AdSense","Amazon Associates","Cursor affiliate ($20/referral)","ElevenLabs affiliate"]
+    },
+    {
+      icon:"💻",baslik:"AI Freelancer / Yazılımcı",kazanc:"₺8.000 - ₺50.000/ay",sure:"4-8 hafta",seviye:"Orta",renk:"#a855f7",
+      ozet:"Cursor ve Claude Code ile kod 3x hızlı yaz, aynı sürede 3x fazla proje teslim et. Upwork ve Fiverr'de AI uzmanı olarak markalaş.",
+      gercekOrnek:"Mert, web geliştirici. Cursor kullanmaya başladıktan sonra proje teslim süresini %60 kısalttı. Aynı ücretle 2.5x fazla proje alıyor. Aylık geliri ₺8.000'den ₺22.000'e çıktı.",
+      adimlar:[
+        {no:1,baslik:"Cursor'ı Öğren",aciklama:"cursor.com'dan indir, 3 gün kullan. Tab tamamlama, Ctrl+K ile düzenleme, Ctrl+L ile chat. 1 haftada ustalaşırsın."},
+        {no:2,baslik:"Portföy Güncelle",aciklama:"GitHub profilini güncelle. 'AI-assisted development' uzmanlığını öne çıkar. 3 showcase proje hazırla."},
+        {no:3,baslik:"Upwork/Fiverr Profil",aciklama:"'AI-powered web development' başlığıyla profil oluştur. İlk 5 müşteriyi düşük fiyatla al, yorumları topla."},
+        {no:4,baslik:"Hızlı Teslim Avantajı",aciklama:"'3 günde teslim' yaz. AI sayesinde bunu gerçekten yapabilirsin. Hız en büyük fark yaratıcın."},
+        {no:5,baslik:"Fiyat Artır",aciklama:"10 iyi yorum sonrası %30-50 fiyat artır. AI kullandığını söyleme — hızlı ve kaliteli iş yaptığını söyle."},
+      ],
+      araclar:["Cursor (kod)","Claude Code (ajan)","GitHub Copilot (tamamlama)","v0.dev (UI)","Replit (hızlı prototip)"],
+      kazancDetay:"Junior: ₺8000-15000/ay | Mid: ₺15000-30000/ay | Senior: ₺30000-50000+/ay",
+      affiliateler:["Cursor affiliate","GitHub Copilot","Replit affiliate"]
+    },
+    {
+      icon:"🎨",baslik:"AI Görsel Tasarım Servisi",kazanc:"₺3.000 - ₺20.000/ay",sure:"1-2 hafta",seviye:"Kolay",renk:"#f472b6",
+      ozet:"Midjourney ve Adobe Firefly ile logo, sosyal medya görseli, ürün fotoğrafı ve sunum tasarımı sat. Türkiye'de bu servise büyük talep var.",
+      gercekOrnek:"Zeynep, grafik tasarımcı. Midjourney'i öğrendikten sonra logo paketini ₺150'den ₺500'e çıkardı. Aylık 25 logo yapıyor, ₺12.500 kazanıyor. Tasarım süresi: logo başına 45 dakika.",
+      adimlar:[
+        {no:1,baslik:"Araçları Öğren",aciklama:"Midjourney ($10/ay): En yüksek kalite. DALL-E 3 (ücretsiz ChatGPT ile): Metinli görseller. Adobe Firefly: Ticari kullanım güvenli."},
+        {no:2,baslik:"Hizmet Paketi Oluştur",aciklama:"Logo paketi: ₺300-600. Sosyal medya paketi: ₺800-2000/ay. Sunum tasarımı: ₺500-1500. Ürün fotoğrafı: ₺200-500/ürün."},
+        {no:3,baslik:"Fiverr/Bionluk Profil",aciklama:"'AI-powered logo design' kategorisinde profil aç. İlk 3 müşteriye %50 indirim yap, portfolio doldur."},
+        {no:4,baslik:"LinkedIn Pazarlama",aciklama:"Before/after görseller paylaş. 'AI ile 3 günde logo tasarladım' içerikleri çok ilgi çekiyor. Organik trafik gelir."},
+        {no:5,baslik:"Kurumsal Müşteri",aciklama:"KOBİ'lere aylık sosyal medya paketi sat. ₺1500-3000/ay, düzenli gelir. 5 müşteri = ₺10.000+/ay."},
+      ],
+      araclar:["Midjourney (yaratıcı)","Adobe Firefly (ticari)","Canva AI (düzenleme)","DALL-E 3 (metin)","Remove.bg (arkaplan)"],
+      kazancDetay:"Başlangıç: ₺2000-5000/ay | Orta: ₺8000-15000/ay | Kurumsal: ₺15000-20000+/ay",
+      affiliateler:["Midjourney referral","Adobe affiliate","Canva affiliate ($36/referral)"]
+    },
+    {
+      icon:"📚",baslik:"AI Eğitim & Danışmanlık",kazanc:"₺5.000 - ₺80.000/ay",sure:"4-8 hafta",seviye:"Orta",renk:"#34d399",
+      ozet:"Şirketlere ve bireylere AI araçları eğitimi ver. Türkiye'de AI eğitimi talebi 2023'e göre 10x arttı ama eğitimci sayısı çok az.",
+      gercekOrnek:"Elif, eski bir pazarlamacı. 3 aylık AI öğrenimiyle kurumsal eğitimci oldu. Şirket başına ₺5.000-15.000 workshop ücreti alıyor. Ayda 4 eğitim = ₺25.000+.",
+      adimlar:[
+        {no:1,baslik:"Uzmanlık Seç",aciklama:"'AI ile pazarlama', 'AI ile müşteri hizmetleri', 'AI ile yazılım geliştirme'. Genel değil, sektör spesifik ol."},
+        {no:2,baslik:"Kurs İçeriği Hazırla",aciklama:"ChatGPT ile 10 modüllük müfredat hazırla. Gamma ile sunum yap. Her modül: teori + pratik + ödev."},
+        {no:3,baslik:"Udemy / Kendi Sitesi",aciklama:"Udemy: Hızlı erişim, düşük fiyat. Kendi sitesi: Yüksek marj. İkisini birden yap. Udemy ile müşteri çek, siteye taşı."},
+        {no:4,baslik:"LinkedIn İçerik",aciklama:"Haftada 3 AI ipucu paylaş. 'Şirketinizde AI nasıl kullanılır' konusunda yaz. Organik inbound müşteri gelir."},
+        {no:5,baslik:"Kurumsal Satış",aciklama:"LinkedIn'de İK ve eğitim müdürlerine ulaş. 1 saatlik ücretsiz demo sun. Teklif kabul oranı %30-40."},
+      ],
+      araclar:["ChatGPT (müfredat)","Gamma (sunum)","Loom (video kayıt)","Notion (materyal)","Zoom (eğitim)"],
+      kazancDetay:"Online Kurs: ₺2000-8000/ay | Workshop: ₺5000-15000/etkinlik | Kurumsal: ₺20000-80000/ay",
+      affiliateler:["Udemy affiliate","Teachable affiliate","Notion affiliate"]
+    },
+    {
+      icon:"🔧",baslik:"AI Otomasyon Servisi",kazanc:"₺10.000 - ₺60.000/ay",sure:"6-12 hafta",seviye:"Orta-İleri",renk:"#fb923c",
+      ozet:"n8n ve Make ile şirketlerin tekrarlayan süreçlerini otomatize et. E-ticaret, muhasebe, müşteri hizmetleri — her sektörde talep var.",
+      gercekOrnek:"Burak, n8n kullanarak bir e-ticaret firmasına sipariş-kargo-müşteri bildirim akışını otomatize etti. 3 haftalık iş: ₺18.000. Bakım sözleşmesi: ₺3.000/ay.",
+      adimlar:[
+        {no:1,baslik:"n8n Öğren",aciklama:"n8n.io'da ücretsiz hesap aç. YouTube'da 'n8n tutorial' ara. 2 haftada temel workflow'ları yapabilirsin."},
+        {no:2,baslik:"Nişini Belirle",aciklama:"E-ticaret otomasyonu (sipariş, kargo, iade). Müşteri hizmetleri (ticket yönetimi). Pazarlama (lead nurturing)."},
+        {no:3,baslik:"Case Study Hazırla",aciklama:"Kendi projeni veya ücretsiz yaptığın ilk işi case study yap: 'X şirketi Y saati kurtardı, Z TL tasarruf etti.'"},
+        {no:4,baslik:"Fiyatlandırma",aciklama:"Proje bazlı: ₺5000-20000. Aylık retainer: ₺2000-5000. Tasarruf bazlı: 'Şirkete kazandırdığımın %20'si.'"},
+        {no:5,baslik:"Müşteri Bul",aciklama:"LinkedIn'de operasyon müdürlerine ulaş. 'İş süreçlerinizi otomatize ediyorum' mesajı gönder. Demo teklif et."},
+      ],
+      araclar:["n8n (otomasyon)","Make (görsel)","Zapier (kolay)","ChatGPT API","Airtable (veri)"],
+      kazancDetay:"Küçük proje: ₺5000-15000 | Büyük proje: ₺20000-60000 | Retainer: ₺3000-8000/ay",
+      affiliateler:["n8n affiliate","Make affiliate","Zapier affiliate"]
+    },
+    {
+      icon:"💡",baslik:"Prompt Mühendisi",kazanc:"₺15.000 - ₺60.000/ay",sure:"1-3 ay",seviye:"Orta",renk:"#60a5fa",
+      ozet:"Şirketlere özel AI prompt sistemleri tasarla. ChatGPT ve Claude'u şirketin iş süreçlerine entegre et. 2026'nın en hızlı büyüyen mesleği.",
+      gercekOrnek:"Kerem, bir sigorta şirketine müşteri hizmetleri prompt sistemi kurdu. 6 haftalık çalışma: ₺25.000. Şirket 4 çağrı merkezi çalışanı yerine sistemi kullanıyor.",
+      adimlar:[
+        {no:1,baslik:"Prompt Tekniklerini Öğren",aciklama:"Zero-shot, few-shot, chain of thought, role prompting. IMDATAI'nin prompt rehberini oku. 2 hafta yeterli."},
+        {no:2,baslik:"Sektör Seç",aciklama:"Hukuk, finans, sağlık, e-ticaret, müşteri hizmetleri. Sektör bilgin olan yerde başla. Derin domain bilgisi fark yaratır."},
+        {no:3,baslik:"Test Sistemi Kur",aciklama:"100 farklı girdi ile test et. Başarı oranını ölç. Müşteriye 'X% doğruluk oranı' sunabilmek için gerekli."},
+        {no:4,baslik:"Portföy Hazırla",aciklama:"3 farklı sektörden örnek prompt sistemi yap. GitHub'a yükle. 'AI Prompt Engineer' LinkedIn başlığı ekle."},
+        {no:5,baslik:"Danışmanlık Sat",aciklama:"Küçük şirketlere: ₺5000-10000. Orta ölçekli: ₺15000-30000. Kurumsal: ₺30000+. Bakım: ₺2000-5000/ay."},
+      ],
+      araclar:["ChatGPT (test)","Claude (karmaşık)","Gemini (araştırma)","LangChain (sistem)","PostHog (analitik)"],
+      kazancDetay:"Junior: ₺15000-25000/ay | Mid: ₺25000-45000/ay | Senior: ₺45000-60000+/ay",
+      affiliateler:["Anthropic referral","OpenAI referral","LangChain affiliate"]
+    },
+  ];
+  const aktifYol=yollar[aktif];
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#34d399",marginBottom:5}}>PARA KAZAN</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",marginBottom:8}}>💰 AI ile Para Kazanmanın 6 Gerçekçi Yolu</div>
+      <div style={{fontSize:13,color:"#64748b",lineHeight:1.7}}>Türkiye'de AI bilen profesyonel sayısı hâlâ çok az. Bu pencere kapanmadan başla. Her yol için gerçek örnek, adım adım rehber ve kazanç detayları.</div>
+    </div>
+
+    {/* Uyarı kutusu */}
+    <div style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.25)",borderRadius:13,padding:"16px 20px",marginBottom:24,display:"flex",gap:14,alignItems:"flex-start"}}>
+      <span style={{fontSize:24,flexShrink:0}}>🇹🇷</span>
+      <div>
+        <div style={{fontSize:13,fontWeight:700,color:"#34d399",marginBottom:4}}>Neden Şimdi?</div>
+        <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.7}}>Türkiye AI trafiğinde dünya #1 (%94.49) ama AI bilen uzman sayısı çok az. 2024'e göre AI meslek ilanları %340 arttı. 2027'de bu avantaj kapanmaya başlayacak. Şimdi başla.</div>
+      </div>
+    </div>
+
+    {/* Yol seçici */}
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:20}}>
+      {yollar.map((y,i)=>(
+        <button key={i} onClick={()=>setAktif(i)} style={{padding:"8px 14px",borderRadius:10,border:`1px solid ${aktif===i?y.renk+"60":"rgba(255,255,255,0.08)"}`,background:aktif===i?`${y.renk}12`:"rgba(255,255,255,0.02)",color:aktif===i?y.renk:"#64748b",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:aktif===i?700:400,display:"flex",alignItems:"center",gap:6}}>
+          <span>{y.icon}</span><span>{y.baslik}</span>
+        </button>
+      ))}
+    </div>
+
+    {/* Aktif yol detayı */}
+    <div style={{background:`${aktifYol.renk}06`,border:`1px solid ${aktifYol.renk}22`,borderRadius:16,overflow:"hidden"}}>
+      {/* Header */}
+      <div style={{background:`${aktifYol.renk}10`,padding:"22px 24px",borderBottom:`1px solid ${aktifYol.renk}18`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+          <div style={{display:"flex",gap:14,alignItems:"center"}}>
+            <span style={{fontSize:40}}>{aktifYol.icon}</span>
+            <div>
+              <div style={{fontSize:20,fontWeight:900,color:"#e2e8f0",marginBottom:4}}>{aktifYol.baslik}</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <span style={{fontSize:10,background:`${aktifYol.renk}20`,color:aktifYol.renk,padding:"3px 10px",borderRadius:6,fontWeight:700}}>{aktifYol.seviye}</span>
+                <span style={{fontSize:10,background:"rgba(255,255,255,0.06)",color:"#94a3b8",padding:"3px 10px",borderRadius:6}}>⏱ {aktifYol.sure} başlangıç</span>
+              </div>
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:22,fontWeight:900,color:aktifYol.renk}}>{aktifYol.kazanc}</div>
+            <div style={{fontSize:10,color:"#64748b",marginTop:2}}>aylık potansiyel</div>
+          </div>
+        </div>
+        <div style={{marginTop:14,fontSize:13,color:"#94a3b8",lineHeight:1.7}}>{aktifYol.ozet}</div>
+      </div>
+
+      <div style={{padding:"22px 24px"}}>
+        {/* Gerçek örnek */}
+        <div style={{background:"rgba(0,0,0,0.3)",border:`1px solid ${aktifYol.renk}20`,borderRadius:12,padding:"16px",marginBottom:20}}>
+          <div style={{fontSize:11,color:aktifYol.renk,fontWeight:700,marginBottom:8,letterSpacing:".1em"}}>💬 GERÇEK ÖRNEK</div>
+          <div style={{fontSize:13,color:"#e2e8f0",lineHeight:1.8,fontStyle:"italic"}}>"{aktifYol.gercekOrnek}"</div>
+        </div>
+
+        {/* Adımlar */}
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>📋 Adım Adım Başlangıç Rehberi</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {aktifYol.adimlar.map(a=>(
+              <div key={a.no} style={{display:"flex",gap:14,alignItems:"flex-start",background:"rgba(255,255,255,0.02)",borderRadius:10,padding:"14px"}}>
+                <div style={{width:28,height:28,borderRadius:"50%",background:`${aktifYol.renk}20`,border:`2px solid ${aktifYol.renk}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:aktifYol.renk,flexShrink:0}}>{a.no}</div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:4}}>{a.baslik}</div>
+                  <div style={{fontSize:12,color:"#64748b",lineHeight:1.7}}>{a.aciklama}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Alt bilgiler */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
+          <div style={{background:"rgba(255,255,255,0.02)",borderRadius:12,padding:"16px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:10}}>🛠️ Kullanacağın Araçlar</div>
+            {aktifYol.araclar.map(a=><div key={a} style={{fontSize:11,color:"#64748b",marginBottom:6,display:"flex",gap:8}}><span style={{color:aktifYol.renk,flexShrink:0}}>→</span>{a}</div>)}
+          </div>
+          <div style={{background:"rgba(255,255,255,0.02)",borderRadius:12,padding:"16px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:10}}>📈 Kazanç Detayı</div>
+            <div style={{fontSize:12,color:"#64748b",lineHeight:1.8,marginBottom:10}}>{aktifYol.kazancDetay}</div>
+            <div style={{fontSize:11,fontWeight:700,color:aktifYol.renk,marginBottom:6}}>💸 Affiliate Fırsatları:</div>
+            {aktifYol.affiliateler.map(a=><div key={a} style={{fontSize:11,color:"#64748b",marginBottom:4,display:"flex",gap:6}}><span style={{color:"#34d399",flexShrink:0}}>✓</span>{a}</div>)}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Hızlı başlangıç */}
+    <div style={{marginTop:24,background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.06))",border:"1px solid rgba(0,220,255,0.15)",borderRadius:14,padding:"20px 24px"}}>
+      <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>⚡ Bu Hafta Başlamak İçin 3 Adım</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+        {[
+          {no:"1",yazi:"Bugün: ChatGPT veya Claude'a ücretsiz kaydol, 30 dakika dene",renk:"#00dcff"},
+          {no:"2",yazi:"Bu hafta: Seçtiğin gelir yolunun ilk adımını yap (hesap aç, profil oluştur)",renk:"#a855f7"},
+          {no:"3",yazi:"Bu ay: İlk müşterini bul veya ilk içeriğini yayınla. Mükemmel değil, başlamış ol.",renk:"#34d399"},
+        ].map(a=>(
+          <div key={a.no} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+            <div style={{width:24,height:24,borderRadius:"50%",background:`${a.renk}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:a.renk,flexShrink:0}}>{a.no}</div>
+            <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6}}>{a.yazi}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>;
+}
 
 function HakkimizdaPage(){return <div style={{padding:"28px 20px",maxWidth:800,margin:"0 auto"}}><div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>HAKKIMIZDA</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>⬡ IMDATAI Kimdir?</div></div><div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.06))",border:"1px solid rgba(0,220,255,0.15)",borderRadius:16,padding:"24px",marginBottom:20}}><div style={{fontSize:14,color:"#94a3b8",lineHeight:1.9}}>IMDATAI, Türkiye'de yapay zeka okuryazarlığını artırmak için kuruldu. 2026'da Türkiye AI trafiğinde dünya birincisi olduğunda bir şeyi fark ettik: Türkçe, kapsamlı ve güvenilir bir AI kaynağı yok. IMDATAI bu boşluğu doldurmak için burada.</div></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>{[{icon:"🎯",t:"Doğruluk",d:"Her içeriği doğruluyoruz."},{icon:"🇹🇷",t:"Türkçe Önce",d:"Çeviri değil, orijinal Türkçe."},{icon:"🆓",t:"Erişilebilirlik",d:"Temel içerik her zaman ücretsiz."},{icon:"⚡",t:"Hız",d:"AI dünyası hızlı, biz de."}].map(v=><div key={v.t} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:13,padding:"16px"}}><div style={{fontSize:22,marginBottom:8}}>{v.icon}</div><div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>{v.t}</div><div style={{fontSize:11,color:"#64748b"}}>{v.d}</div></div>)}</div></div>;}
 function IletisimPage(){const[f,setF]=useState({ad:"",email:"",mesaj:""});const[s,setS]=useState(false);return <div style={{padding:"28px 20px",maxWidth:600,margin:"0 auto"}}><div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>İLETİŞİM</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>📬 Bize Ulaşın</div></div>{s?<div style={{textAlign:"center",padding:"40px"}}><div style={{fontSize:32,marginBottom:8}}>✅</div><div style={{fontSize:16,fontWeight:700,color:"#34d399"}}>Mesajın İletildi!</div></div>:<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"22px"}}><div style={{display:"flex",flexDirection:"column",gap:12}}>{[["Ad Soyad","ad","Adın..."],["E-posta","email","E-posta..."]].map(([l,k,ph])=><div key={k}><div style={{fontSize:10,color:"#64748b",marginBottom:5}}>{l.toUpperCase()}</div><input style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#e2e8f0",padding:"10px 13px",fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}} placeholder={ph} value={f[k]} onChange={e=>setF(p=>({...p,[k]:e.target.value}))}/></div>)}<div><div style={{fontSize:10,color:"#64748b",marginBottom:5}}>MESAJ</div><textarea style={{width:"100%",minHeight:120,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#e2e8f0",padding:"10px 13px",fontSize:12,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box"}} placeholder="Mesajını yaz..." value={f.mesaj} onChange={e=>setF(p=>({...p,mesaj:e.target.value}))}/></div><button onClick={()=>{if(f.ad&&f.email&&f.mesaj)setS(true);}} style={{padding:"12px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Gönder →</button></div></div>}</div>;}
@@ -1400,40 +1634,75 @@ const TIMELINE_DATA = [
 
 const PROMPTS_DATA = [
   {cat:"💼 İş & Kariyer",color:"#fb923c",icon:"💼",items:[
-    {title:"Mükemmel CV",kotu:"CV yaz",iyi:"10 yıl deneyimli İK danışmanı olarak [pozisyon] için CV yaz. Başarıları sayısal verilerle destekle. ATS sistemlerini geçecek anahtar kelimeler ekle. Türkçe, 1 sayfa.",note:"Rol + sayısal başarı + ATS = işe alım şansı 3x"},
-    {title:"Mülakat Hazırlığı",kotu:"Mülakat soruları ver",iyi:"[Şirket] için [pozisyon] mülakatı. STAR metoduyla yanıtlayabileceğim 10 soru ve her biri için cevap çerçevesi. Şirket değerleri: [değerler]. Zor sorular dahil et.",note:"Şirketi araştır, değerleri ver, STAR formülü şart"},
-    {title:"Müzakere E-postası",kotu:"Maaş isteği yaz",iyi:"[X TL] teklif aldım, [Y TL] istiyorum. Sektör ort. [Z TL]. İlişkiyi bozmayan değer önerisine dayanan Türkçe müzakere e-postası. 3 farklı ton ver.",note:"3 versiyon iste, duruma göre seç"},
-    {title:"İş Planı",kotu:"İş planı yaz",iyi:"Startup danışmanı olarak [ürün] için 12 aylık iş planı. Pazar analizi, rekabet, gelir modeli, finansal projeksiyon. Somut rakamlar, yatırımcı sunum formatı.",note:"Bölümleri önceden belirt"},
+    {title:"Mükemmel CV",kotu:"CV yaz",iyi:"10 yıl deneyimli İK danışmanı olarak [pozisyon] için CV yaz. Başarıları sayısal verilerle destekle (X ile Y% artış sağladım gibi). ATS sistemlerini geçecek anahtar kelimeler ekle. Türkçe, 1 sayfa, tersine kronolojik.",note:"Rol + sayısal başarı + ATS = işe alım şansı 3x artar"},
+    {title:"Mülakat Hazırlığı",kotu:"Mülakat soruları ver",iyi:"[Şirket] için [pozisyon] mülakatı. STAR metoduyla yanıtlayabileceğim 10 soru ve her biri için cevap çerçevesi. Şirket değerleri: [değerler]. Zor ve tuzak sorular dahil et. Türkçe.",note:"Şirketi araştır, değerleri ver, STAR formülü şart"},
+    {title:"Müzakere E-postası",kotu:"Maaş isteği yaz",iyi:"[X TL] teklif aldım, [Y TL] istiyorum. Deneyimim: [deneyim]. Sektör ort. [Z TL]. İlişkiyi bozmayan, değer önerisine dayanan Türkçe müzakere e-postası. 3 farklı ton: doğrudan, diplomatik, esnek.",note:"3 versiyon iste, duruma göre seç"},
+    {title:"İş Planı",kotu:"İş planı yaz",iyi:"Startup danışmanı olarak [ürün/hizmet] için 12 aylık iş planı. Pazar analizi, rekabet, gelir modeli, pazarlama, finansal projeksiyon. Somut rakamlar. Yatırımcı sunum formatı.",note:"Bölümleri önceden belirt, yatırımcı odaklı yaz"},
+    {title:"LinkedIn Profil Özeti",kotu:"LinkedIn bio yaz",iyi:"[Sektör]'de [yıl] yıllık [uzmanlık] deneyimine sahip biri için LinkedIn 'About' bölümü yaz. Başarıları rakamlarla göster, güçlü ilk cümle, CTA ile bitir. 300 kelime. İngilizce ve Türkçe versiyonu.",note:"İki dil iste, hangisi daha iyi skor yap"},
+    {title:"İş Başvuru Mektubu",kotu:"Başvuru mektubu yaz",iyi:"[Şirkete] [pozisyon] için başvuru mektubu. Şirketin son [gelişme]'sinden bahset. Benim [spesifik deneyim]'im bu role nasıl katkı katar açıkla. Samimi ama profesyonel. 250 kelime.",note:"Şirketi araştır, spesifik gelişmeye atıf yap"},
   ]},
-  {cat:"📱 İçerik & Sosyal",color:"#f472b6",icon:"📱",items:[
-    {title:"Viral LinkedIn Postu",kotu:"LinkedIn yazısı yaz",iyi:"İçerik stratejisti olarak [konu] hakkında viral LinkedIn postu yaz. İlk cümle şok edici. Kişisel deneyim ekle. 3 çıkarım listele. Soru ile bitir. 200-250 kelime.",note:"Hook + hikaye + çıkarım + soru = viral formül"},
-    {title:"İçerik Takvimi",kotu:"İçerik planı yap",iyi:"[Marka] için 4 haftalık sosyal medya takvimi. Instagram + LinkedIn. Kategoriler: Eğitici %40, Eğlenceli %30, Satış %20, Topluluk %10. Tablo formatında.",note:"Yüzdeleri ver, dengeli içerik"},
-    {title:"YouTube Senaryo",kotu:"YouTube videosu yaz",iyi:"[Konu] için YouTube senaryosu. İlk 30sn dikkat çekici hook. 3 ana bölüm (2-3dk her biri). Sonunda CTA. Ton: [samimi/eğitici]. Toplam 10 dakika.",note:"Hook + bölümler + CTA = izlenme süresi maksimum"},
-    {title:"Instagram Caption",kotu:"Caption yaz",iyi:"[Ürün/hizmet] için Instagram caption. Ton: [samimi/profesyonel]. CTA ekle. 3 farklı versiyon: Kısa (50k), orta (100k), hikaye formatı. Her birinde 5 hashtag.",note:"3 versiyon iste, en iyisini seç"},
+  {cat:"📱 İçerik & Sosyal Medya",color:"#f472b6",icon:"📱",items:[
+    {title:"Viral LinkedIn Postu",kotu:"LinkedIn yazısı yaz",iyi:"İçerik stratejisti olarak [konu] hakkında viral LinkedIn postu yaz. İlk cümle şok edici veya merak uyandıran. Kişisel deneyim ekle. 3 somut çıkarım listele. Düşündürücü soru ile bitir. 200-250 kelime, emojisiz.",note:"Hook + hikaye + çıkarım + soru = viral formül"},
+    {title:"İçerik Takvimi",kotu:"İçerik planı yap",iyi:"[Marka] için [hedef kitle]'ye yönelik 4 haftalık sosyal medya takvimi. Platformlar: Instagram + LinkedIn + Twitter. Kategoriler: Eğitici %40, Eğlenceli %30, Satış %20, Topluluk %10. Tablo formatında, her post için hook cümlesi.",note:"Yüzdeleri ver, dengeli ve yapılandırılmış içerik al"},
+    {title:"YouTube Senaryo",kotu:"YouTube videosu yaz",iyi:"[Konu] için YouTube senaryosu. İlk 30sn dikkat çekici hook (neden izlemeli?). 3 ana bölüm, her biri 2-3 dakika. Her bölümde somut örnek. Sonunda CTA. Ton: [samimi/eğitici]. Toplam 8-10 dakika.",note:"Hook + 3 bölüm + CTA = izlenme süresi maksimum"},
+    {title:"TikTok Script",kotu:"TikTok videosu yaz",iyi:"[Konu] için 60 saniyelik TikTok senaryosu. İlk 3 saniye: dikkat çekici hook. Trend ses/efekt öner. Hızlı kesimler için her 5 saniyede bir yeni bilgi. Sürprizle bitir. Alt yazı için de yaz.",note:"İlk 3 saniye = her şey. Hook olmazsa kimse izlemez"},
+    {title:"Instagram Caption",kotu:"Caption yaz",iyi:"[Ürün/hizmet] için Instagram caption. Ton: [samimi/profesyonel/eğlenceli]. CTA ekle. 3 farklı uzunluk: Kısa (50 kelime), orta (100 kelime), uzun (hikaye formatı). Her birinde 5 niş hashtag.",note:"3 uzunluk ver, platforma ve içeriğe göre seç"},
+    {title:"E-posta Kampanyası",kotu:"E-posta yaz",iyi:"[Ürün] için 5 e-postalık drip kampanyası yaz. 1)Hoşgeldin 2)Değer önerisi 3)Sosyal kanıt 4)İtiraz kırma 5)CTA. Her e-posta: konu satırı + 200 kelime gövde + PS notu. Kişiselleştirme alanları köşeli parantezle.",note:"Drip serisi = alışkanlık + güven + satış. Hepsini iste"},
+    {title:"Podcast Bölüm Tanıtımı",kotu:"Podcast açıklaması yaz",iyi:"[Podcast adı]'nın [bölüm no] bölümü için tanıtım yaz. Konuk: [isim]. Konular: [liste]. Platform: Spotify açıklama (500 kelime) + Instagram duyuru (150 kelime) + Twitter thread (5 tweet). Bölüm içinden 3 alıntı.",note:"Her platform için ayrı format, tek içerikten 3 kullanım"},
   ]},
   {cat:"⚙️ Kod & Teknik",color:"#00dcff",icon:"⚙️",items:[
-    {title:"Kod Review",kotu:"Bu kodu düzelt",iyi:"Senior mühendis olarak bu [dil] kodu incele:\n```[kod]```\n1)Hatalar 2)Güvenlik açıkları 3)Performans iyileştirme 4)Düzeltilmiş versiyon 5)Unit test.",note:"Her adımı ayrı madde yap"},
-    {title:"API Tasarımı",kotu:"API yaz",iyi:"RESTful API tasarımcısı olarak [uygulama] için API tasarla. Endpoint'ler, HTTP metodları, request/response, hata kodları, authentication. OpenAPI 3.0 formatı.",note:"Standart formatı belirt"},
-    {title:"Hata Debug",kotu:"Bu hata neden oluyor",iyi:"[Hata mesajı] aldım. Ortam: [OS, dil, kütüphane]. 1)Hatanın tam sebebi 2)Root cause 3)3 farklı çözüm 4)Tekrarlanmaması için önlem.",note:"Hata mesajı + ortam + bağlam = ilk seferde çözüm"},
-    {title:"SQL Sorgusu",kotu:"SQL yaz",iyi:"DBA uzmanı olarak [veritabanı] için bu sorguyu yaz: [istek]. Tablo yapısı: [tablo]. Performans için index öner, EXPLAIN PLAN çıktısını yorumla.",note:"Tablo yapısını ver, optimize sorgu al"},
+    {title:"Kapsamlı Kod Review",kotu:"Bu kodu düzelt",iyi:"Senior yazılım mühendisi olarak bu [dil] kodu incele:\n```\n[kod]\n```\n1)Hatalar ve sebepleri 2)Güvenlik açıkları (OWASP top 10'a göre) 3)Performans darboğazları 4)Test coverage eksiklikleri 5)Düzeltilmiş versiyon 6)Unit test örnekleri.",note:"Her madde ayrı bölüm — kapsamlı review al"},
+    {title:"API Tasarımı",kotu:"API yaz",iyi:"RESTful API tasarımcısı olarak [uygulama] için tam API tasarla. Endpoint'ler, HTTP metodları, request/response şemaları, hata kodları, authentication (JWT), rate limiting, versiyonlama. OpenAPI 3.0 YAML formatında.",note:"OpenAPI formatı iste — direkt Swagger'a at"},
+    {title:"Hata Debug",kotu:"Bu hata neden oluyor",iyi:"[Hata mesajı ve stack trace] aldım. Ortam: [OS, dil versiyonu, kütüphane versiyonları]. Kod: [ilgili kısım]. 1)Hatanın tam sebebi 2)Root cause analizi 3)3 farklı çözüm yolu (hız/güvenlik/basitlik odaklı) 4)Tekrarlanmaması için önlem.",note:"Stack trace + ortam + kod = ilk seferde çözüm"},
+    {title:"SQL Optimizasyonu",kotu:"SQL yaz",iyi:"DBA uzmanı olarak bu yavaş SQL sorgusunu optimize et:\n```sql\n[sorgu]\n```\nTablo boyutları: [tablo boyutları]. 1)Neden yavaş açıkla 2)Index stratejisi öner 3)Yeniden yazılmış versiyon 4)EXPLAIN PLAN çıktısını yorumla 5)Monitoring için metrikler.",note:"Tablo boyutunu ver, gerçek optimizasyon al"},
+    {title:"Sistem Mimarisi",kotu:"Mimari tasarla",iyi:"[Uygulama] için üretim mimarisi tasarla. Beklenen: [X] günlük aktif kullanıcı. Gereksinimler: [liste]. Tasarla: 1)Katman diyagramı (Mermaid formatında) 2)Teknoloji seçimleri + gerekçe 3)Veritabanı stratejisi 4)Ölçeklenme planı 5)Felaket kurtarma 6)Tahmini maliyet (AWS/GCP).",note:"Mermaid formatı iste — direkt diyagram çıkar"},
+    {title:"Güvenlik Denetimi",kotu:"Bu kodu güvenlik açısından incele",iyi:"Güvenlik araştırmacısı olarak bu [dil/framework] uygulamasını OWASP Top 10'a göre denetle:\n```\n[kod]\n```\nHer zafiyet için: 1)Risk seviyesi (Kritik/Yüksek/Orta/Düşük) 2)Saldırı vektörü 3)Düzeltme kodu. CVE referansları ekle.",note:"Risk seviyesi iste, önceliklendirme yapabilirsin"},
+    {title:"Regex Üret",kotu:"Regex yaz",iyi:"[Dil] için [ne eşleştirmek istiyorum] regex yaz. Geçerli örnekler: [örnekler]. Geçersiz örnekler: [örnekler]. Çıktı: 1)Regex pattern 2)Her parçanın açıklaması 3)Test örnekleri 4)Edge case'ler 5)Kod snippet ile kullanım.",note:"Geçerli + geçersiz örnek ver, doğru pattern ilk seferde"},
+  ]},
+  {cat:"🧠 Claude'a Özel",color:"#a855f7",icon:"🧠",items:[
+    {title:"Kitap Boyutu Belge Analizi",kotu:"Bu belgeyi özetle",iyi:"Sana [sayfa sayısı] sayfalık [belge türü] vereceğim. Claude'un 1M token kapasitesiyle tüm belgeyi bir kerede işle:\n1)Ana temayı ve iddiaları çıkar\n2)En önemli 10 bulguyu listele\n3)İç tutarsızlıkları tespit et\n4)Pratikte uygulanabilir 5 öneri sun\n5)Yönetici özeti yaz (1 sayfa)\n\nBelge: [belgeyi buraya yapıştır]",note:"Claude'un 1M token'ı ChatGPT'nin 128K'sından 8x büyük"},
+    {title:"Tam Codebase Analizi",kotu:"Bu projeyi incele",iyi:"Bu projenin tüm kodunu incele (1M token kapasiteni kullan):\n\n[Kodu yapıştır]\n\n1)Mimari pattern'ları açıkla\n2)Güvenlik açıklarını kritiklik sırasına göre listele\n3)Performans darboğazlarını tespit et\n4)Test coverage analizi\n5)Refactoring önerileri (öncelik sırasıyla)\n6)Teknik borç tahmini",note:"Claude SWE-bench #1 — kodlama analizinde gerçekten üstün"},
+    {title:"Constitutional AI ile Güvenli Rol",kotu:"Bana yardım et",iyi:"[Uzman rolü] olarak görev yap. Kısıtlar:\n- Belirsizsen 'Emin değilim, doğrulamanı öneririm' de\n- Kaynak sınırlılıklarını açıkça belirt\n- Zararlı olabilecek içerikten kaçın\n- Kritik kararlar için profesyonel görüş al uyarısı ekle\n\nGörev: [görev açıklaması]",note:"Claude Constitutional AI ile diğerlerinden daha güvenli yanıt verir"},
+    {title:"Uzun İçerik Dönüştürme",kotu:"Bunu farklı formata dönüştür",iyi:"[Uzun içerik]'i [hedef format]'a dönüştür.\n\nDönüşüm kuralları:\n- Ton: [teknik/samimi/akademik/pazarlama]\n- Uzunluk: orijinalin [%X]'i\n- Hedef kitle: [kitle]\n- Platform: [LinkedIn/blog/e-posta/rapor]\n- Kesinlikle koru: [önemli unsurlar]\n- Çıkar: [gereksiz kısımlar]",note:"Claude uzun format dönüştürmede GPT'den tutarlı"},
+    {title:"Karmaşık Konu Derinlemesine",kotu:"[Konu] açıkla",iyi:"[Konu] hakkında kapsamlı analiz yap. Benden:\n1)[Temel kavramı] 3 farklı seviyede açıkla: 5 yaşında çocuk, lise öğrencisi, uzman\n2)Tarihsel gelişimi zaman çizgisiyle\n3)Günümüzdeki en iyi 5 kaynak\n4)Yanlış anlaşılan 3 nokta ve düzeltmesi\n5)Türkiye'ye özgü bağlam\n6)İleri okuma için 3 kaynak",note:"3 seviye açıklama = gerçek anlama testi"},
   ]},
   {cat:"🎓 Eğitim & Araştırma",color:"#34d399",icon:"🎓",items:[
-    {title:"Feynman Tekniği",kotu:"[konu] anlat",iyi:"[Konu]'u Feynman tekniğiyle anlat: 1)8 yaşındaki çocuğa açıkla 2)Temel kavramlar 3)Gerçek hayat örnekleri 4)Sık yanlış anlamalar 5)İleri öğrenim yolu.",note:"Feynman = gerçek anlama, ezbersiz"},
-    {title:"Quiz Üretici",kotu:"Test sorusu yaz",iyi:"[Konu] için Bloom taksonomisine göre 15 soru: 5 bilgi, 5 anlama, 3 uygulama, 2 analiz. Her soru için 4 şık, doğru cevap ve açıklama. Zorluk artan sırayla.",note:"Bloom taksonomisi = dengeli değerlendirme"},
-    {title:"Öğrenme Planı",kotu:"[konu] nasıl öğrenirim",iyi:"Eğitim koçu olarak [konu]'u [seviye] birisi için 90 günlük yol haritası. Her hafta: hedef + kaynak + pratik görev + ölçüm. Ücretsiz kaynakları önce say.",note:"Seviyeni ve süreyi belirt"},
-    {title:"Araştırma Analizi",kotu:"Bu makaleyi özetle",iyi:"Akademik editör olarak analiz et: 1)Ana hipotez 2)Metodoloji güçlü/zayıf 3)Temel bulgular (sayısal) 4)Sınırlılıklar 5)Güvenilirlik 1-10.",note:"Sınırlılıkları iste, eleştirel analiz"},
+    {title:"Feynman Tekniği",kotu:"[konu] anlat",iyi:"[Konu]'u Feynman tekniğiyle öğret: 1)8 yaşındaki çocuğa açıklar gibi başla 2)Temel kavramları ver 3)Gerçek hayat örnekleri (Türkiye'den) 4)Sık yapılan yanlış anlamalar 5)Her bölümde 'anlama sorusu' sor 6)İleri öğrenim için yol haritası.",note:"Feynman = gerçek anlama, ezbersiz öğrenme"},
+    {title:"Quiz Üretici",kotu:"Test sorusu yaz",iyi:"[Konu] için Bloom taksonomisine göre 15 soru: 5 bilgi, 5 anlama, 3 uygulama, 2 analiz. Her soru için: A-D şıkları + doğru cevap + neden doğru açıklaması + hangi yanlış anlamayı test ettiği. Zorluk sırasına diz.",note:"Bloom taksonomisi = dengeli, kaliteli değerlendirme"},
+    {title:"90 Günlük Öğrenme Planı",kotu:"[konu] nasıl öğrenirim",iyi:"Eğitim koçu olarak [konu]'u [mevcut seviye] biri için 90 günlük plan yap. Haftalık: hedef + kaynak (önce ücretsiz) + pratik görev + ölçüm kriteri. 30-60-90 gün kontrol noktaları. Günlük 1-2 saat varsay.",note:"Seviye + süre + günlük vakit = gerçekçi plan"},
+    {title:"Akademik Makale Analizi",kotu:"Bu makaleyi özetle",iyi:"Akademik editör olarak bu [alan] makalesini analiz et: 1)Ana hipotez ve araştırma sorusu 2)Metodoloji — güçlü ve zayıf yönler 3)Örneklem yeterliliği 4)İstatistiksel analizin doğruluğu 5)Temel bulgular (sayısal) 6)Sınırlılıklar 7)Pratikte ne anlama geliyor 8)Güvenilirlik puanı 1-10 ve gerekçe.",note:"Metodoloji eleştirisi iste, kör güven yapma"},
+    {title:"Ders Planı",kotu:"Ders hazırla",iyi:"[Konu] için [yaş/seviye] öğrencilere yönelik 60 dakikalık ders planı yap. Format: 1)Giriş aktivitesi (10dk) 2)Teori anlatımı (20dk) — slayt notlarıyla 3)Uygulama/grup çalışması (20dk) 4)Değerlendirme (10dk). Her bölüm için öğretmen notu + öğrenci materyali ayrı ayrı.",note:"Öğretmen notu + öğrenci materyali ayrı = hazır ders"},
+    {title:"Kavram Haritası",kotu:"Bu konuyu açıkla",iyi:"[Konu] için kapsamlı kavram haritası oluştur. Merkezi kavram → alt kavramlar → aralarındaki ilişkiler. Mermaid diyagram formatında yaz. Ardından her kavramı 2-3 cümleyle açıkla. Yanlış anlaşılan bağlantıları vurgula.",note:"Mermaid formatı = görsel diyagram çıkar"},
   ]},
   {cat:"✍️ Yaratıcı Yazarlık",color:"#a855f7",icon:"✍️",items:[
-    {title:"Güçlü Hikaye",kotu:"Hikaye yaz",iyi:"[Tür]'de [ayar]'da geçen [karakter] ile hikaye yaz. Kesinlikle içersin: [3 unsur]. Hook ile başlasın, iç çatışma olsun, açık uçlu bitsin. Ton: [ton]. 800 kelime.",note:"Kısıtlamalar ver, daha yaratıcı çıktı"},
-    {title:"Marka Sesi",kotu:"Marka için yaz",iyi:"[Marka] sesi: [3 sıfat]. Hedef: [kitle]. Bu sesle yaz: 1)Slogan 3 alternatif 2)Bio Twitter/LinkedIn/Instagram 3)E-posta açılış 4)Kriz durumu yanıtı.",note:"Ses kılavuzunu tanımla, tutarlı marka al"},
-    {title:"İsim & Tagline",kotu:"İsim bul",iyi:"[Sektör]'deki [hedef kitle]'ye yönelik [değer önerisi] için 10 marka ismi. Her biri: anlam, neden işe yarar, potansiyel sorun. Sonra her birine 2 tagline.",note:"Kriterleri ver, seçenek zenginliği"},
-    {title:"Karakter Geliştir",kotu:"Karakter yarat",iyi:"[Hikaye] için [isim] karakteri: fiziksel özellikler, kişilik (MBTI + 5 sıfat), motivasyon, korkusu, sırrı, konuşma tarzı, 3 alışkanlık.",note:"MBTI iste, tutarlı karakter al"},
+    {title:"Güçlü Kısa Hikaye",kotu:"Hikaye yaz",iyi:"[Tür]'de, [ayar]'da geçen, [karakter] ile kısa hikaye yaz. Kesinlikle içersin: [3 spesifik unsur]. Anlatı dikkat çekici hook ile başlasın, iç çatışma olsun, belirsiz/açık uçlu bitsin. Ton: [ton]. Max 800 kelime. Show, don't tell ilkesine uy.",note:"Show don't tell + spesifik unsurlar = yaratıcı çıktı"},
+    {title:"Marka Sesi Rehberi",kotu:"Marka için yaz",iyi:"[Marka] için kapsamlı ses rehberi oluştur. Marka kişiliği: [3 sıfat]. Hedef kitle: [profil]. Çıktı: 1)Ton ve dil kuralları (5 madde) 2)Kelime/ifade kullanılacaklar listesi 3)Kesinlikle kullanılmayacaklar 4)Her platform için ses örneği (LinkedIn, Instagram, e-posta, müşteri hizmetleri) 5)Kötü örnek → iyi örnek dönüşümleri.",note:"Kötü→iyi örnek iste, ekibin için kılavuz hazır"},
+    {title:"Marka İsmi & Tagline",kotu:"İsim bul",iyi:"[Sektör]'deki [hedef kitle]'ye yönelik [değer önerisi] sunan marka için 10 isim öner. Her isim için: 1)Anlam ve çağrışım 2)Neden işe yarar 3)Olası sorunlar (telaffuz/anlam) 4)Domain müsaitliği tahmini. Sonra her isme 2 farklı ton'da tagline yaz.",note:"10 isim + 2 tagline = 20 seçenek, en iyisini seç"},
+    {title:"Karakter Geliştirme",kotu:"Karakter yarat",iyi:"[Hikaye türü] için [isim] karakterini derinlemesine geliştir: 1)Fiziksel özellikler 2)MBTI kişilik tipi + 5 sıfatla açıklama 3)Temel motivasyonu ve en büyük korkusu 4)Gizli tuttuğu sır 5)Konuşma tarzı ve sıkça kullandığı ifadeler 6)3 özgün alışkanlık 7)Diğer karakterlerle ilişki dinamikleri 8)Karakter arki (başlangıç → dönüşüm).",note:"MBTI + karakter arki = tutarlı ve büyüyen karakter"},
+    {title:"Senaryo Diyaloğu",kotu:"Diyalog yaz",iyi:"[Film/dizi/oyun] için [sahne: iki karakter, durum] diyaloğu yaz. Karakterler: [A - kişilik/motivasyon] ve [B - kişilik/motivasyon]. Gereksinimler: Alt metin kullan (söylenmeyen söylenenden önemli), güç dinamiğini göster, her karakterin sesi farklı olsun, 3 farklı versiyon (dramatik/komik/gerilimli).",note:"Alt metin iste, yüzeysel diyalog olmaz"},
+    {title:"Pazarlama Metni (AIDA)",kotu:"Reklam metni yaz",iyi:"[Ürün/hizmet] için AIDA formülünde kopya yaz:\n- Dikkat (1 güçlü cümle)\n- İlgi (2-3 cümle, problem empati)\n- İstek (3-4 cümle, çözüm + faydalar, sosyal kanıt)\n- Eylem (güçlü CTA)\n\n3 versiyon: uzun (500k), orta (200k), kısa (50k). Google Ads başlıkları da ekle.",note:"3 uzunluk + AIDA = her platform hazır"},
   ]},
-  {cat:"⚡ Verimlilik",color:"#60a5fa",icon:"⚡",items:[
-    {title:"Karar Analizi",kotu:"Ne yapayım",iyi:"Stratejik danışman olarak [durum]. Seçenekler: [A] ve [B]. 1)5'er artı/eksi 2)Risk matrisi 3)Değerlerime uygunluk (değerlerim: [liste]) 4)Nihai öneri.",note:"Değerlerini ver, kişisel karar al"},
-    {title:"Haftalık Plan",kotu:"Haftalık plan yap",iyi:"Verimlilik koçu olarak [hedeflerim] için haftalık plan. Kısıtlarım: [zaman]. Her gün: 2 derin çalışma (90dk), 1 idari blok (45dk). Pazartesi-Cuma tablosu.",note:"Kısıtlarını belirt, gerçekçi plan"},
-    {title:"E-posta Yönetimi",kotu:"E-postalarımı düzenle",iyi:"150 okunmamış e-postam var. 3 kategori sistemi kur: 1)Acil-Önemli 2)Önemli ama acil değil 3)Sil/Arşivle. Her kategori için karar kriterleri yaz.",note:"Sistem kur, bir daha birikmez"},
-    {title:"Hızlı Öğrenme",kotu:"Bunu öğrenmek istiyorum",iyi:"Pareto prensibini uygula: [konu]'nun %20'si %80 değer verir. Hangi kısım? O kısım için: 5 temel kavram + pratik egzersizler + nasıl ölçerim.",note:"Pareto + spesifik = hızlı öğrenme"},
+  {cat:"💡 Claude ile Üretkenlik",color:"#00dcff",icon:"💡",items:[
+    {title:"Toplantı Verimliliği",kotu:"Toplantı notu tut",iyi:"Bu toplantı notlarını işle:\n[Notları yapıştır]\n\nÇıkar: 1)Alınan kararlar (listele) 2)Action items — her biri için: görev + sorumlu + tarih 3)Açık kalan sorular 4)Sonraki toplantı için gündem önerileri 5)Yöneticiye gönderilebilir özet (5 madde). Formatlı, kopyala-yapıştır hazır.",note:"Toplantı notu → action items → özet = 10 dakika iş"},
+    {title:"Proje Planlama",kotu:"Proje planı yap",iyi:"[Proje hedefi] için kapsamlı proje planı yap. Verilen: [kaynak sayısı] kişi, [süre] hafta, [bütçe]. Çıkar: 1)Proje kapsamı ve kapsam dışı (scope/out of scope) 2)Milestones ve deliverables 3)Gantt benzeri timeline 4)Risk matrisi (olasılık × etki) 5)Kaynak atama önerisi 6)Başarı kriterleri (KPI'lar).",note:"Kapsam dışını da belirle — kapsam kaymasını önler"},
+    {title:"Performans Geri Bildirimi",kotu:"Geri bildirim ver",iyi:"[Çalışan/öğrenci] için [performans dönemi] değerlendirmesi yaz. Güçlü yanlar: [liste]. Gelişim alanları: [liste]. Yapı: SBI formatı kullan (Durum-Davranış-Etki). Her geri bildirim spesifik, ölçülebilir. Motivasyonu koruyacak ton. Gelişim planı ekle.",note:"SBI formatı = spesifik, ölçülebilir, yapıcı"},
+    {title:"Rakip Analizi",kotu:"Rakiplerimi analiz et",iyi:"[Şirket/ürün] için kapsamlı rakip analizi. Rakipler: [R1, R2, R3]. Her rakip için: 1)Güçlü yönler 2)Zayıf yönler 3)Fiyatlandırma stratejisi 4)Hedef kitle 5)Pazarlama kanalları. Sonunda: 1)Piyasa boşlukları 2)Farklılaşma fırsatları 3)Tehditler 4)Önerilen konumlandırma.",note:"Boşlukları iste — asıl altın orası"},
+    {title:"Hukuki Belge Özeti",kotu:"Bu sözleşmeyi açıkla",iyi:"[Sözleşme türü]'nü sade dille özetle:\n[Belge]\n\n1)Taraflar ve temel yükümlülükler (tablo) 2)Riskli maddeler — risk seviyesi ile (Kırmızı/Sarı/Yeşil) 3)Standart dışı maddeler 4)Eksik olan koruyucu hükümler 5)Müzakere edilebilir maddeler 6)Yönetici özeti (5 madde)\n\nNot: Bu hukuki tavsiye değildir.",note:"Risk seviyesi renklendirmesi = hızlı önceliklendirme"},
+    {title:"Strateji Danışmanlığı",kotu:"Stratejim ne olmalı",iyi:"Stratejik danışman olarak [konu/sektör]'de [şirket/kişi] için strateji öner. Bağlam: [mevcut durum]. Hedef: [hedef]. Kısıtlar: [kısıtlar]. 1)Durum analizi (SWOT) 2)3 farklı strateji seçeneği — her birinin artı/eksi 3)Önerilen strateji + gerekçe 4)İlk 90 gün eylem planı 5)Başarı ölçütleri.",note:"3 strateji seçeneği iste — tek fikre kör bağlı kalma"},
+  ]},
+  {cat:"🌐 SEO & Dijital Pazarlama",color:"#34d399",icon:"🌐",items:[
+    {title:"SEO Blog Yazısı",kotu:"Blog yaz",iyi:"SEO uzmanı ve içerik yazarı olarak [anahtar kelime] için blog yazısı yaz. Hedef arama hacmi: [hacim]. Rakip sayfaların ele almadığı [açı] ile yaklaş. Yapı: H1+H2+H3 hiyerarşisi, her bölümde iç bağlantı fırsatı, meta description (155 karakter), özgün görseller için alt text önerileri. 1500 kelime.",note:"Rakibin ele almadığı açı = içerik boşluğu = sıralama fırsatı"},
+    {title:"Google Ads Metni",kotu:"Google reklam yaz",iyi:"[Ürün/hizmet] için Google Responsive Search Ad metni yaz. 15 başlık (30 karakter max her biri) + 4 açıklama (90 karakter max). Başlıklarda: ana anahtar kelime, değer önerisi, CTA, fiyat/indirim, aciliyet. Her metni harf sayısıyla listele.",note:"15 başlık iste — Google en iyi kombinasyonu seçer"},
+    {title:"E-posta Konu Satırı",kotu:"E-posta konusu yaz",iyi:"[E-posta içeriği/amacı] için 20 farklı konu satırı yaz. Kategorize et: 1)Merak uyandıran (5 adet) 2)Faydayı öne çıkaran (5 adet) 3)Kişiselleştirilmiş (5 adet) 4)Aciliyet/kıtlık (5 adet). Her birinin beklenen açılma oranı tahmini ve neden işe yarayacağı.",note:"20 seçenek = A/B test için hazır malzeme"},
+    {title:"Hashtag Stratejisi",kotu:"Hashtag öner",iyi:"[İçerik türü] ve [niş] için 3 katmanlı hashtag stratejisi: 1)Büyük (1M+): 5 adet 2)Orta (100K-1M): 10 adet 3)Küçük/niş (10K-100K): 10 adet. Türkçe + İngilizce için ayrı listeler. Yüksek rekabetli hashtag'lerde görünürlük taktiği de ekle.",note:"3 katman = büyük kitleden niş kitleye fırsat"},
+    {title:"Landing Page Metin",kotu:"Satış sayfası yaz",iyi:"[Ürün/hizmet] için landing page metni yaz. Yapı: 1)Hero (başlık + alt başlık + CTA) 2)Problem tanımı 3)Çözüm sunumu 4)3 temel fayda 5)Sosyal kanıt bölümü (testimonial şablonları) 6)Fiyatlandırma 7)SSS (5 soru) 8)Final CTA. Conversion odaklı, net ve öz.",note:"SSS bölümü = itirazları önceden kır"},
+  ]},
+  {cat:"⚡ Verimlilik & Karar",color:"#60a5fa",icon:"⚡",items:[
+    {title:"Karmaşık Karar Analizi",kotu:"Ne yapayım",iyi:"Stratejik danışman olarak [durum] konusunda karar analizi yap. Seçenekler: [A] ve [B] (ve gerekirse [C]). 1)Her seçeneğin 5'er artı/eksi 2)Risk matrisi (olasılık × etki) 3)Değerlerime uygunluk (değerlerim: [liste]) 4)Eksik bilgiler 5)Nihai öneri + gerekçe 6)Kötü senaryoda plan B.",note:"Değerlerini ver + plan B iste = daha iyi karar"},
+    {title:"Haftalık Plan",kotu:"Haftalık plan yap",iyi:"Verimlilik koçu olarak [hedeflerim] için haftalık plan yap. Kısıtlarım: [zaman dilimi, enerji]. Öncelikler: [liste]. Her gün: 2 derin çalışma bloğu (90dk), 1 idari blok (45dk), öğrenme (30dk). Pazartesi-Cuma tablo formatı. Hafta başı + gün sonu ritual de ekle.",note:"Kısıtlarını belirt — gerçekçi plan al"},
+    {title:"E-posta Sıfırlama Sistemi",kotu:"E-postalarımı düzenle",iyi:"E-posta yönetim sistemi kur. Mevcut: [kaç okunmamış]. 1)4-kutu sıralama sistemi tasarla (Acil+Önemli/Önemli/Acil/Ne Önemli Ne Acil) 2)Her kategori için karar kriteri ve SLA 3)Filtre ve etiket önerileri (Gmail/Outlook için) 4)5 tekrarlayan e-posta türü için hazır şablon yanıtlar 5)Günlük 30dk e-posta rutini.",note:"Sistem + şablon + rutin = bir daha birikmez"},
+    {title:"Pareto ile Hızlı Öğrenme",kotu:"Bunu öğrenmek istiyorum",iyi:"Pareto prensibini uygula: [konu]'nun %20'si %80 değer verir. 1)Bu kritik %20 ne? Listele 2)O kısım için 5 temel kavram 3)Her kavram için en iyi 1 kaynak (ücretsiz önce) 4)Pratik egzersizler 5)İlerlemeyi nasıl ölçerim 6)Sık yapılan hata ve tuzaklar 7)30-60-90 günlük hedefler.",note:"Tuzakları iste — başkalarının hatalarından öğren"},
+    {title:"Sabah Rutini Tasarımı",kotu:"Sabah rutini yap",iyi:"Verimlilik koçu olarak benim için ideal sabah rutini tasarla. Benim hakkımda: [uyku saatleri, meslek, hedefler, kısıtlar]. 1)Uyandıktan ilk 30 dakika için adımlar 2)Odaklanma ve enerji için öneriler 3)Hangi araçları kullanmalıyım 4)Rutinin test süresi ve adaptasyon stratejisi 5)Rutini bozan durumlar için plan B.",note:"Kısıtlarını ver — teorik değil, uygulanabilir rutin al"},
   ]},
 ];
 
@@ -1774,35 +2043,170 @@ function ZamanCizgisiPage(){
 }
 
 function KariyerPage(){
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>KARİYER</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🚀 AI Kariyer Rehberi 2026</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>Türkiye'de AI meslekleri, maaşlar ve nasıl başlanır</div></div>
-    <div style={{background:"rgba(0,220,255,0.06)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:12,padding:"14px 18px",marginBottom:20,fontSize:12,color:"#00dcff",lineHeight:1.7}}>
-      🇹🇷 <strong>Türkiye fırsatı:</strong> AI bilen uzman sayısı çok az, talep patlıyor. 2024'e kıyasla AI meslek ilanları %340 arttı. Şimdi başla.
+  const[aktif,setAktif]=useState("harita");
+  const tabs=[["harita","🗺️ Yol Haritası"],["meslekler","💼 AI Meslekleri"],["kaynaklar","📚 Kaynaklar"],["cv","📄 CV & LinkedIn"]];
+  const meslekler=[
+    {icon:"💡",baslik:"Prompt Mühendisi",maas:"₺20K-60K/ay",sure:"1-2 ay",seviye:"Başlangıç",renk:"#00dcff",talep:"🔥 Çok Yüksek",
+     aciklama:"Şirketlere özel AI prompt sistemleri tasarla ve optimize et. Türkiye'de bu unvanla tam zamanlı çalışan sayısı henüz 500'ün altında — talep çok daha fazla.",
+     gorevler:["Şirket süreçlerine özel prompt şablonları geliştirme","ChatGPT/Claude API entegrasyonu","Prompt testleri ve optimizasyonu","AI çıktı kalitesini ölçme ve iyileştirme"],
+     gereksinimler:["Prompt tekniklerini iyi bilmek","Model farklarını anlamak (GPT vs Claude vs Gemini)","Test metodolojisi","Temel Python (opsiyonel ama faydalı)"],
+     baslarken:["IMDATAI prompt rehberini baştan sona oku","PromptingGuide.ai'yi incele","10 farklı sektör için prompt sistemi yap","GitHub'a portföy olarak yükle"]
+    },
+    {icon:"🤖",baslik:"AI Danışmanı",maas:"₺30K-80K/ay",sure:"3-6 ay",seviye:"Orta",renk:"#a855f7",talep:"🔥 Çok Yüksek",
+     aciklama:"KOBİ ve büyük şirketlere AI entegrasyonu danışmanlığı yap. 'Şirketim AI'ı nasıl kullanmalı?' sorusunun cevabını ver ve uygula.",
+     gorevler:["Şirket süreçlerini analiz etme","AI araç önerileri ve değerlendirmesi","Pilot proje yönetimi","Çalışan AI eğitimi","ROI hesaplama ve raporlama"],
+     gereksinimler:["Geniş AI araç bilgisi","İş süreçleri analizi","Sunum ve iletişim becerileri","En az 1 sektörde derin bilgi"],
+     baslarken:["Birini sektörü için AI use case'leri araştır","LinkedIn'de 'AI Consultant' paylaşımları yap","Ücretsiz demo sunum hazırla","İlk müşteri için indirimli çalış"]
+    },
+    {icon:"💻",baslik:"ML Mühendisi",maas:"₺40K-120K/ay",sure:"1-2 yıl",seviye:"İleri",renk:"#34d399",talep:"📈 Yüksek",
+     aciklama:"Makine öğrenmesi modelleri geliştir, eğit ve üretim ortamına al. Türkiye'de en yüksek maaşlı yazılım pozisyonlarından biri.",
+     gorevler:["ML modeli geliştirme ve eğitimi","Veri işleme pipelines","Model deployment (MLOps)","A/B testleri","Performans optimizasyonu"],
+     gereksinimler:["Python (ileri seviye)","PyTorch veya TensorFlow","İstatistik ve matematik temeli","Docker ve Cloud (AWS/GCP/Azure)","SQL ve veri işleme"],
+     baslarken:["fast.ai ücretsiz kursunu tamamla","Kaggle'da en az 3 yarışmaya katıl","GitHub'da ML projeler yayınla","Papers with Code'u takip et"]
+    },
+    {icon:"📊",baslik:"AI Ürün Müdürü",maas:"₺35K-100K/ay",sure:"6-12 ay",seviye:"Orta",renk:"#fb923c",talep:"📈 Yüksek",
+     aciklama:"AI ürünlerini planla, geliştir ve piyasaya sun. Teknik ekip ile iş birimi arasında köprü kur. Hem teknik hem iş bilgisi şart.",
+     gorevler:["AI ürün stratejisi belirleme","Roadmap ve önceliklendirme","Geliştirici ekiple çalışma","Kullanıcı araştırması","Metrikleri takip etme"],
+     gereksinimler:["Ürün yönetimi temelleri","AI/ML temel kavramları","Veri analizi (SQL + Excel)","İletişim ve liderlik","Teknik empati"],
+     baslarken:["Product School PM kursunu al","AI ürünlerini kullanıcı gözüyle incele","Kendi AI ürün konseptini yaz","Mevcut ürüne AI özelliği öner"]
+    },
+    {icon:"✍️",baslik:"AI İçerik Stratejisti",maas:"₺15K-40K/ay",sure:"2-4 hafta",seviye:"Başlangıç",renk:"#f472b6",talep:"📈 Yüksek",
+     aciklama:"AI araçlarıyla içerik üret, marka sesi oluştur, içerik stratejisi kur. En hızlı ve en kolay başlangıç yapılabilen AI pozisyonu.",
+     gorevler:["AI araçlarıyla blog ve sosyal medya içeriği üretme","İçerik takvimi planlama","SEO optimizasyonu","Marka ses kılavuzu oluşturma","İçerik performansı analizi"],
+     gereksinimler:["ChatGPT ve Claude kullanımı","Yazarlık ve dil becerisi","Sosyal medya bilgisi","Temel SEO bilgisi","Canva veya benzer tasarım aracı"],
+     baslarken:["Haftada 5 blog yazısı üret, yayınla","LinkedIn'de AI içerik paylaş","İlk 3 müşterini ücretsiz yardımla kazan","Portfolio sitesi oluştur"]
+    },
+    {icon:"🔧",baslik:"AI Otomasyon Uzmanı",maas:"₺25K-70K/ay",sure:"2-4 ay",seviye:"Orta",renk:"#60a5fa",talep:"🔥 Çok Yüksek",
+     aciklama:"n8n, Make ve Zapier ile şirketlerin tekrarlayan süreçlerini otomatize et. Proje başına yüksek ücret + aylık bakım geliri.",
+     gorevler:["İş süreçlerini otomatize etme","API entegrasyonları kurma","Veri akışları tasarlama","Hata yönetimi ve monitoring","Dokümantasyon hazırlama"],
+     gereksinimler:["n8n veya Make kullanımı","API kavramlarını anlama","Temel programlama (Python/JS faydalı)","Süreç analizi","Hata debug etme"],
+     baslarken:["n8n.io'da ücretsiz hesap aç","10 farklı workflow dene","Kendi hayatında bir şeyi otomatize et","Case study yaz, paylaş"]
+    },
+  ];
+
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{marginBottom:22}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>KARİYER</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",marginBottom:6}}>🚀 AI Kariyer Rehberi 2026</div>
+      <div style={{fontSize:13,color:"#64748b"}}>Türkiye'de AI meslekleri · Maaş verileri · Adım adım yol haritası · Ücretsiz kaynaklar</div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:14,marginBottom:24}}>
-      {KARIYER_DATA.map(k=>(
-        <div key={k.title} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{display:"flex",gap:10,alignItems:"center"}}><span style={{fontSize:26}}>{k.icon}</span><div><div style={{fontSize:14,fontWeight:700,color:"#e2e8f0"}}>{k.title}</div><div style={{fontSize:10,color:"#475569"}}>{k.level} · {k.time}</div></div></div>
-            <div style={{textAlign:"right"}}><div style={{fontSize:13,fontWeight:800,color:"#34d399"}}>{k.salary}</div></div>
-          </div>
-          <div style={{fontSize:12,color:"#64748b",lineHeight:1.6,marginBottom:10}}>{k.desc}</div>
-          <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>{k.skills.map(s=><Tag key={s} text={s} color="#00dcff" size={9}/>)}</div>
-          <a href={k.url} target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"8px",borderRadius:8,border:"none",background:"rgba(0,220,255,0.1)",color:"#00dcff",fontSize:11,cursor:"pointer",textDecoration:"none",textAlign:"center",fontWeight:600}}>Başlangıç Kaynağı →</a>
-        </div>
-      ))}
+    <div style={{background:"rgba(0,220,255,0.07)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:12,padding:"14px 18px",marginBottom:20}}>
+      <div style={{fontSize:12,color:"#00dcff",lineHeight:1.7}}>🇹🇷 <strong>Türkiye fırsatı:</strong> 2024'e göre AI meslek ilanları %340 arttı. AI bilen uzman sayısı hâlâ çok az. 2026'da başlayanlar "erken adaptör" avantajı taşıyor.</div>
     </div>
-    <div style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:14,padding:"20px"}}>
-      <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>📚 Ücretsiz Başlangıç Yolu (0 TL)</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
-        {[["Hafta 1","ChatGPT'ye kayıt ol, her gün 30dk kullan"],["Hafta 2","Claude ve Gemini dene, farkları gözlemle"],["Hafta 3","Prompt rehberimizden 10 teknik öğren"],["Hafta 4","AI ile gerçek bir iş yap: CV, içerik veya kod"],["Ay 2","Mesleğine en uygun AI aracını derinlemesine öğren"],["Ay 3","Öğrendiklerini LinkedIn/YouTube'da paylaş, müşteri bul"]].map(([h,d])=>(
-          <div key={h} style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-            <div style={{width:18,height:18,borderRadius:"50%",background:"rgba(168,85,247,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#a855f7",flexShrink:0,fontWeight:700,marginTop:1}}>→</div>
-            <div><div style={{fontSize:10,color:"#a855f7",fontWeight:700,marginBottom:2}}>{h}</div><div style={{fontSize:10,color:"#64748b",lineHeight:1.4}}>{d}</div></div>
+    <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}}>
+      {tabs.map(([id,l])=><button key={id} onClick={()=>setAktif(id)} style={{padding:"8px 16px",borderRadius:9,border:"none",cursor:"pointer",fontSize:12,fontFamily:"inherit",background:aktif===id?"rgba(0,220,255,0.15)":"rgba(255,255,255,0.04)",color:aktif===id?"#00dcff":"#475569",fontWeight:aktif===id?700:400}}>{l}</button>)}
+    </div>
+
+    {aktif==="harita"&&<div>
+      <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:16}}>🗺️ Sıfırdan AI Uzmanına — 6 Aylık Yol Haritası</div>
+      <div style={{display:"flex",flexDirection:"column",gap:0}}>
+        {[
+          {hafta:"Hafta 1-2",baslik:"Temelleri Öğren",renk:"#00dcff",gorevler:["ChatGPT, Claude ve Gemini'ye ücretsiz kayıt ol","Her gün 30 dakika farklı görevler dene","IMDATAI sözlüğündeki 20 temel terimi öğren","AI mı İnsan mı? oyunumuzu oyna"],ipucu:"Amaç mükemmel olmak değil, başlamak. İlk 2 haftada sadece kullan."},
+          {hafta:"Hafta 3-4",baslik:"Prompt Tekniklerini Öğren",renk:"#a855f7",gorevler:["IMDATAI prompt rehberini baştan sona oku","Role prompting, Chain of Thought, Few-shot uygula","Her gün 1 yeni teknik dene","Kendi iş alanın için 10 prompt şablonu yaz"],ipucu:"Prompt kalitesi çıktı kalitesini doğrudan belirler. Bu hafta en kritik hafta."},
+          {hafta:"Ay 2",baslik:"Uzmanlaş ve Uygula",renk:"#34d399",gorevler:["Mesleğine en uygun 3 AI aracını derinlemesine öğren","Gerçek işinde AI ile bir proje tamamla","LinkedIn'de 'AI ile X yaptım' içeriği paylaş","Bir blog yazısı veya video hazırla"],ipucu:"Uzmanlaşma = Para. 'Her şeyi bilen' değil, belirli bir alanda çok iyi olan ol."},
+          {hafta:"Ay 3",baslik:"İlk Müşteriyi Kazan",renk:"#fb923c",gorevler:["Fiverr/Upwork profili oluştur","İlk 3 müşteriyi indirimli veya ücretsiz kazan","Portfolio sitesi yayınla","LinkedIn bağlantılarına ulaş, demo sun"],ipucu:"İlk müşteri en zoru. Fiyat değil değer sat. 'Sizi X saat kurtarabilirim' de."},
+          {hafta:"Ay 4-5",baslik:"Sistemi Kur",renk:"#f472b6",gorevler:["Düzenli gelir akışı oluştur (5+ tekrar müşteri)","Fiyatları %30-50 artır","Referans sistemi kur","İkinci gelir kanalı aç (kurs veya içerik)"],ipucu:"Bu aşamada kalite > hız. Az müşteri, yüksek kalite, yüksek fiyat."},
+          {hafta:"Ay 6",baslik:"Ölçeklendir",renk:"#60a5fa",gorevler:["Aylık ₺20.000+ hedefini kontrol et","Daha büyük kurumsal müşterilere geç","Kendi AI aracı veya kurs geliştir","Network oluştur, konuşmacı ol"],ipucu:"6. ayda artık 'AI uzmanı' kimliğin oturmuş olmalı. Markalaşmaya başla."},
+        ].map((a,i)=>(
+          <div key={i} style={{display:"flex",gap:0}}>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:50,flexShrink:0}}>
+              <div style={{width:36,height:36,borderRadius:"50%",background:`${a.renk}20`,border:`2px solid ${a.renk}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:a.renk,flexShrink:0}}>{i+1}</div>
+              {i<5&&<div style={{width:2,flex:1,background:`linear-gradient(${a.renk},${["#a855f7","#34d399","#fb923c","#f472b6","#60a5fa"][i]})`,opacity:.3,minHeight:20}}/>}
+            </div>
+            <div style={{flex:1,padding:"0 0 24px 16px"}}>
+              <div style={{background:`${a.renk}06`,border:`1px solid ${a.renk}18`,borderRadius:12,padding:"16px 18px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:6}}>
+                  <div style={{fontSize:14,fontWeight:800,color:"#e2e8f0"}}>{a.baslik}</div>
+                  <div style={{fontSize:10,color:a.renk,background:`${a.renk}15`,padding:"3px 10px",borderRadius:6,fontWeight:700}}>{a.hafta}</div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:6,marginBottom:12}}>
+                  {a.gorevler.map(g=><div key={g} style={{display:"flex",gap:7,fontSize:11,color:"#94a3b8"}}><span style={{color:a.renk,flexShrink:0}}>✓</span>{g}</div>)}
+                </div>
+                <div style={{background:"rgba(0,0,0,0.25)",borderRadius:8,padding:"9px 12px",fontSize:11,color:"#64748b",fontStyle:"italic"}}>💡 {a.ipucu}</div>
+              </div>
+            </div>
           </div>
         ))}
       </div>
-    </div>
+    </div>}
+
+    {aktif==="meslekler"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:14}}>
+      {meslekler.map(m=>(
+        <div key={m.baslik} style={{background:`${m.renk}06`,border:`1px solid ${m.renk}20`,borderRadius:14,padding:"18px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{display:"flex",gap:10,alignItems:"center"}}><span style={{fontSize:26}}>{m.icon}</span><div><div style={{fontSize:14,fontWeight:700,color:"#e2e8f0"}}>{m.baslik}</div><div style={{fontSize:10,color:"#475569"}}>{m.seviye} · {m.sure}</div></div></div>
+            <div style={{textAlign:"right"}}><div style={{fontSize:12,fontWeight:800,color:m.renk}}>{m.maas}</div><div style={{fontSize:9,color:"#475569",marginTop:2}}>{m.talep}</div></div>
+          </div>
+          <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:12}}>{m.aciklama}</div>
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>Görevler:</div>
+            {m.gorevler.slice(0,3).map(g=><div key={g} style={{fontSize:10,color:"#64748b",marginBottom:4,display:"flex",gap:6}}><span style={{color:m.renk,flexShrink:0}}>→</span>{g}</div>)}
+          </div>
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>Nasıl Başlarım?</div>
+            {m.baslarken.slice(0,2).map(b=><div key={b} style={{fontSize:10,color:"#64748b",marginBottom:4,display:"flex",gap:6}}><span style={{color:"#34d399",flexShrink:0}}>✓</span>{b}</div>)}
+          </div>
+        </div>
+      ))}
+    </div>}
+
+    {aktif==="kaynaklar"&&<div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
+        {[
+          {baslik:"🆓 Ücretsiz Kurslar",renk:"#34d399",liste:[{isim:"fast.ai — Derin Öğrenme",url:"https://fast.ai",detay:"ML mühendisleri için, Türkçe altyazılı"},{isim:"Google AI Essentials",url:"https://grow.google",detay:"Başlangıç için ideal, sertifikalı"},{isim:"Microsoft AI Skills",url:"https://microsoft.com/ai",detay:"Azure ve Copilot entegrasyonu"},{isim:"DeepLearning.AI",url:"https://deeplearning.ai",detay:"Andrew Ng'nin kursu, en kapsamlı"},{isim:"Kaggle Courses",url:"https://kaggle.com",detay:"Veri bilimi, ML, Python"}]},
+          {baslik:"💰 Ücretli Kurslar (Değer)",renk:"#fb923c",liste:[{isim:"Udemy — AI/ML Bootcamp",url:"https://udemy.com",detay:"İndirimde $15, kapsamlı"},{isim:"Coursera ML Specialization",url:"https://coursera.org",detay:"Stanford, sertifikalı"},{isim:"DataCamp",url:"https://datacamp.com",detay:"Aylık $25, pratik odaklı"},{isim:"PromptingGuide.ai",url:"https://promptingguide.ai",detay:"Ücretsiz prompt rehberi"}]},
+          {baslik:"📖 Türkçe Kaynaklar",renk:"#a855f7",liste:[{isim:"IMDATAI Prompt Rehberi",url:"#prompt",detay:"Kendi rehberimiz, Türkçe"},{isim:"IMDATAI Sözlük",url:"#sozluk",detay:"60+ AI terimi, Türkçe açıklama"},{isim:"BTK Akademi AI Kursları",url:"https://btkakademi.gov.tr",detay:"Ücretsiz, devlet destekli"},{isim:"Udemy TR",url:"https://udemy.com",detay:"Türkçe AI kursları var"}]},
+          {baslik:"🎯 Pratik Platformlar",renk:"#00dcff",liste:[{isim:"Kaggle",url:"https://kaggle.com",detay:"Veri bilimi yarışmaları, ücretsiz"},{isim:"Hugging Face",url:"https://huggingface.co",detay:"Model hub, açık kaynak"},{isim:"Google Colab",url:"https://colab.google",detay:"Ücretsiz GPU ile ML"},{isim:"Replit",url:"https://replit.com",detay:"AI destekli kod ortamı"}]},
+        ].map(s=>(
+          <div key={s.baslik} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${s.renk}18`,borderRadius:13,padding:"16px"}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>{s.baslik}</div>
+            {s.liste.map(l=>(
+              <a key={l.isim} href={l.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none",display:"block",marginBottom:10,padding:"8px 10px",background:"rgba(0,0,0,0.2)",borderRadius:8,border:`1px solid ${s.renk}10`,transition:"all .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=s.renk+"40"} onMouseLeave={e=>e.currentTarget.style.borderColor=s.renk+"10"}>
+                <div style={{fontSize:11,fontWeight:600,color:s.renk,marginBottom:2}}>{l.isim}</div>
+                <div style={{fontSize:10,color:"#64748b"}}>{l.detay}</div>
+              </a>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>}
+
+    {aktif==="cv"&&<div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+        <div>
+          <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>📄 AI CV'sinde Olması Gerekenler</div>
+          {[
+            {baslik:"AI Araçları Bölümü",aciklama:"'Yetenekler' bölümüne: ChatGPT, Claude, Midjourney, Cursor gibi kullandığın araçları ekle. 'Araçlar' başlığı altında listele."},
+            {baslik:"Sayısal Başarılar",aciklama:"'AI araçlarıyla proje teslim süresini %60 kısalttım' veya 'AI ile 10 günde 50 blog yazısı ürettim' gibi somut rakamlar."},
+            {baslik:"AI Projeleri Bölümü",aciklama:"GitHub'daki AI projelerini, yaptığın otomasyonları veya kurduğun prompt sistemlerini ayrı bir bölümde göster."},
+            {baslik:"Sertifikalar",aciklama:"Google AI Essentials, DeepLearning.AI, Microsoft AI sertifikalarını ekle. Ücretsiz ve çok hızlı alınabiliyor."},
+          ].map(m=>(
+            <div key={m.baslik} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:11,padding:"13px",marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#00dcff",marginBottom:5}}>{m.baslik}</div>
+              <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{m.aciklama}</div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>💼 LinkedIn Optimizasyonu</div>
+          {[
+            {baslik:"Başlık (Headline)",aciklama:"'AI-Powered Marketing Specialist' veya 'Yapay Zeka Destekli Yazılım Geliştirici' gibi. AI kelimesini başlığa ekle."},
+            {baslik:"Hakkında (About)",aciklama:"'AI araçlarını kullanarak X sonuçlarını elde ediyorum' ile başla. Spesifik araçları ve kazanımları yaz."},
+            {baslik:"Beceriler",aciklama:"ChatGPT, Claude, Prompt Engineering, AI Automation, Midjourney, n8n gibi 2026'nın arama edilen kelimeleri."},
+            {baslik:"İçerik Paylaş",aciklama:"Haftada 2-3 AI ipucu paylaş. 'AI ile şunu yaptım' içerikleri çok etkileşim alıyor. 90 günde network oluşur."},
+          ].map(m=>(
+            <div key={m.baslik} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:11,padding:"13px",marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#a855f7",marginBottom:5}}>{m.baslik}</div>
+              <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{m.aciklama}</div>
+            </div>
+          ))}
+          <div style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:11,padding:"13px",marginTop:4}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#34d399",marginBottom:6}}>💡 LinkedIn Sihir Cümlesi</div>
+            <div style={{fontSize:11,color:"#94a3b8",lineHeight:1.7,fontStyle:"italic"}}>"I help [kim] achieve [ne] using AI tools, reducing [ne] by [yüzde]."<br/>Örnek: "I help SMEs automate repetitive tasks using n8n and ChatGPT, reducing manual workload by 60%."</div>
+          </div>
+        </div>
+      </div>
+    </div>}
   </div>;
 }
 
@@ -1811,6 +2215,9 @@ const NAV = [
   {id:"home",label:"Ana Sayfa"},
   {id:"haberler",label:"Haberler"},
   {id:"blog",label:"Blog"},
+  {id:"claude",label:"🧠 Claude"},
+  {id:"chatgpt",label:"🤖 ChatGPT"},
+  {id:"gemini",label:"🌟 Gemini"},
   {id:"ogrenme",label:"🎓 Öğren"},
   {id:"prompt",label:"💡 Prompt"},
   {id:"karsilastirma",label:"🆚 Karşılaştır"},
@@ -1822,7 +2229,6 @@ const NAV = [
   {id:"topluluk",label:"💬 Topluluk"},
   {id:"kariyer",label:"🚀 Kariyer"},
   {id:"mitler",label:"🔍 Mitler"},
-  {id:"zaman",label:"📅 Tarihçe"},
   {id:"para",label:"💰 Para"},
   {id:"pro",label:"⭐ Pro"},
 ];
@@ -1836,7 +2242,9 @@ export default function App(){
 
   if(page.startsWith("blog-")){const id=page.replace("blog-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><BlogPostPage postId={id} setPage={nav}/></Wrapper>;}
   if(page.startsWith("tool-")){const key=page.replace("tool-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ToolDetailPage toolKey={key} setPage={nav}/></Wrapper>;}
-  if(page==="chatgpt"||page==="claude"||page==="gemini"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ModelPage modelKey={page}/></Wrapper>;}
+  if(page==="claude"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ClaudePage setPage={nav}/></Wrapper>;}
+  if(page==="chatgpt"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ChatGPTPage setPage={nav}/></Wrapper>;}
+  if(page==="gemini"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><GeminiPage setPage={nav}/></Wrapper>;}
 
   return <Wrapper nav={nav} page={page} user={user} setUser={setUser} cookie={cookie} setCookie={setCookie}>
     {page==="home"          &&<HomePage setPage={nav} user={user} setUser={setUser}/>}
@@ -1848,7 +2256,358 @@ export default function App(){
     {page==="sozluk"        &&<SozlukPage/>}
     {page==="dizin"         &&<DizinPage setPage={nav}/>}
     {page==="galeri"        &&<GaleriPage/>}
-    {page==="quiz"          &&<QuizPage/>}
+// ══════════════════════════════════════════════════════════
+// CLAUDE KAPSAMLI SAYFA
+// ══════════════════════════════════════════════════════════
+function ClaudePage({setPage}){
+  const[tab,setTab]=useState("nedir");
+  const tabs=[["nedir","🧠 Claude Nedir?"],["versiyonlar","📊 Versiyonlar"],["nasil","⚡ Nasıl Kullanılır?"],["promptlar","💡 Özel Promptlar"],["karsilastirma","🆚 Karşılaştırma"],["mimari","🔬 Teknik Yapı"]];
+  const versiyonlar=[
+    {ad:"Claude 3.5 Haiku",renk:"#60a5fa",icon:"⚡",hiz:"En Hızlı",maliyet:"En Ucuz",context:"200K",guc:75,ideal:"Basit görevler, chatbot, hızlı cevaplar",notlar:"API maliyeti en düşük. Gerçek zamanlı uygulamalar için ideal."},
+    {ad:"Claude 3.5 Sonnet",renk:"#a855f7",icon:"⚖️",hiz:"Dengeli",maliyet:"Orta",context:"200K",guc:88,ideal:"Günlük kullanım, yazarlık, kod yardımı",notlar:"Performans/maliyet dengesi en iyi model. Pro planın varsayılanı."},
+    {ad:"Claude Opus 4.5",renk:"#f472b6",icon:"🏆",hiz:"Orta",maliyet:"Yüksek",context:"1M",guc:95,ideal:"Karmaşık analiz, uzun belgeler, araştırma",notlar:"1 milyon token = 750.000 kelime = kitap boyutu. Rakipsiz context."},
+    {ad:"Claude Opus 4.7",renk:"#00dcff",icon:"🚀",hiz:"Güçlü",maliyet:"En Yüksek",context:"1M",guc:99,ideal:"Kodlama, SWE-bench #1, ajan görevleri",notlar:"SWE-bench %87.6 ile yazılım mühendisliğinde dünya rekoru. Agentic AI için tasarlandı."},
+  ];
+  const ozelPromptlar=[
+    {baslik:"📄 Kitap Boyutu Belge Analizi",aciklama:"Claude'un 1M token gücünü kullan",prompt:`Sana [sayfa sayısı] sayfalık [belge türü] yükleyeceğim. Yaptıklarım sırayla şunlar:\n1) Tüm belgeyi oku ve ana temayı anla\n2) En önemli 10 bulguyu çıkar\n3) İç tutarsızlıkları tespit et\n4) Pratikte uygulanabilir 5 öneri sun\n5) Yönetici özeti yaz (1 sayfa)\n\nBelge: [belgeyi buraya yapıştır]`,ipucu:"ChatGPT'nin 128K limiti aşılınca başarısız olduğu görevleri Claude 1M tokenla halleder."},
+    {baslik:"💻 Tam Codebase Analizi",aciklama:"Tüm projeyi bir kerede analiz et",prompt:`Bu projenin tüm kaynak kodunu inceleyeceğim.\n\n[Kodu buraya yapıştır]\n\nBenden şunları yapmanı istiyorum:\n1) Mimariyi ve tasarım pattern'larını açıkla\n2) Güvenlik açıklarını listele (kritiklik sırasına göre)\n3) Performans darboğazlarını tespit et\n4) Test coverage eksikliklerini belirle\n5) Refactoring önerilerini öncelik sırasıyla sun\n6) Teknik borç analizi yap`,ipucu:"Claude'un code review'ı diğer modellerden %40 daha kapsamlı. SWE-bench'te kanıtlandı."},
+    {baslik:"🔬 Akademik Araştırma Sentezi",aciklama:"Birden fazla makaleyi birleştir",prompt:`Sana [sayı] adet araştırma makalesi vereceğim. Bunları şu şekilde sentezle:\n\n1) Her makalenin ana iddiası ve metodolojisi (tablo formatında)\n2) Makaleler arasındaki consensus noktaları\n3) Çelişkili bulgular ve olası nedenleri\n4) Metodolojik sınırlılıklar\n5) Araştırma boşlukları (gelecek çalışmalar için)\n6) Pratik uygulamalar için özet\n\nHer iddia için kaynak göster: (Yazar, Yıl)`,ipucu:"Araştırmacılar için 1M token = 20-30 makaleyi aynı anda analiz edebilirsin."},
+    {baslik:"⚖️ Hukuki Belge İncelemesi",aciklama:"Sözleşme ve yasal metinler",prompt:`Aşağıdaki [belge türü]'ni profesyonel bir hukuk danışmanı gözüyle incele:\n\n[Belgeyi buraya yapıştır]\n\nRaporun şunları içermeli:\n1) Taraflar ve temel yükümlülükler (özet tablo)\n2) Riskli maddeler (kırmızı bayraklar) — her biri için risk seviyesi: Yüksek/Orta/Düşük\n3) Standart sözleşmeden sapan maddeler\n4) Eksik olan koruyucu hükümler\n5) Müzakere önerileri\n\nNOT: Bu analiz hukuki tavsiye değildir, bir avukatla doğrulayın.`,ipucu:"Claude hallüsinasyon oranı diğer modellere göre düşük. Yine de kritik hukuki kararlar için avukat danışın."},
+    {baslik:"🎭 Constitutional AI ile Güvenli Kullanım",aciklama:"Claude'un değer sistemini anla",prompt:`Bir [rol/uzman] olarak görev yapmanı istiyorum. Ancak şu kısıtlara uy:\n- Kesinlikle doğru olmayan bir şey söyleme; belirsizsen 'emin değilim' de\n- Zararlı olabilecek içerikten kaçın\n- Kaynakların gerçek mi yoksa sınırlı bilgine mi dayandığını belirt\n- Kararlar için her zaman kullanıcının son onayını al\n\nGörev: [görev açıklaması]`,ipucu:"Constitutional AI: Claude, belirli etik ilkelere göre eğitildi. Bu sayede hallüsinasyon ve zararlı çıktı oranı düşük."},
+    {baslik:"🔄 Uzun İçerik Dönüştürme",aciklama:"Format ve ton değiştirme",prompt:`Aşağıdaki içeriği [hedef format]'a dönüştür:\n\nKaynak: [içerik]\n\nDönüşüm kuralları:\n- Ton: [teknik/samimi/akademik/pazarlama]\n- Uzunluk: [kısa/orta/uzun] — mevcut içeriğin [%X]'i\n- Hedef kitle: [kitle tanımı]\n- Platform: [LinkedIn/blog/e-posta/sunum]\n- Kesinlikle koru: [korunması gereken unsurlar]\n- Kaldır: [gereksiz unsurlar]`,ipucu:"Claude'un yazarlık kalitesi özellikle uzun formatlarda diğer modellerden üstün."},
+  ];
+  const karsilastirmaData=[
+    {kriter:"Context Window",claude:"1M token (750K kelime)",chatgpt:"128K token",gemini:"2M token",kazanan:"Gemini",not:"Gemini en uzun, Claude 2. GPT çok geride."},
+    {kriter:"Kod Yazma",claude:"SWE-bench %87.6 🏆",chatgpt:"SWE-bench %78.4",gemini:"SWE-bench %74.2",kazanan:"Claude",not:"Claude kodlamada açık ara birinci."},
+    {kriter:"Hallüsinasyon",claude:"En düşük risk 🏆",chatgpt:"Orta risk",gemini:"Orta risk",kazanan:"Claude",not:"Constitutional AI sayesinde Claude en güvenilir."},
+    {kriter:"Görsel Üretim",claude:"Yok ❌",chatgpt:"DALL-E 3 🏆",gemini:"Imagen 3",kazanan:"ChatGPT",not:"Claude görsel üretemiyor."},
+    {kriter:"Türkçe Kalite",claude:"Çok İyi 🏆",chatgpt:"İyi",gemini:"Orta",kazanan:"Claude",not:"Türkçe'de Claude tutarlılık ve kalite açısından öne çıkıyor."},
+    {kriter:"API Güvenliği",claude:"Constitutional AI 🏆",chatgpt:"RLHF",gemini:"RLHF + Güvenlik",kazanan:"Claude",not:"Anthropic güvenlik odaklı şirket. Kurumsal kullanım için öncelik."},
+    {kriter:"Fiyat (Pro)",claude:"$20/ay",chatgpt:"$20/ay",gemini:"$19.99/ay",kazanan:"Gemini",not:"Fiyatlar benzer ama Claude Max $100, GPT Pro $200."},
+    {kriter:"Agentic AI",claude:"Task Budget 🏆",chatgpt:"Operator",gemini:"Sınırlı",kazanan:"Claude",not:"Claude'un Task Budget özelliği ajan maliyetlerini kontrol altına alıyor."},
+  ];
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.12),rgba(0,0,0,0))",border:"1px solid rgba(168,85,247,0.3)",borderRadius:20,padding:"28px",marginBottom:24}}>
+      <div style={{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",marginBottom:16}}>
+        <div style={{fontSize:56}}>🧠</div>
+        <div>
+          <div style={{fontSize:28,fontWeight:900,color:"#a855f7",marginBottom:4}}>Claude — Anthropic</div>
+          <div style={{fontSize:14,color:"#94a3b8"}}>Kodlama ve Analiz Şampiyonu · SWE-bench %87.6 · 1M Token · Constitutional AI</div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:10}}>
+        {[["🏆","Kodlamada #1","SWE-bench Verified"],["📚","1M Token","750.000 kelime"],["🔒","En Güvenli","Constitutional AI"],["🧪","En Az","Hallüsinasyon"],["🤖","Agentic","Task Budget"],["💜","Anthropic","2021'de kuruldu"]].map(([e,t,d])=>(
+          <div key={t} style={{background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:10,padding:"12px",textAlign:"center"}}>
+            <div style={{fontSize:20,marginBottom:4}}>{e}</div>
+            <div style={{fontSize:12,fontWeight:700,color:"#a855f7",marginBottom:2}}>{t}</div>
+            <div style={{fontSize:10,color:"#475569"}}>{d}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:20,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+      {tabs.map(([id,l])=><button key={id} onClick={()=>setTab(id)} style={{padding:"8px 13px",border:"none",cursor:"pointer",fontSize:11,fontFamily:"inherit",borderRadius:"6px 6px 0 0",background:tab===id?"rgba(168,85,247,0.12)":"transparent",color:tab===id?"#a855f7":"#475569",borderBottom:tab===id?"2px solid #a855f7":"2px solid transparent",whiteSpace:"nowrap"}}>{l}</button>)}
+    </div>
+    {tab==="nedir"&&<div>
+      <div style={{background:"rgba(168,85,247,0.05)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:14,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:16,fontWeight:800,color:"#e2e8f0",marginBottom:12}}>Claude Nedir ve Neden Önemli?</div>
+        <div style={{fontSize:13,color:"#94a3b8",lineHeight:2}}>Claude, Anthropic tarafından geliştirilen bir yapay zeka asistanıdır. OpenAI'den ayrılan araştırmacılar tarafından 2021'de kurulan Anthropic, AI güvenliğini merkeze alan bir şirket.<br/><br/>
+        Claude'u diğerlerinden ayıran şey: <strong style={{color:"#a855f7"}}>Constitutional AI</strong> yaklaşımı. Claude, belirli etik ilkelere dayalı bir "anayasa" ile eğitildi. Bu sayede daha az hallüsinasyon yapar, zararlı içerik üretmez ve kendi sınırlılıklarını daha iyi kabul eder.<br/><br/>
+        2026 itibarıyla Claude Opus 4.7, yazılım mühendisliği benchmarkı SWE-bench'te %87.6 ile dünya rekoru kırdı. Bu, AI'ın gerçek yazılım projelerindeki etkinliğini ölçen en güvenilir test.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:12}}>
+        {[{baslik:"Constitutional AI Nedir?",icerik:"Claude, bir 'anayasa' — temel ilkeler kümesi — ile eğitildi. Model, kendi çıktısını bu ilkelere göre değerlendirir ve düzeltir. Sonuç: daha güvenilir, daha tutarlı yanıtlar.",icon:"⚖️",renk:"#a855f7"},{baslik:"Neden Kodlamada #1?",icerik:"Claude Opus 4.7, SWE-bench Verified testinde %87.6 aldı. Bu test gerçek GitHub issue'larını çözmeyi ölçüyor. Claude, gerçek yazılım problemlerini insan geliştiriciden daha iyi çözüyor.",icon:"💻",renk:"#34d399"},{baslik:"1 Milyon Token Ne Demek?",icerik:"1M token ≈ 750.000 kelime ≈ 10 roman. Bir kitabı, yüzlerce sayfayı, tüm codebase'i tek sohbette işleyebilirsin. ChatGPT'nin 128K limiti biterken Claude devam eder.",icon:"📚",renk:"#00dcff"},{baslik:"Anthropic Güvencesi",icerik:"OpenAI'den farklı olarak Anthropic, saf bir AI güvenlik şirketi. Yatırımcı baskısıyla değil, güvenli AI geliştirme misyonuyla yönetiliyor. Bu kurumsal kullanım için kritik.",icon:"🔒",renk:"#fb923c"}].map(k=>(
+          <div key={k.baslik} style={{background:`${k.renk}06`,border:`1px solid ${k.renk}20`,borderRadius:13,padding:"16px"}}>
+            <div style={{fontSize:24,marginBottom:8}}>{k.icon}</div>
+            <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:8}}>{k.baslik}</div>
+            <div style={{fontSize:11,color:"#64748b",lineHeight:1.7}}>{k.icerik}</div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="versiyonlar"&&<div>
+      <div style={{fontSize:12,color:"#64748b",marginBottom:16,lineHeight:1.7}}>Claude'un 4 farklı modeli var — her biri farklı hız/güç/maliyet dengesi sunar. Doğru modeli seçmek hem kaliteyi hem maliyeti optimize eder.</div>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {versiyonlar.map(v=>(
+          <div key={v.ad} style={{background:`${v.renk}06`,border:`1px solid ${v.renk}22`,borderRadius:14,padding:"18px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,marginBottom:12}}>
+              <div style={{display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:28}}>{v.icon}</span><div><div style={{fontSize:15,fontWeight:800,color:v.renk}}>{v.ad}</div><div style={{fontSize:11,color:"#475569"}}>Hız: {v.hiz} · Maliyet: {v.maliyet} · Context: {v.context} token</div></div></div>
+              <div style={{background:`${v.renk}18`,borderRadius:8,padding:"6px 14px",fontSize:14,fontWeight:900,color:v.renk}}>{v.guc}/100</div>
+            </div>
+            <div style={{height:6,background:"rgba(255,255,255,0.06)",borderRadius:3,marginBottom:12}}><div style={{width:`${v.guc}%`,height:"100%",background:v.renk,borderRadius:3}}/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div><div style={{fontSize:10,color:"#475569",marginBottom:4}}>İDEAL KULLANIM</div><div style={{fontSize:12,color:"#94a3b8"}}>{v.ideal}</div></div>
+              <div><div style={{fontSize:10,color:"#475569",marginBottom:4}}>NOTLAR</div><div style={{fontSize:12,color:"#94a3b8"}}>{v.notlar}</div></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="nasil"&&<div>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {[{no:1,baslik:"claude.ai'ye Git ve Kayıt Ol",icerik:"claude.ai adresine git, Google veya e-posta ile kayıt ol. Ücretsiz plan Claude 3.5 Haiku erişimi sağlar. Pro ($20/ay) Opus 4.7'ye erişim verir.",ipucu:"Pro planı ilk ay dene, sonra karar ver. 14 gün para iade garantisi var."},
+        {no:2,baslik:"İlk Promptu Doğru Kur",icerik:"Claude'a rol ver: 'Deneyimli bir [uzman] olarak...' ile başla. Format belirt: 'Madde madde listele', 'tablo formatında', '500 kelimede'. Bağlam ver: Kim için, ne amaçla.",ipucu:"Claude role prompting'e diğer modellerden daha iyi yanıt verir. Rol ne kadar spesifik olursa çıktı o kadar iyi."},
+        {no:3,baslik:"Uzun Belge Analizi İçin",icerik:"PDF veya uzun metni kopyala, yapıştır. Claude 1M token işleyebilir — tüm kitabı bir seferde ver. 'Bu belgeyi analiz et ve şunu yap:' ile devam et.",ipucu:"ChatGPT'de 'metin çok uzun' hatası aldığında Claude'a geç. 1M token bu iş için var."},
+        {no:4,baslik:"Kod Yazmak İçin",icerik:"Projenin context'ini ver: 'Tech stack: [stack]. Mevcut kod: [kod]. Şunu eklemem gerekiyor: [özellik].' Tek adımda yazmak yerine Claude'un planlamasına izin ver.",ipucu:"'Önce planı göster, onaylayınca yaz' demek daha temiz kod üretir."},
+        {no:5,baslik:"Projects Özelliğini Kullan",icerik:"Claude Projects ile kalıcı context kur. Proje belgelerini, kuralları, tercihlerini bir kez ekle — her sohbette tekrar açıklama yapma.",ipucu:"İş projeleri için Projects şart. Her sohbeti sıfırdan başlatmana gerek kalmaz."},
+        {no:6,baslik:"Claude'a İtiraz Etmekten Korkma",icerik:"Claude'un verdiği cevabı beğenmezsen doğrudan söyle: 'Bu yeterince detaylı değil', 'Daha teknik ol', 'Bu hatalı, yeniden dene'. Claude düzeltmelere çok iyi yanıt verir.",ipucu:"Claude'un en güçlü özelliklerinden biri: eleştiriye açık olması ve cevabı geliştirmesi."}].map(a=>(
+          <div key={a.no} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:13,padding:"16px",display:"flex",gap:14}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(168,85,247,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:"#a855f7",flexShrink:0}}>{a.no}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>{a.baslik}</div>
+              <div style={{fontSize:12,color:"#64748b",lineHeight:1.7,marginBottom:8}}>{a.icerik}</div>
+              <div style={{background:"rgba(168,85,247,0.08)",borderRadius:8,padding:"8px 12px",fontSize:11,color:"#a855f7"}}>💡 {a.ipucu}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="promptlar"&&<div>
+      <div style={{fontSize:12,color:"#64748b",marginBottom:16}}>Claude'un özel güçlerini ortaya çıkaran prompt şablonları. Kopyala, köşeli parantezleri kendi bilgilerinle doldur.</div>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {ozelPromptlar.map((p,i)=>(
+          <div key={i} style={{background:"rgba(168,85,247,0.04)",border:"1px solid rgba(168,85,247,0.18)",borderRadius:14,overflow:"hidden"}}>
+            <div style={{background:"rgba(168,85,247,0.1)",padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{p.baslik}</div>
+              <div style={{fontSize:10,color:"#a855f7"}}>{p.aciklama}</div>
+            </div>
+            <div style={{padding:"14px 16px"}}>
+              <div style={{background:"rgba(0,0,0,0.4)",borderRadius:9,padding:"12px 14px",fontFamily:"monospace",fontSize:11,color:"#94a3b8",lineHeight:1.8,marginBottom:10,whiteSpace:"pre-wrap"}}>{p.prompt}</div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontSize:11,color:"#475569",fontStyle:"italic"}}>💡 {p.ipucu}</div>
+                <button onClick={()=>navigator.clipboard?.writeText(p.prompt)} style={{padding:"5px 12px",borderRadius:7,border:"none",background:"rgba(168,85,247,0.2)",color:"#a855f7",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginLeft:10}}>Kopyala</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="karsilastirma"&&<div>
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,overflow:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:"rgba(0,0,0,0.3)",padding:"12px 16px",gap:8}}>
+          {["KRİTER","CLAUDE","CHATGPT","GEMİNİ"].map(h=><div key={h} style={{fontSize:10,fontWeight:700,color:"#475569"}}>{h}</div>)}
+        </div>
+        {karsilastirmaData.map((k,i)=>(
+          <div key={k.kriter} style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",padding:"12px 16px",gap:8,borderTop:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.01)"}}>
+            <div style={{fontSize:11,color:"#94a3b8",fontWeight:600}}>{k.kriter}</div>
+            <div style={{fontSize:11,color:k.kazanan==="Claude"?"#a855f7":"#475569",fontWeight:k.kazanan==="Claude"?700:400}}>{k.claude}</div>
+            <div style={{fontSize:11,color:k.kazanan==="ChatGPT"?"#00dcff":"#475569",fontWeight:k.kazanan==="ChatGPT"?700:400}}>{k.chatgpt}</div>
+            <div style={{fontSize:11,color:k.kazanan==="Gemini"?"#34d399":"#475569",fontWeight:k.kazanan==="Gemini"?700:400}}>{k.gemini}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{marginTop:16,background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:12,padding:"16px"}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#a855f7",marginBottom:8}}>🎯 Verdict: Ne Zaman Claude Kullan?</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
+          {[["✅ Claude Seç","Kod yazma/debug için","Uzun belge analizi için","Güvenlik kritik görevler","Agentic iş akışları","1M+ token gereken işler"],["❌ Claude Seçme","Görsel üretmek istiyorsan","Sesli sohbet istiyorsan","Hız çok kritikse (Haiku yeterli)","Google ekosistemi entegrasyonu","Popülerlik önemliyse"]].map(([baslik,...items])=>(
+            <div key={baslik} style={{background:"rgba(0,0,0,0.3)",borderRadius:9,padding:"12px"}}>
+              <div style={{fontSize:11,fontWeight:700,color:baslik.includes("✅")?"#34d399":"#f472b6",marginBottom:8}}>{baslik}</div>
+              {items.map(item=><div key={item} style={{fontSize:10,color:"#64748b",marginBottom:4}}>→ {item}</div>)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>}
+    {tab==="mimari"&&<div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {[{baslik:"Transformer Mimarisi",icerik:"Claude, 2017'de Google tarafından önerilen Transformer mimarisi üzerine inşa edilmiştir. Milyarlarca parametre ile eğitilmiş büyük bir dil modeli (LLM). Temel mekanizma: Attention — model, bir token üretirken diğer tüm tokenlara 'dikkat' eder ve bağlamı kavrar.",icon:"🔧"},
+        {baslik:"Constitutional AI (CAI)",icerik:"Anthropic'in buluşu. Klasik RLHF yerine, Claude'a bir 'anayasa' (etik ilkeler listesi) verilir. Model önce kendi çıktısını bu anayasaya göre değerlendirir, sonra düzeltir. Bu self-critique süreci hallüsinasyonu ve zararlı içeriği azaltır.",icon:"⚖️"},
+        {baslik:"RLHF + RLAIF",icerik:"Claude hem insan geri bildirimiyle (RLHF) hem de AI geri bildirimiyle (RLAIF — Reinforcement Learning from AI Feedback) eğitildi. RLAIF, ölçeklenebilir güvenlik sağlar: Başka bir AI modeli Claude'un çıktılarını değerlendirerek eğitime katkı sağlar.",icon:"🔄"},
+        {baslik:"Context Window Tekniği",icerik:"Claude'un 1M token context window'u özel mühendislik çalışmasının ürünü. Standart Transformer dikkat mekanizması O(n²) hesaplama gerektirir — bu 1M token için pratik değil. Anthropic, bu sınırı aşmak için özel optimizasyonlar geliştirdi.",icon:"📚"},
+        {baslik:"Task Budget Özelliği",icerik:"Claude Opus 4.7'de eklenen yeni özellik. Ajan görevlerinde Claude'a bir 'bütçe' verebilirsin — maksimum kaç adım atabileceği, ne kadar API çağrısı yapabileceği. Bu, maliyeti kontrol altına alır ve güvenli ajan davranışı sağlar.",icon:"💰"},
+        {baslik:"MCP Entegrasyonu",icerik:"Claude, Anthropic'in geliştirdiği Model Context Protocol (MCP) ile dış araçlara bağlanabilir. Veritabanı, dosya sistemi, web tarayıcı, API'lar — 97M+ kurulum ile Claude ekosistemi hızla büyüyor.",icon:"🔌"}].map(m=>(
+          <div key={m.baslik} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(168,85,247,0.12)",borderRadius:12,padding:"16px",display:"flex",gap:12}}>
+            <div style={{fontSize:24,flexShrink:0}}>{m.icon}</div>
+            <div><div style={{fontSize:13,fontWeight:700,color:"#a855f7",marginBottom:6}}>{m.baslik}</div><div style={{fontSize:12,color:"#64748b",lineHeight:1.7}}>{m.icerik}</div></div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    <div style={{marginTop:20,textAlign:"center"}}>
+      <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"13px 32px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#a855f7,#7c3aed)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textDecoration:"none"}}>Claude'u Ücretsiz Dene →</a>
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// CHATGPT KAPSAMLI SAYFA
+// ══════════════════════════════════════════════════════════
+function ChatGPTPage({setPage}){
+  const[tab,setTab]=useState("nedir");
+  const tabs=[["nedir","🤖 ChatGPT Nedir?"],["modeller","📊 Modeller"],["ozellikler","⚡ Özellikler"],["promptlar","💡 En İyi Promptlar"],["ipuclari","🎯 Pro İpuçları"]];
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.1),rgba(0,0,0,0))",border:"1px solid rgba(0,220,255,0.3)",borderRadius:20,padding:"28px",marginBottom:24}}>
+      <div style={{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",marginBottom:16}}>
+        <div style={{fontSize:56}}>🤖</div>
+        <div><div style={{fontSize:28,fontWeight:900,color:"#00dcff",marginBottom:4}}>ChatGPT — OpenAI</div><div style={{fontSize:14,color:"#94a3b8"}}>Dünyanın En Popüler AI · 900M Haftalık Kullanıcı · GPT-5.5 · DALL-E 3 · Sesli Sohbet</div></div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10}}>
+        {[["👥","900M+","Haftalık kullanıcı"],["🌍","175+","Ülke"],["🖼️","DALL-E 3","Görsel üretim"],["🎙️","Ses Modu","Konuşma AI"],["🔌","Plugin","Ekosistemi"],["💾","Hafıza","Kişiselleşme"]].map(([e,t,d])=>(
+          <div key={t} style={{background:"rgba(0,220,255,0.08)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,padding:"12px",textAlign:"center"}}>
+            <div style={{fontSize:18,marginBottom:4}}>{e}</div><div style={{fontSize:12,fontWeight:700,color:"#00dcff",marginBottom:2}}>{t}</div><div style={{fontSize:10,color:"#475569"}}>{d}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:20,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+      {tabs.map(([id,l])=><button key={id} onClick={()=>setTab(id)} style={{padding:"8px 13px",border:"none",cursor:"pointer",fontSize:11,fontFamily:"inherit",borderRadius:"6px 6px 0 0",background:tab===id?"rgba(0,220,255,0.1)":"transparent",color:tab===id?"#00dcff":"#475569",borderBottom:tab===id?"2px solid #00dcff":"2px solid transparent",whiteSpace:"nowrap"}}>{l}</button>)}
+    </div>
+    {tab==="nedir"&&<div>
+      <div style={{background:"rgba(0,220,255,0.04)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:14,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:16,fontWeight:800,color:"#e2e8f0",marginBottom:12}}>ChatGPT Neden Bu Kadar Popüler?</div>
+        <div style={{fontSize:13,color:"#94a3b8",lineHeight:2}}>Kasım 2022'de lansman yapan ChatGPT, 5 günde 1 milyon kullanıcıya ulaştı — teknoloji tarihinin en hızlı büyüyen ürünü. 2026'da 900 milyon haftalık kullanıcıyla hâlâ #1.<br/><br/>
+        Türkiye'de de aynı hikaye: AI web trafiğinin %94.49'u ChatGPT'den geliyor (Digital 2026). Her 100 Türk AI kullanıcısından 94'ü ChatGPT kullanıyor.<br/><br/>
+        <strong style={{color:"#00dcff"}}>GPT-5.5</strong> ile ChatGPT, metin asistanından "süper uygulamaya" dönüştü: Codex (kodlama), DALL-E 3 (görsel), ses modu, hafıza ve web arama tek platformda.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+        {[{t:"Görsel Üretim (DALL-E 3)",d:"ChatGPT'nin en büyük avantajı: Konuşma içinde görsel üret. 'Bana bir logo çiz' demen yeterli. Claude'da bu özellik yok.",c:"#00dcff",e:"🖼️"},{t:"Sesli Sohbet",d:"Mikrofona konuş, ChatGPT cevap ver. Gerçek zamanlı çeviri, konuşma pratiği, eller-serbest kullanım. En gelişmiş ses AI modu.",c:"#a855f7",e:"🎙️"},{t:"Hafıza Özelliği",d:"ChatGPT seni hatırlar: Mesleğin, tercihlerin, projeler. Her sohbette sıfırdan başlamana gerek kalmaz. Kişiselleştirilmiş deneyim.",c:"#34d399",e:"💾"},{t:"Plugin Ekosistemi",d:"Wolfram Alpha, code interpreter, web arama, dosya analizi. Yüzlerce plugin ile ChatGPT'yi güçlendir. En geniş ekosistem.",c:"#fb923c",e:"🔌"}].map(k=>(
+          <div key={k.t} style={{background:`${k.c}06`,border:`1px solid ${k.c}20`,borderRadius:12,padding:"14px"}}>
+            <div style={{fontSize:22,marginBottom:8}}>{k.e}</div>
+            <div style={{fontSize:12,fontWeight:700,color:k.c,marginBottom:6}}>{k.t}</div>
+            <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{k.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="modeller"&&<div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {[{ad:"GPT-3.5 Turbo",durum:"Eski ama hızlı",detay:"2022'de ChatGPT'yi başlatan model. Artık ücretsiz planda bile nadiren kullanılıyor. Basit görevler için hâlâ yeterli.",maliyet:"API: $0.0005/1K token",c:"#475569"},{ad:"GPT-4o",durum:"Ücretsiz güç merkezi",detay:"'omni' model — metin, ses ve görüntüyü birlikte işler. Ücretsiz kullanıcıların erişebildiği en güçlü model. Günlük limit var.",maliyet:"API: $0.005/1K token",c:"#60a5fa"},{ad:"GPT-4o mini",durum:"Hızlı ve ekonomik",detay:"GPT-4o'nun küçük kardeşi. API maliyeti çok düşük. Chatbot ve basit otomasyon uygulamaları için ideal.",maliyet:"API: $0.00015/1K token",c:"#34d399"},{ad:"GPT-5.5",durum:"2026'nın amiral gemisi",detay:"Kodex ve tarayıcı ile birleşti. Süper uygulama dönemini başlattı. Enterprise kullanıcılara ve Pro ($200/ay) sahiplerine öncelikli erişim.",maliyet:"Pro: $200/ay sınırsız",c:"#00dcff"},{ad:"o1 / o3",durum:"Akıl yürütme modelleri",detay:"Cevap vermeden önce uzun süre 'düşünen' modeller. Matematik, fizik, karmaşık mantık sorunlarında standart GPT'yi eziyor.",maliyet:"Pro planında dahil",c:"#a855f7"}].map(m=>(
+          <div key={m.ad} style={{background:`${m.c}06`,border:`1px solid ${m.c}22`,borderRadius:12,padding:"16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:8}}>
+              <div style={{fontSize:14,fontWeight:800,color:m.c}}>{m.ad}</div>
+              <div style={{fontSize:11,background:`${m.c}18`,color:m.c,padding:"3px 10px",borderRadius:6}}>{m.durum}</div>
+            </div>
+            <div style={{fontSize:12,color:"#64748b",lineHeight:1.6,marginBottom:8}}>{m.detay}</div>
+            <div style={{fontSize:10,color:"#475569"}}>💰 {m.maliyet}</div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="promptlar"&&<div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {[{baslik:"🎨 DALL-E 3 ile Görsel Üret",prompt:"ChatGPT'de doğrudan yaz: 'Bana [açıklama] tarzında bir görsel çiz. Boyut: [kare/yatay/dikey]. Stil: [fotogerçekçi/illustrasyon/minimalist]. Renk paleti: [renkler].'\n\nÖrnek: 'Modern bir İstanbul kafesi iç mekanı, sıcak ışıklandırma, Boğaz manzarası, fotogerçekçi, yatay format.'",ipucu:"DALL-E 3, ChatGPT Plus ve Pro'da dahil. Ücretsiz planda sınırlı."},
+        {baslik:"🎙️ Sesli Mod İpuçları",prompt:"ChatGPT uygulamasında ses butonuna bas. Şunları dene:\n- 'Benimle İngilizce konuş, hatalarımı düzelt'\n- 'Bu konuyu bana öğret, anlamadığım yerde dur'\n- 'Senaryo: Müşteri olarak davran, ben de satış yapayım'\n- 'Bu metni oku ve vurgulı yerlerini söyle'",ipucu:"Mobil uygulamada kullanılabilir. Gerçek zamanlı dil pratiği için mükemmel."},
+        {baslik:"💾 Hafızayı Etkin Kullan",prompt:"Sohbet başına şunu yaz:\n'Beni hatırla: [mesleğin], [kullandığın araçlar], [tercihler]. Her yanıtta bunu göz önünde bulundur.'\n\nYa da Settings > Memory'den manuel ekle:\n- 'Türkçe yanıt ver'\n- 'Kodlarda daima TypeScript kullan'\n- 'Açıklamaları kısa tut'",ipucu:"ChatGPT hafıza özelliği Türkiye'de aktif. Ayarlardan kapatabilirsin."},
+        {baslik:"🔍 Web Araması ile Güncel Bilgi",prompt:"'[konu] hakkında güncel bilgi ver' dediğinde ChatGPT web'e bağlanır.\n\nEtkili sorgular:\n- 'Bugünkü [şirket] haberleri neler?'\n- '[teknoloji] 2026'daki son gelişmeleri'\n- '[ürün] güncel fiyatı ne kadar?'\n- '[konu] hakkında son araştırmalar'",ipucu:"Web araması Plus ve üstü planlarda. Perplexity kadar kaynaklı değil ama entegrasyon kolaylığı var."},
+        {baslik:"📊 Veri Analizi ve Grafik",prompt:"CSV veya Excel dosyasını ChatGPT'ye yükle, sonra:\n- 'Bu veriyi analiz et, ana trendleri bul'\n- 'Aylık satışları grafik olarak göster'\n- 'Aykırı değerleri tespit et'\n- 'Bu veri için tahmin modeli kur'\n- 'Özet rapor yaz, yöneticiye sunacağım'",ipucu:"Code Interpreter özelliği gerçek Python kodu çalıştırır. Sonuçlar doğrulanabilir."}].map((p,i)=>(
+          <div key={i} style={{background:"rgba(0,220,255,0.04)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:13,overflow:"hidden"}}>
+            <div style={{background:"rgba(0,220,255,0.08)",padding:"11px 16px",fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{p.baslik}</div>
+            <div style={{padding:"13px 16px"}}>
+              <div style={{background:"rgba(0,0,0,0.4)",borderRadius:9,padding:"11px",fontFamily:"monospace",fontSize:11,color:"#94a3b8",lineHeight:1.8,marginBottom:8,whiteSpace:"pre-wrap"}}>{p.prompt}</div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontSize:11,color:"#475569",fontStyle:"italic"}}>💡 {p.ipucu}</div>
+                <button onClick={()=>navigator.clipboard?.writeText(p.prompt)} style={{padding:"4px 10px",borderRadius:6,border:"none",background:"rgba(0,220,255,0.15)",color:"#00dcff",fontSize:9,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginLeft:8}}>Kopyala</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="ipuclari"&&<div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+        {[{t:"Rol Vermenin Gücü",d:"'Deneyimli bir X olarak...' ile başla. ChatGPT bu rolü benimseyerek çok daha kaliteli çıktı üretir. Rol ne kadar spesifik, çıktı o kadar iyi.",e:"🎭",c:"#00dcff"},{t:"'Devam et' Kullan",d:"Cevap yarıda kesilirse 'devam et' yaz. Uzun içerikler için 'sonraki bölümü yaz' de. Asla baştan isteme — token israf olur.",e:"▶️",c:"#a855f7"},{t:"Örnek Göster",d:"İstediğin tarzda bir örnek ver: 'Şu şekilde yaz: [örnek]'. ChatGPT örneği taklit eder. Ton, uzunluk, format için çok etkili.",e:"📋",c:"#34d399"},{t:"Iterasyon Yap",d:"İlk çıktıyı beğenmezsen spesifik eleştir: 'Daha kısa ol', 'Teknik terimler kullan', 'Daha samimi ton'. Genel 'daha iyi yap' işe yaramaz.",e:"🔄",c:"#fb923c"},{t:"JSON ve Yapısal Çıktı",d:"'JSON formatında ver', 'Markdown tablo yap', 'Madde madde listele' gibi format komutları çıktıyı kullanılabilir hale getirir.",e:"📊",c:"#60a5fa"},{t:"Sıcaklık Kontrolü",d:"'Yaratıcı ol' (yüksek sıcaklık) vs 'Kesin ve teknik ol' (düşük sıcaklık). Bu ifadeler ChatGPT'nin davranışını etkiler.",e:"🌡️",c:"#f472b6"}].map(k=>(
+          <div key={k.t} style={{background:`${k.c}06`,border:`1px solid ${k.c}18`,borderRadius:12,padding:"14px"}}>
+            <div style={{fontSize:22,marginBottom:8}}>{k.e}</div>
+            <div style={{fontSize:12,fontWeight:700,color:k.c,marginBottom:6}}>{k.t}</div>
+            <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{k.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    <div style={{marginTop:20,textAlign:"center"}}>
+      <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"13px 32px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#00dcff,#0891b2)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textDecoration:"none"}}>ChatGPT'yi Dene →</a>
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// GEMİNİ KAPSAMLI SAYFA
+// ══════════════════════════════════════════════════════════
+function GeminiPage({setPage}){
+  const[tab,setTab]=useState("nedir");
+  const tabs=[["nedir","🌟 Gemini Nedir?"],["modeller","📊 Modeller"],["entegrasyon","🔗 Google Entegrasyonu"],["promptlar","💡 En İyi Promptlar"]];
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(0,0,0,0))",border:"1px solid rgba(52,211,153,0.3)",borderRadius:20,padding:"28px",marginBottom:24}}>
+      <div style={{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",marginBottom:16}}>
+        <div style={{fontSize:56}}>🌟</div>
+        <div><div style={{fontSize:28,fontWeight:900,color:"#34d399",marginBottom:4}}>Gemini — Google DeepMind</div><div style={{fontSize:14,color:"#94a3b8"}}>2M Token Dünya Rekoru · Google Ekosistemi · Gerçek Zamanlı Web · Multimodal</div></div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10}}>
+        {[["📚","2M Token","Dünya rekoru"],["🔍","Google","Tam entegrasyon"],["🌐","Web","Gerçek zamanlı"],["📷","Multimodal","Görsel+ses+metin"],["📱","Android","Yerleşik asistan"],["🆓","Geniş","Ücretsiz plan"]].map(([e,t,d])=>(
+          <div key={t} style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:10,padding:"12px",textAlign:"center"}}>
+            <div style={{fontSize:18,marginBottom:4}}>{e}</div><div style={{fontSize:12,fontWeight:700,color:"#34d399",marginBottom:2}}>{t}</div><div style={{fontSize:10,color:"#475569"}}>{d}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:20,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+      {tabs.map(([id,l])=><button key={id} onClick={()=>setTab(id)} style={{padding:"8px 13px",border:"none",cursor:"pointer",fontSize:11,fontFamily:"inherit",borderRadius:"6px 6px 0 0",background:tab===id?"rgba(52,211,153,0.1)":"transparent",color:tab===id?"#34d399":"#475569",borderBottom:tab===id?"2px solid #34d399":"2px solid transparent",whiteSpace:"nowrap"}}>{l}</button>)}
+    </div>
+    {tab==="nedir"&&<div>
+      <div style={{background:"rgba(52,211,153,0.04)",border:"1px solid rgba(52,211,153,0.15)",borderRadius:14,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:16,fontWeight:800,color:"#e2e8f0",marginBottom:12}}>Gemini Neden Farklı?</div>
+        <div style={{fontSize:13,color:"#94a3b8",lineHeight:2}}>Google DeepMind tarafından 2024'te lansmanı yapılan Gemini, ChatGPT ve Claude'dan farklı bir tasarım anlayışıyla geldi: <strong style={{color:"#34d399"}}>sıfırdan multimodal.</strong><br/><br/>
+        Önceki modeller önce metni öğrendi, sonra görsel/ses eklendi. Gemini ise başından beri metin, görsel, ses ve videoyu birlikte işleyecek şekilde tasarlandı. Bu mimarisi sayesinde farklı medya türleri arasında daha doğal geçiş yapabiliyor.<br/><br/>
+        <strong style={{color:"#34d399"}}>2M token context window</strong> şu an dünya rekoru. 1500 sayfalık kitabı, 200+ akademik makaleyi veya büyük bir kod tabanını tek sohbette işleyebilir.<br/><br/>
+        Google ekosistemi entegrasyonu ise Gemini'nin en güçlü kozu: Gmail, Drive, Docs, Sheets, YouTube — tümüne erişim.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+        {[{t:"2M Token Context",d:"ChatGPT'nin 128K, Claude'un 1M tokenına karşı Gemini 2M token. Bu yaklaşık 1500 sayfalık kitap veya 200+ makale demek.",c:"#34d399",e:"📚"},{t:"Gerçek Zamanlı Web",d:"Gemini her sohbette web'e bağlanabilir. Güncel haber, güncel fiyat, güncel araştırma — taze bilgi her zaman erişilebilir.",c:"#00dcff",e:"🌐"},{t:"Google Drive Analizi",d:"Drive'daki dosyaları direkt analiz et. 'Bu raporumu özetle', 'Bu sunumu iyileştir' — Google ekosistemi entegrasyonu.",c:"#60a5fa",e:"📁"},{t:"Imagen 3 ile Görsel",d:"Gemini Ultra'da Imagen 3 görsel üretimi mevcut. ChatGPT'nin DALL-E 3'üne rakip, özellikle fotogerçekçi görsellerde güçlü.",c:"#f472b6",e:"🖼️"}].map(k=>(
+          <div key={k.t} style={{background:`${k.c}06`,border:`1px solid ${k.c}20`,borderRadius:12,padding:"14px"}}>
+            <div style={{fontSize:22,marginBottom:8}}>{k.e}</div>
+            <div style={{fontSize:12,fontWeight:700,color:k.c,marginBottom:6}}>{k.t}</div>
+            <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{k.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="modeller"&&<div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {[{ad:"Gemini Nano",d:"Telefonda çalışır, internet gerekmez. Pixel ve Samsung telefonlarda yerleşik. Basit görevler için hızlı ve gizli.",c:"#475569",plan:"Android cihazlarda dahil"},{ad:"Gemini Flash",d:"Hızlı ve ekonomik. API için en popüler seçim. Ücretsiz planda bile güçlü. Chatbot ve otomasyon uygulamaları için ideal.",c:"#60a5fa",plan:"Ücretsiz"},{ad:"Gemini 2.5 Pro",d:"Araştırma ve analiz için güçlü model. Google AI Pro ($19.99/ay) planında. Drive entegrasyonu ile maksimum verimlilik.",c:"#34d399",plan:"AI Pro: $19.99/ay"},{ad:"Gemini 3.1 Ultra",d:"2M token, en güçlü model. Multimodal performans rekoru. Enterprise ve araştırma için. Görsel, ses, metin, video aynı anda.",c:"#00dcff",plan:"AI Ultra: $249/ay"}].map(m=>(
+          <div key={m.ad} style={{background:`${m.c}06`,border:`1px solid ${m.c}22`,borderRadius:12,padding:"16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:8}}>
+              <div style={{fontSize:14,fontWeight:800,color:m.c}}>{m.ad}</div>
+              <div style={{fontSize:10,color:"#475569"}}>💰 {m.plan}</div>
+            </div>
+            <div style={{fontSize:12,color:"#64748b",lineHeight:1.6}}>{m.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="entegrasyon"&&<div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:12}}>
+        {[{icon:"📧",baslik:"Gmail Entegrasyonu",detay:"'Gelen kutundaki tüm toplantı davetlerini özetle ve takvime ekle', 'Bu e-postaya Türkçe profesyonel yanıt yaz', 'Geçen haftaki önemli e-postaları listele'",renk:"#34d399"},{icon:"📁",baslik:"Google Drive",detay:"Drive'daki PDF, Docs, Sheets dosyalarını direkt analiz et. 'Q1 raporum.xlsx'i analiz et, trend bul', 'Bu sözleşmeyi özetle', 'Projelerimi karşılaştır'",renk:"#00dcff"},{icon:"📄",baslik:"Google Docs",detay:"Doküman içinde Gemini aç. 'Bu bölümü yeniden yaz', 'Gramer hatalarını düzelt', 'Bu rapora yönetici özeti ekle', 'Daha resmi ton kullan'",renk:"#60a5fa"},{icon:"📊",baslik:"Google Sheets",detay:"Veriyi analiz et, formül öner, grafik oluştur. 'Bu verideki anomalileri bul', 'Aylık büyüme formülü ekle', 'Satış tahmin modeli kur'",renk:"#f472b6"},{icon:"🎬",baslik:"YouTube",detay:"Video içeriğini analiz et. 'Bu videonun özetini çıkar', 'Hangi konular ele alındı?', 'Bu kanalın içerik stratejisi nedir?'",renk:"#fb923c"},{icon:"📅",baslik:"Google Calendar",detay:"Takvimini yönet. 'Bu haftaki toplantılarımı özetle', 'Benimle toplantı için uygun zaman bul', 'Bu etkinlik için hazırlık listesi oluştur'",renk:"#a855f7"}].map(k=>(
+          <div key={k.baslik} style={{background:`${k.renk}06`,border:`1px solid ${k.renk}18`,borderRadius:12,padding:"14px"}}>
+            <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:8}}><span style={{fontSize:22}}>{k.icon}</span><div style={{fontSize:12,fontWeight:700,color:k.renk}}>{k.baslik}</div></div>
+            <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{k.detay}</div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="promptlar"&&<div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {[{b:"🔍 Güncel Araştırma",p:"[Konu] hakkında 2026'daki en güncel gelişmeleri araştır. Özellikle şunlara odaklan:\n1) Son 3 aydaki önemli haberler\n2) Akademik araştırmalar varsa özetle\n3) Uzman görüşleri\n4) Türkiye'ye olan etkisi\nKaynaklarını belirt.",t:"Gemini web'e bağlanır, gerçek zamanlı bilgi getirir."},
+        {b:"📁 Drive Belge Analizi",p:"[Drive'dan yüklediğin dosyayı analiz et]\n\nBu belgeden şunları çıkar:\n1) Ana iddialar ve öneriler\n2) Karar gerektiren noktalar\n3) Eksik bilgiler veya belirsizlikler\n4) Bir sonraki adımlar (action items)\n5) Önemli rakamlar ve tarihler",t:"Drive dosyasını sohbet penceresine sürükle bırak."},
+        {b:"🖼️ Görsel Analizi",p:"Bu görüntüyü/grafiği analiz et:\n[Görüntüyü yükle]\n\nBenden şunları yapmanı istiyorum:\n1) Ana mesajı ve amacı açıkla\n2) Dikkat çeken unsurları listele\n3) Veri varsa rakamları özetle\n4) Güçlü ve zayıf yönleri belirt\n5) İyileştirme önerileri",t:"Gemini'nin görsel analizi özellikle grafik ve infografikler için güçlü."},
+        {b:"📊 Sheets Veri Analizi",p:"Bu tabloyu analiz et:\n[Sheets verini yapıştır veya dosya yükle]\n\n1) Veriyi özetle (5 satır)\n2) En önemli trendleri göster\n3) Aykırı değerleri tespit et\n4) Korelasyonları bul\n5) Tahmin modeli öner\n6) Görselleştirme önerileri",t:"Sheets entegrasyonu ile direkt veri çekerek analiz yapar."}].map((p,i)=>(
+          <div key={i} style={{background:"rgba(52,211,153,0.04)",border:"1px solid rgba(52,211,153,0.15)",borderRadius:12,overflow:"hidden"}}>
+            <div style={{background:"rgba(52,211,153,0.08)",padding:"11px 16px",fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{p.b}</div>
+            <div style={{padding:"13px 16px"}}>
+              <div style={{background:"rgba(0,0,0,0.4)",borderRadius:9,padding:"11px",fontFamily:"monospace",fontSize:11,color:"#94a3b8",lineHeight:1.8,marginBottom:8,whiteSpace:"pre-wrap"}}>{p.p}</div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontSize:11,color:"#475569",fontStyle:"italic"}}>💡 {p.t}</div>
+                <button onClick={()=>navigator.clipboard?.writeText(p.p)} style={{padding:"4px 10px",borderRadius:6,border:"none",background:"rgba(52,211,153,0.15)",color:"#34d399",fontSize:9,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginLeft:8}}>Kopyala</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    <div style={{marginTop:20,textAlign:"center"}}>
+      <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"13px 32px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#34d399,#059669)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textDecoration:"none"}}>Gemini'yi Dene →</a>
+    </div>
+  </div>;
+}
     {page==="oyun"          &&<OyunPage/>}
     {page==="topluluk"      &&<ToplulukPage/>}
     {page==="kariyer"       &&<KariyerPage/>}
