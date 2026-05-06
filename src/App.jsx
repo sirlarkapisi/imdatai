@@ -2330,6 +2330,20 @@ export default function App(){
     {page==="sozluk"        &&<SozlukPage/>}
     {page==="dizin"         &&<DizinPage setPage={nav}/>}
     {page==="galeri"        &&<GaleriPage/>}
+    {page==="quiz"          &&<QuizPage/>}
+    {page==="oyun"          &&<OyunPage/>}
+    {page==="topluluk"      &&<ToplulukPage/>}
+    {page==="kariyer"       &&<KariyerPage/>}
+    {page==="mitler"        &&<MitlerPage/>}
+    {page==="zaman"         &&<ZamanCizgisiPage/>}
+    {page==="para"          &&<ParaPage/>}
+    {page==="hakkimizda"    &&<HakkimizdaPage/>}
+    {page==="iletisim"      &&<IletisimPage/>}
+    {page==="gizlilik"      &&<GizlilikPage/>}
+    {page==="pro"           &&<ProPage/>}
+  </Wrapper>;
+}
+
 // ══════════════════════════════════════════════════════════
 // CLAUDE KAPSAMLI SAYFA
 // ══════════════════════════════════════════════════════════
