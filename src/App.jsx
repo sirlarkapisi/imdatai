@@ -30,18 +30,22 @@ const IG = () => <svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="
 const TICKER = ["🔥 GPT-5.5 yayınlandı — süper uygulama dönemi başladı","⚡ Claude Opus 4.7 — SWE-bench %87.6, kodlamada #1","🌐 Gemini 3.1 Ultra — 2 milyon token dünya rekoru","🇹🇷 Türkiye AI trafiğinde dünya #1 — %94.49","💰 2026 Q1'de AI'ya $267 milyar yatırım","🎨 Midjourney v7 fotorealizm çıtasını aştı","🎵 Suno v5 gerçek enstrüman sesi üretiyor","✨ Sora Enterprise küresel kullanıma açıldı","🦙 Meta Llama 4 açık kaynak devrim","💻 Cursor 3 Background Agents ile otonom geliştirme","📱 Apple Intelligence 2.0 cihaz üstünde AI","🔬 DeepSeek V4 ABD modelleriyle başa baş","🏥 Doktorların %72'si AI kullanıyor","🎯 MCP protokolü 97 milyon kurulum aştı"];
 
 const NEWS = [
-  {tag:"🔥",hot:true,color:"#00dcff",title:"GPT-5.5: Süper Uygulama Çağı",desc:"ChatGPT, Codex ve tarayıcıyı tek platformda topladı. Enterprise ve bilimsel görevlerde devrim. Türkiye erişimi aktif.",src:"OpenAI",time:"1 gün",read:"3 dk",emoji:"🤖"},
-  {tag:"🆕",hot:true,color:"#a855f7",title:"Claude Opus 4.7 ile Kodlama Devrimi",desc:"SWE-bench Verified %87.6'ya yükseldi. Task budget ile ajan maliyetleri kontrol altında. 1M token context.",src:"Anthropic",time:"2 gün",read:"4 dk",emoji:"🧠"},
-  {tag:"🌐",hot:false,color:"#34d399",title:"Gemini 3.1 Ultra: 2M Token Rekoru",desc:"Google'ın en büyük güncelleme. Ses, görüntü, metin eş zamanlı işleme. Sandbox kod çalıştırma özelliği.",src:"Google",time:"3 gün",read:"3 dk",emoji:"🌟"},
-  {tag:"🇹🇷",hot:true,color:"#fb923c",title:"Türkiye AI Trafiğinde Dünya 1.",desc:"Digital 2026: Türkiye'de AI trafiğinin %94.49'u ChatGPT kaynaklı. Küresel ortalama %80.92'yi geride bıraktık.",src:"We Are Social",time:"4 gün",read:"2 dk",emoji:"🏆"},
-  {tag:"💰",hot:false,color:"#60a5fa",title:"AI'ya Q1'de $267 Milyar Yatırım",desc:"OpenAI $25B, Anthropic $19B yıllık gelire ulaştı. Her iki şirket halka arz sinyali veriyor.",src:"Bloomberg",time:"5 gün",read:"3 dk",emoji:"💹"},
-  {tag:"🎨",hot:false,color:"#f472b6",title:"Midjourney v7: Fotorealizm Çıtası",desc:"Yeni model insan anatomisini mükemmelleştiriyor. Archival quality fotoğraf üretimi artık mümkün.",src:"Midjourney",time:"6 gün",read:"3 dk",emoji:"🎨"},
-  {tag:"🤖",hot:false,color:"#34d399",title:"Meta Llama 4: Açık Kaynak Devrim",desc:"Meta'nın yeni açık kaynak modeli Llama 4, kapalı kaynak modellerle rekabet ediyor. Ücretsiz kullanım.",src:"Meta AI",time:"1 hafta",read:"3 dk",emoji:"🦙"},
-  {tag:"🎵",hot:false,color:"#a855f7",title:"Suno v5: Gerçek Enstrüman Sesi",desc:"AI müzik üretiminde yeni çığır. Gerçek gitarist, piyanist sesi. Ticari kullanım lisansı dahil.",src:"Suno",time:"1 hafta",read:"2 dk",emoji:"🎵"},
-  {tag:"💻",hot:false,color:"#00dcff",title:"Cursor 3: Ajan Çağı Başladı",desc:"Paralel AI ajanlar, izole VM'lerde Background Agents. Geliştirici artık mimar — ajanlar inşaatçı. 4M+ kullanıcı.",src:"Cursor",time:"1 hafta",read:"4 dk",emoji:"💻"},
-  {tag:"🏥",hot:false,color:"#fb923c",title:"Sağlıkta AI: Doktorların %72'si Kullanıyor",desc:"AMA 2026 raporu: hekimlerin AI kullanımı 1 yılda %48'den %72'ye çıktı. Tanı doğruluğu artıyor.",src:"AMA",time:"10 gün",read:"3 dk",emoji:"🏥"},
-  {tag:"🔬",hot:false,color:"#60a5fa",title:"DeepSeek V4: ABD Modelleriyle Başa Baş",desc:"Çin'in önde gelen AI şirketi yeni modeliyle rekabeti kızıştırıyor. Açık kaynak versiyonu mevcut.",src:"DeepSeek",time:"10 gün",read:"3 dk",emoji:"🔬"},
-  {tag:"📱",hot:false,color:"#f472b6",title:"Apple Intelligence 2.0: Cihaz Üstünde AI",desc:"Apple'ın yeni AI motoru, kişisel verileri buluta göndermeden işliyor. iPhone 16 ve üstü için.",src:"Apple",time:"12 gün",read:"3 dk",emoji:"📱"},
+  {tag:"🔥",hot:true,color:"#00dcff",title:"GPT-5.5: Süper Uygulama Dönemi Başladı",desc:"ChatGPT, Codex ve tarayıcı tek platformda. Bilimsel görevlerde devrim. OpenAI'nin pazar değeri $300 milyarı aştı. Türkiye erişimi aktif.",src:"OpenAI Blog",time:"2 gün",read:"4 dk",emoji:"🤖"},
+  {tag:"🆕",hot:true,color:"#a855f7",title:"Claude Opus 4.7: Kodlamada Dünya Rekoru",desc:"SWE-bench Verified %87.6 ile tüm modelleri geçti. Task Budget özelliği ajanları kontrol altına alıyor. 1M token, Constitutional AI.",src:"Anthropic",time:"3 gün",read:"4 dk",emoji:"🧠"},
+  {tag:"🌟",hot:true,color:"#34d399",title:"Gemini 3.1 Ultra: 2 Milyon Token Rekoru",desc:"Google'ın multimodal devi güncellendi. Ses, görüntü, metin eş zamanlı işleme. Sandbox Python çalıştırma. Drive entegrasyonu mükemmelleşti.",src:"Google DeepMind",time:"4 gün",read:"3 dk",emoji:"🌟"},
+  {tag:"🇹🇷",hot:true,color:"#fb923c",title:"Türkiye AI Trafiğinde Dünya Birincisi",desc:"Digital 2026 raporu: Türkiye'de AI trafiğinin %94.49'u ChatGPT'den geliyor. Küresel ortalama %80.92. Fırsat penceresi açık.",src:"We Are Social",time:"5 gün",read:"2 dk",emoji:"🏆"},
+  {tag:"💰",hot:false,color:"#60a5fa",title:"2026 Q1: AI'ya 267 Milyar Dolar",desc:"OpenAI $25B, Anthropic $19B yıllık gelir. Her ikisi de halka arz sinyali veriyor. Türk yatırımcılar AI fonlarına yöneldi.",src:"Bloomberg",time:"6 gün",read:"3 dk",emoji:"💹"},
+  {tag:"🎨",hot:false,color:"#f472b6",title:"Midjourney v7: Gerçek mi AI mi?",desc:"Yeni model insan anatomisini ve fotorealizmi mükemmelleştirdi. Archival quality fotoğraf. Ticari kullanım lisansı güçlendi.",src:"Midjourney",time:"1 hafta",read:"3 dk",emoji:"🎨"},
+  {tag:"💻",hot:false,color:"#34d399",title:"Cursor 3.0: Ajan Çağı Başladı",desc:"Background Agents, Slack ve GitHub issue'lardan görev alıyor. Cloud'da çalışıyor, PR açıyor. Developer artık mimar, AI inşaatçı.",src:"Cursor Blog",time:"1 hafta",read:"4 dk",emoji:"💻"},
+  {tag:"🦙",hot:false,color:"#fb923c",title:"Meta Llama 4: Açık Kaynak Devrimi",desc:"Meta'nın yeni modeli kapalı kaynak rakiplerle yarışıyor. Ücretsiz, ticari kullanım açık. Türkçe performansı iyi.",src:"Meta AI",time:"10 gün",read:"3 dk",emoji:"🦙"},
+  {tag:"🎵",hot:false,color:"#a855f7",title:"Suno v5: Gerçek Enstrüman Sesi",desc:"AI müzikte yeni çığır. Gerçek gitarist, piyanist, davulcu sesi üretiyor. Ticari kullanım lisansı dahil. Türkçe sözlü şarkı.",src:"Suno AI",time:"10 gün",read:"2 dk",emoji:"🎵"},
+  {tag:"🏥",hot:false,color:"#60a5fa",title:"Doktorların %72'si AI Kullanıyor",desc:"AMA 2026 raporu: Bir yılda %48'den %72'ye çıktı. Tanı doğruluğu ve tedavi planlamasında AI desteği yaygınlaşıyor.",src:"AMA",time:"12 gün",read:"3 dk",emoji:"🏥"},
+  {tag:"🔬",hot:false,color:"#00dcff",title:"DeepSeek V4 Piyasaya Çıktı",desc:"Çin'in AI şampiyonu yeni modeliyle ABD'ye rakip olmaya devam ediyor. Açık kaynak versiyonu ücretsiz. Matematikte öne çıkıyor.",src:"DeepSeek",time:"13 gün",read:"3 dk",emoji:"🔬"},
+  {tag:"📱",hot:false,color:"#f472b6",title:"Apple Intelligence 2.0: Cihaz Üstünde Güç",desc:"Kişisel verileri buluta göndermeden işleyen yeni AI motoru. iPhone 16 ve iPad için. Siri tamamen yenilendi.",src:"Apple",time:"2 hafta",read:"3 dk",emoji:"📱"},
+  {tag:"🤖",hot:false,color:"#a855f7",title:"Perplexity Pro: Yapay Zeka Araştırma Motoru",desc:"Kaynaklı yanıtlar, akademik paper analizi, kod yazma. Google'a gerçek rakip olmaya başladı. 30M kullanıcı.",src:"Perplexity",time:"2 hafta",read:"2 dk",emoji:"🔍"},
+  {tag:"🎬",hot:false,color:"#fb923c",title:"Sora Enterprise: Küresel Açılış",desc:"OpenAI'nin metin-video modeli tüm dünyaya açıldı. 1080p, 60 saniye, tutarlı karakterler. Reklam ajansları hızla adaptasyon.",src:"OpenAI",time:"2 hafta",read:"3 dk",emoji:"🎬"},
+  {tag:"🏛️",hot:false,color:"#60a5fa",title:"AB AI Yasası Yürürlüğe Girdi",desc:"Yüksek riskli AI uygulamaları için sıkı kurallar başladı. Türk şirketleri AB pazarında uyum zorunluluğuyla karşı karşıya.",src:"European Commission",time:"3 hafta",read:"4 dk",emoji:"🏛️"},
+  {tag:"🇹🇷",hot:false,color:"#34d399",title:"Türkiye'de AI Girişim Sayısı 300'ü Aştı",desc:"İstanbul merkezli AI startup'lar 2025'e kıyasla %180 arttı. Sağlık, eğitim ve tarım öne çıkan sektörler.",src:"Startups.com.tr",time:"3 hafta",read:"3 dk",emoji:"🚀"},
 ];
 
 const TRENDING = [
@@ -1666,7 +1670,7 @@ const PROMPTS_DATA = [
     {title:"Uzun İçerik Dönüştürme",kotu:"Bunu farklı formata dönüştür",iyi:"[Uzun içerik]'i [hedef format]'a dönüştür.\n\nDönüşüm kuralları:\n- Ton: [teknik/samimi/akademik/pazarlama]\n- Uzunluk: orijinalin [%X]'i\n- Hedef kitle: [kitle]\n- Platform: [LinkedIn/blog/e-posta/rapor]\n- Kesinlikle koru: [önemli unsurlar]\n- Çıkar: [gereksiz kısımlar]",note:"Claude uzun format dönüştürmede GPT'den tutarlı"},
     {title:"Karmaşık Konu Derinlemesine",kotu:"[Konu] açıkla",iyi:"[Konu] hakkında kapsamlı analiz yap. Benden:\n1)[Temel kavramı] 3 farklı seviyede açıkla: 5 yaşında çocuk, lise öğrencisi, uzman\n2)Tarihsel gelişimi zaman çizgisiyle\n3)Günümüzdeki en iyi 5 kaynak\n4)Yanlış anlaşılan 3 nokta ve düzeltmesi\n5)Türkiye'ye özgü bağlam\n6)İleri okuma için 3 kaynak",note:"3 seviye açıklama = gerçek anlama testi"},
   ]},
-  {cat:"🎓 Eğitim & Araştırma",color:"#34d399",icon:"🎓",items:[
+  {cat:"📚 Öğrenme & Analiz",color:"#34d399",icon:"📚",items:[
     {title:"Feynman Tekniği",kotu:"[konu] anlat",iyi:"[Konu]'u Feynman tekniğiyle öğret: 1)8 yaşındaki çocuğa açıklar gibi başla 2)Temel kavramları ver 3)Gerçek hayat örnekleri (Türkiye'den) 4)Sık yapılan yanlış anlamalar 5)Her bölümde 'anlama sorusu' sor 6)İleri öğrenim için yol haritası.",note:"Feynman = gerçek anlama, ezbersiz öğrenme"},
     {title:"Quiz Üretici",kotu:"Test sorusu yaz",iyi:"[Konu] için Bloom taksonomisine göre 15 soru: 5 bilgi, 5 anlama, 3 uygulama, 2 analiz. Her soru için: A-D şıkları + doğru cevap + neden doğru açıklaması + hangi yanlış anlamayı test ettiği. Zorluk sırasına diz.",note:"Bloom taksonomisi = dengeli, kaliteli değerlendirme"},
     {title:"90 Günlük Öğrenme Planı",kotu:"[konu] nasıl öğrenirim",iyi:"Eğitim koçu olarak [konu]'u [mevcut seviye] biri için 90 günlük plan yap. Haftalık: hedef + kaynak (önce ücretsiz) + pratik görev + ölçüm kriteri. 30-60-90 gün kontrol noktaları. Günlük 1-2 saat varsay.",note:"Seviye + süre + günlük vakit = gerçekçi plan"},
@@ -1703,6 +1707,36 @@ const PROMPTS_DATA = [
     {title:"E-posta Sıfırlama Sistemi",kotu:"E-postalarımı düzenle",iyi:"E-posta yönetim sistemi kur. Mevcut: [kaç okunmamış]. 1)4-kutu sıralama sistemi tasarla (Acil+Önemli/Önemli/Acil/Ne Önemli Ne Acil) 2)Her kategori için karar kriteri ve SLA 3)Filtre ve etiket önerileri (Gmail/Outlook için) 4)5 tekrarlayan e-posta türü için hazır şablon yanıtlar 5)Günlük 30dk e-posta rutini.",note:"Sistem + şablon + rutin = bir daha birikmez"},
     {title:"Pareto ile Hızlı Öğrenme",kotu:"Bunu öğrenmek istiyorum",iyi:"Pareto prensibini uygula: [konu]'nun %20'si %80 değer verir. 1)Bu kritik %20 ne? Listele 2)O kısım için 5 temel kavram 3)Her kavram için en iyi 1 kaynak (ücretsiz önce) 4)Pratik egzersizler 5)İlerlemeyi nasıl ölçerim 6)Sık yapılan hata ve tuzaklar 7)30-60-90 günlük hedefler.",note:"Tuzakları iste — başkalarının hatalarından öğren"},
     {title:"Sabah Rutini Tasarımı",kotu:"Sabah rutini yap",iyi:"Verimlilik koçu olarak benim için ideal sabah rutini tasarla. Benim hakkımda: [uyku saatleri, meslek, hedefler, kısıtlar]. 1)Uyandıktan ilk 30 dakika için adımlar 2)Odaklanma ve enerji için öneriler 3)Hangi araçları kullanmalıyım 4)Rutinin test süresi ve adaptasyon stratejisi 5)Rutini bozan durumlar için plan B.",note:"Kısıtlarını ver — teorik değil, uygulanabilir rutin al"},
+    {title:"Toplantı Verimliliği",kotu:"Toplantı özetle",iyi:"[Toplantı transkripti veya notları]'nı işle. 1)Alınan kararlar (madde madde) 2)Atanan görevler (kişi + son tarih formatında) 3)Açık kalan sorular 4)Katılmayan ekip üyeleri için 5 dakikalık özet e-postası 5)Bir sonraki toplantı için gündem önerisi.",note:"Toplantı notu → aksiyon planı dönüşümü en kritik verimlilik kazanımı"},
+  ]},
+  {cat:"🔬 Araştırma & Akademik",color:"#34d399",icon:"📚",items:[
+    {title:"Feynman Tekniği ile Öğren",kotu:"[konu] anlat",iyi:"[Konu]'u Feynman tekniğiyle öğret. Adımlar: 1)8 yaşında çocuğa açıklar gibi başla 2)Teknik terimleri sade dille yeniden yaz 3)Analogilerle somutlaştır 4)Sık yapılan yanlış anlamalar 5)Bu kavramı gerçek hayatta nerede görürüm 6)Bir sonraki adım ne öğrenmeli. Her bölüm ayrı başlık.",note:"Analoji + gerçek hayat örneği = gerçek anlama"},
+    {title:"Araştırma Sentezi",kotu:"Bu araştırmayı özetle",iyi:"Bu [araştırma makalesi/rapor]'u analiz et:\n[Metni yapıştır]\n1)Ana hipotez ve iddia 2)Metodoloji (güçlü/zayıf yönler) 3)Temel bulgular (rakamlarla) 4)Sınırlılıklar 5)Gerçek hayat uygulaması 6)Güvenilirlik skoru (1-10, gerekçesiyle) 7)İlgili diğer araştırma önerileri.",note:"Güvenilirlik skoru iste — körce güvenme, eleştirel oku"},
+    {title:"Kapsamlı Quiz Üret",kotu:"Test sorusu yaz",iyi:"[Konu] için Bloom taksonomisine göre 20 soruluk test hazırla. Dağılım: 5 hatırlama, 5 anlama, 4 uygulama, 3 analiz, 2 sentez, 1 değerlendirme. Her soru: 4 şık + doğru cevap + neden doğru açıklama + neden yanlış açıklama. Zorluk artan sırayla.",note:"Bloom taksonomisi = derinlemesine öğrenme testi"},
+    {title:"90 Günlük Öğrenme Planı",kotu:"[konu] nasıl öğrenirim",iyi:"[Konu] için [mevcut seviye] birisi için 90 günlük öğrenme programı hazırla. Her hafta: 1)Bu hafta ne öğreneceğim 2)En iyi kaynak (ücretsiz önce) 3)Pratik görev 4)İlerleme ölçüm kriteri. Ayda bir kontrol noktası. Öğrenmeyi engelleyecek 3 tuzak ve çözümleri.",note:"Tuzak ve çözümler = programın yarıda kalmaması"},
+    {title:"Konferans/Seminer Notu",kotu:"Bu konferansı özetle",iyi:"[Konferans/sunum transkripti veya notu]'nden şunları çıkar: 1)Ana mesajlar (en fazla 5) 2)Pratik uygulanabilir öneriler (madde madde) 3)Dikkat çeken veriler ve istatistikler 4)Konuşmacının kullandığı en güçlü analoji 5)Bu bilgiyi [benim alanım]'a nasıl uygularım 6)Daha derin araştırma için 3 kaynak.",note:"Alan uygulaması iste — bilgi transferi gerçekleşsin"},
+    {title:"Kavram Haritası",kotu:"Bu konuyu haritala",iyi:"[Konu] için kapsamlı kavram haritası oluştur. Format: ana kavram merkeze, 5-7 alt dal, her dalda 3-4 bağlantılı kavram. Her kavram için: kısa tanım + diğer kavramlarla ilişki. Sonunda Mermaid mindmap kodu olarak da ver.",note:"Mermaid kodu iste — direkt görsel haritaya dönüştür"},
+  ]},
+  {cat:"🖋️ Hikaye & Sunum",color:"#a855f7",icon:"🖋️",items:[
+    {title:"Güçlü Hikaye Yapısı",kotu:"Hikaye yaz",iyi:"[Tür] türünde, [mekan]'da geçen, [karakter] karakteriyle hikaye yaz. Yapı: Aristo'nun dramatik yayı kullan (kurulum→komplikasyon→krize yükseliş→doruk→çözüm). Mutlaka içersin: [3 zorunlu unsur]. İç çatışma dış çatışmadan daha güçlü olsun. Açık uçlu bitir. [Ton]. 1000 kelime.",note:"Aristo yapısı + iç çatışma = okuyucuyu bağlayan hikaye"},
+    {title:"Karakter Derinleştirme",kotu:"Karakter yarat",iyi:"[Hikayem] için [isim] karakterini derinleştir. 1)Fiziksel özellikler (görünür ve görünmez) 2)Kişilik (MBTI + 5 sıfat + 1 paradoks) 3)Backstory: Onu bugün şekillendiren 3 kritik olay 4)En büyük korkusu ve gizli arzusu 5)Konuşma tarzı ve kullandığı kelimeler 6)Diğer karakterlerle ilişki dinamikleri 7)Biyografi 100 kelime.",note:"Paradoks ver — düz karakterler sıkıcı, çelişkili karakterler ilgi çekici"},
+    {title:"Marka Hikayesi",kotu:"Marka hikayesi yaz",iyi:"[Marka] için güçlü bir 'origin story' yaz. İçermeli: 1)Kurucunun yaşadığı gerçek problem 2)Neden mevcut çözümler yetmedi 3)Aydınlanma anı (ne zaman ve nasıl fikir geldi) 4)İlk başarısızlık ve ders 5)İlk müşteri hikayesi 6)Bugün neredeler ve hedef. 500 kelime, duygu ağırlıklı, samimi ton.",note:"Gerçek problem + başarısızlık = güvenilir marka hikayesi"},
+    {title:"İsim & Tagline Fabrikası",kotu:"İsim bul",iyi:"[Sektör]'deki [hedef kitle]'ye yönelik [değer önerisi] sunan marka için 15 isim üret. 3 kategori: 1)Açıklayıcı (ne yaptığını söyler) 2)Soyut (his yaratır) 3)Birleşik/neolojizm (yeni kelime). Her isim: anlam, neden işe yarar, potansiyel sorun, .com müsaitliği (tahmin). Sonra en iyi 5'ine 3'er tagline.",note:"15 isim + 3 kategori = gerçek seçenek çeşitliliği"},
+    {title:"Konuşma ve Sunum",kotu:"Konuşma yaz",iyi:"[Konu] üzerine [hedef kitle]'ye [süre] dakikalık konuşma yaz. Yapı: 1)Dikkat çeken açılış (soru/şok/istatistik/hikaye) 2)Neden bu önemli (bağlam) 3)3 ana nokta (her biri örnek+veri) 4)Karşı argümanları çürüt 5)Güçlü kapanış + harekete geçirici mesaj. Notlar bölümünde: ne zaman duraklayacaksın, hangi kısım daha yavaş, soru-cevap için 5 olası soru.",note:"Notlar bölümü iste — sahne pratiği için şart"},
+  ]},
+  {cat:"💰 Pazarlama & Satış",color:"#fb923c",icon:"💰",items:[
+    {title:"Rakip Analizi",kotu:"Rakip analizi yap",iyi:"[Sektör]'deki [rakip listesi] için kapsamlı rakip analizi. Her rakip için: 1)Güçlü yönler (5 madde) 2)Zayıf yönler (5 madde) 3)Hedef kitle 4)Fiyatlandırma stratejisi 5)Pazarlama mesajı ve tonu 6)Müşteri şikayetleri (G2/Trustpilot/Google Reviews'dan çıkar). Sonunda: rakiplerin boş bıraktığı fırsatlar.",note:"Müşteri şikayetleri = senin fırsatların"},
+    {title:"AIDA Reklam Metni",kotu:"Reklam yaz",iyi:"[Ürün/hizmet] için AIDA modelinde reklam metni. Dikkat: tek güçlü başlık. İlgi: problem + acı noktası (2 cümle). Arzu: çözüm + fayda + sosyal kanıt (3 cümle). Eylem: spesifik CTA + aciliyet. Platform uyarlaması: Google Ads (30 karakter başlık + 90 karakter açıklama) + Facebook Ad + LinkedIn Ad versiyonları.",note:"3 platform versiyonu = zaman tasarrufu"},
+    {title:"Müşteri Persona",kotu:"Hedef kitle tanımla",iyi:"[Ürün/hizmet] için 3 farklı müşteri persona oluştur. Her persona: 1)Ad, yaş, meslek, gelir 2)Bir günlüğü (sabahtan akşama) 3)En büyük 3 sorunu ve yaşattığı his 4)Bizim ürünümüzden beklentisi 5)Satın alma kararında 3 itiraz 6)Onlara ulaşmak için en iyi 3 kanal 7)Bu personaya özel mesaj.",note:"3 persona = 3 farklı pazarlama mesajı"},
+    {title:"Fiyatlandırma Stratejisi",kotu:"Fiyat belirle",iyi:"[Ürün/hizmet] için fiyatlandırma stratejisi geliştir. Bağlam: [rakip fiyatlar, hedef müşteri, maliyet yapısı]. 1)3 fiyatlandırma modeli öner (hangisi neden uygun) 2)Psikolojik fiyatlandırma taktikleri 3)Paket/tier seçenekleri (3 paket kuralı) 4)Fiyat artışı için ne zaman ve nasıl 5)Fiyatı meşrulaştıran değer önerisi metni.",note:"3 paket kuralı: ucuz/orta/pahalı — çoğu orta seçer"},
+    {title:"Satış E-postası Dizisi",kotu:"Satış e-postası yaz",iyi:"[Ürün] için soğuk e-posta dizisi (5 e-posta). E-posta 1: Problem odaklı açılış (merak uyandır, çözüm verme). E-posta 2: Sosyal kanıt (benzer müşteri hikayesi). E-posta 3: Değer önerisi detay (nasıl çalışır). E-posta 4: İtiraz kırıcı (en sık 3 itiraz + yanıt). E-posta 5: Son şans + basit CTA. Her e-posta: konu satırı + 150 kelime max.",note:"5 e-posta = ısınma süreci. Tek e-postayla satış bekleme"},
+    {title:"Lansman Stratejisi",kotu:"Ürün lansmanı planla",iyi:"[Ürün] için 30 günlük lansman stratejisi. Hafta 1: Pre-lansman (beklenti yaratma). Hafta 2: Soft launch (erken erişim). Hafta 3: Tam lansman (tüm kanallar). Hafta 4: Momentum (referans + vaka çalışması). Her hafta için: ana mesaj, kanallar, içerik türleri, başarı metrikleri.",note:"4 haftalık yol haritası = odaklı ve ölçülebilir lansman"},
+  ]},
+  {cat:"🧬 Sağlık & Yaşam",color:"#34d399",icon:"🧬",items:[
+    {title:"Kişisel Beslenme Planı",kotu:"Diyet planı yap",iyi:"Diyetisyen olarak benim için haftalık beslenme planı hazırla. Bilgilerim: [yaş, cinsiyet, boy, kilo, aktivite seviyesi, hedef, alerjiler, hoşlanmadıklarım]. 1)Günlük kalori + makro hedefleri 2)7 günlük öğün planı (tablo) 3)Her öğün için hızlı hazırlama ipuçları 4)Alışveriş listesi 5)Dışarıda yemek için öneriler. NOT: Bu tıbbi tavsiye değildir.",note:"Tüm kısıtlarını ver — kopyala-yapıştır değil, senin için plan"},
+    {title:"Egzersiz Programı",kotu:"Spor programı yap",iyi:"Kişisel antrenör olarak [hedef: kas/zayıflama/dayanıklılık] için [haftalık gün sayısı] günlük egzersiz programı. Ekipman: [mevcut ekipman]. Seviye: [başlangıç/orta/ileri]. Her gün: ısınma + ana antrenman + soğuma + süre tahmini. İlerleme takvimi (6 hafta). Hata yapılmaması gereken teknik noktalar.",note:"Teknik hatalar bölümü iste — sakatlık önlemek için şart"},
+    {title:"Stres Yönetimi Planı",kotu:"Stres azalt",iyi:"Stres yönetimi koçu olarak benim için kişiselleştirilmiş plan yap. Durumum: [stres kaynakları, semptomlar, mevcut başa çıkma yöntemleri]. 1)Ani stres için 5 dakikalık teknikler 2)Günlük önleyici pratikler 3)Stres tetikleyicileri azaltma stratejileri 4)Uyku kalitesini artırma 5)Haftalık recovery ritüeller. Kanıta dayalı teknikler kullan.",note:"Tetikleyiciler bölümü iste — belirtiyi değil nedeni tedavi et"},
+    {title:"Uyku Optimizasyonu",kotu:"Nasıl daha iyi uyurum",iyi:"Uyku uzmanı olarak benim uyku sorunlarımı çöz. Sorunum: [uyku güçlüğü/çok uyuma/kalitesiz uyku]. Mevcut alışkanlıklar: [uyku saati, ekran süresi, kafein, egzersiz]. 1)Kişisel sirkadiyen ritim optimizasyonu 2)Yatak odası ortamı düzenlemeleri 3)Uyku öncesi 60 dakika rutini 4)Uyanma protokolü 5)1 haftalık adaptasyon planı. Bilimsel referanslar ekle.",note:"Bilimsel referans iste — kanıta dayalı tavsiye al"},
   ]},
 ];
 
@@ -1763,7 +1797,7 @@ function SozlukPage(){
 
 function OgrenmePage(){
   const[tab,setTab]=useState("nedir");
-  const tabs=[["nedir","🤔 AI Nedir?"],["turleri","🗂️ Türleri"],["tarihce","📅 Tarihçe"],["turkiye","🇹🇷 TR'de AI"],["gelecek","🚀 Gelecek"]];
+  const tabs=[["nedir","🤔 AI Nedir?"],["turleri","🗂️ Türleri"],["tarihce","📅 Tarihçe"],["turkiye","🇹🇷 TR'de AI"],["gelecek","🚀 Gelecek"],["modeller","🤖 3 Büyük Model"],["prompt101","💡 Prompt 101"]];
   return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
     <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>EĞİTİM</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🎓 AI Öğrenme Merkezi</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>Sıfırdan uzmanlığa — Türkçe, kapsamlı, ücretsiz</div></div>
     <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:20,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
@@ -1828,6 +1862,46 @@ function OgrenmePage(){
           <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{f.desc}</div>
         </div>
       ))}
+    </div>}
+    {tab==="modeller"&&<div>
+      <div style={{fontSize:12,color:"#64748b",marginBottom:16}}>ChatGPT, Claude ve Gemini — 2026'da dijital okuryazarlığın temeli. Hızlı rehber ve ne zaman hangisi.</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14,marginBottom:20}}>
+        {[{k:"chatgpt",isim:"ChatGPT",firma:"OpenAI",renk:"#00dcff",icon:"🤖",model:"GPT-5.5",ozet:"900M kullanıcı. Görsel, ses, hafıza. En geniş ekosistem.",kullan:["Günlük görevler","DALL-E 3 görsel","Sesli sohbet","Genel sorular"],kullanma:["Uzun belge","Gizlilik kritikse","Derin kod"]},{k:"claude",isim:"Claude",firma:"Anthropic",renk:"#a855f7",icon:"🧠",model:"Opus 4.7",ozet:"Kodlamada #1 (SWE-bench %87.6). 1M token. En az hallüsinasyon.",kullan:["Kod yazma/debug","Uzun belge analizi","Güvenlik kritik","Akademik"],kullanma:["Görsel üretim","Sesli sohbet","Google ekosistemi"]},{k:"gemini",isim:"Gemini",firma:"Google",renk:"#34d399",icon:"🌟",model:"3.1 Ultra",ozet:"2M token rekoru. Google Drive/Gmail/Docs. Gerçek zamanlı web.",kullan:["Araştırma","Google Workspace","2M token belge","Görsel analiz"],kullanma:["Yaratıcı yazarlık","Ses klonlama","Kod derinliği"]}].map(m=>(
+          <div key={m.k} style={{background:`${m.renk}06`,border:`1px solid ${m.renk}22`,borderRadius:14,padding:"18px"}}>
+            <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10}}><span style={{fontSize:28}}>{m.icon}</span><div><div style={{fontSize:14,fontWeight:800,color:m.renk}}>{m.isim}</div><div style={{fontSize:10,color:"#475569"}}>{m.firma} · {m.model}</div></div></div>
+            <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:10}}>{m.ozet}</div>
+            <div style={{marginBottom:6}}><div style={{fontSize:10,color:"#34d399",fontWeight:700,marginBottom:3}}>✅ Kullan:</div>{m.kullan.map(k=><div key={k} style={{fontSize:10,color:"#64748b",marginBottom:1}}>→ {k}</div>)}</div>
+            <div><div style={{fontSize:10,color:"#f472b6",fontWeight:700,marginBottom:3}}>❌ Kullanma:</div>{m.kullanma.map(k=><div key={k} style={{fontSize:10,color:"#64748b",marginBottom:1}}>→ {k}</div>)}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"14px"}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>💡 Pro Strateji</div>
+        <div style={{fontSize:12,color:"#64748b",lineHeight:1.7}}>ChatGPT Plus ($20/ay) + Claude Pro ($20/ay) = $40/ay toplam. Bu iki araç kombinasyonu bir profesyonelin verimliliğini 2-3 katına çıkarır. İlk haftada karşılığını alırsın.</div>
+      </div>
+    </div>}
+    {tab==="prompt101"&&<div>
+      <div style={{background:"rgba(168,85,247,0.05)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:14,padding:"20px",marginBottom:16}}>
+        <div style={{fontSize:15,fontWeight:800,color:"#e2e8f0",marginBottom:8}}>💡 Prompt Nedir?</div>
+        <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.9}}>AI'ya verdiğin komuttur. Kalitesi çıktıyı doğrudan belirler. Aynı AI ile kötü prompt → vasat sonuç, iyi prompt → mükemmel sonuç. AI bir orkestra, sen şefsin.</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:10,marginBottom:16}}>
+        {[{no:1,t:"Rol Ver",a:"'Deneyimli bir X olarak' ile başla",orn:"'10 yıllık İK danışmanı olarak CV yaz'",c:"#00dcff"},{no:2,t:"Bağlam Ekle",a:"Kim için, ne amaçla, hangi platform",orn:"'GenZ hedef kitleye, Instagram için, eğlenceli'",c:"#a855f7"},{no:3,t:"Format Belirt",a:"Uzunluk, yapı, liste/tablo",orn:"'Madde madde, 200 kelime, başlıklar'",c:"#34d399"},{no:4,t:"Örnek Göster",a:"İstediğin tarzın bir örneği",orn:"'Şu şekilde yaz: [örnek]'",c:"#fb923c"},{no:5,t:"Kısıt Ekle",a:"Ne yapmamasını söyle",orn:"'Jargon kullanma, rakip isim verme'",c:"#f472b6"},{no:6,t:"İterasyonu Kullan",a:"Beğenmezsen düzelt",orn:"'Daha kısa / Daha teknik / Ton değiştir'",c:"#60a5fa"}].map(k=>(
+          <div key={k.no} style={{background:`${k.c}06`,border:`1px solid ${k.c}18`,borderRadius:11,padding:"12px"}}>
+            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
+              <div style={{width:20,height:20,borderRadius:"50%",background:`${k.c}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:k.c,flexShrink:0}}>{k.no}</div>
+              <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.t}</div>
+            </div>
+            <div style={{fontSize:10,color:"#64748b",marginBottom:5}}>{k.a}</div>
+            <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,padding:"6px 8px",fontSize:9,color:"#94a3b8",fontStyle:"italic"}}>💬 {k.orn}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:"rgba(0,0,0,0.4)",borderRadius:11,padding:"14px"}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>🏆 Evrensel Formül</div>
+        <div style={{fontFamily:"monospace",fontSize:12,lineHeight:2.2}}><span style={{color:"#00dcff"}}>[ROL]</span> + <span style={{color:"#a855f7"}}>[GÖREV]</span> + <span style={{color:"#34d399"}}>[BAĞLAM]</span> + <span style={{color:"#fb923c"}}>[FORMAT]</span> + <span style={{color:"#f472b6"}}>[KISIT]</span></div>
+        <div style={{fontSize:11,color:"#64748b",marginTop:8}}>"10 yıl deneyimli pazarlamacı olarak (ROL), GenZ hedef kitleye (BAĞLAM) Instagram carousel postu yaz (GÖREV). 5 slayt, madde madde (FORMAT). Argo kullanma (KISIT)."</div>
+      </div>
     </div>}
   </div>;
 }
@@ -2256,6 +2330,20 @@ export default function App(){
     {page==="sozluk"        &&<SozlukPage/>}
     {page==="dizin"         &&<DizinPage setPage={nav}/>}
     {page==="galeri"        &&<GaleriPage/>}
+    {page==="quiz"          &&<QuizPage/>}
+    {page==="oyun"          &&<OyunPage/>}
+    {page==="topluluk"      &&<ToplulukPage/>}
+    {page==="kariyer"       &&<KariyerPage/>}
+    {page==="mitler"        &&<MitlerPage/>}
+    {page==="zaman"         &&<ZamanCizgisiPage/>}
+    {page==="para"          &&<ParaPage/>}
+    {page==="hakkimizda"    &&<HakkimizdaPage/>}
+    {page==="iletisim"      &&<IletisimPage/>}
+    {page==="gizlilik"      &&<GizlilikPage/>}
+    {page==="pro"           &&<ProPage/>}
+  </Wrapper>;
+}
+
 // ══════════════════════════════════════════════════════════
 // CLAUDE KAPSAMLI SAYFA
 // ══════════════════════════════════════════════════════════
@@ -2607,18 +2695,6 @@ function GeminiPage({setPage}){
       <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"13px 32px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#34d399,#059669)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textDecoration:"none"}}>Gemini'yi Dene →</a>
     </div>
   </div>;
-}
-    {page==="oyun"          &&<OyunPage/>}
-    {page==="topluluk"      &&<ToplulukPage/>}
-    {page==="kariyer"       &&<KariyerPage/>}
-    {page==="mitler"        &&<MitlerPage/>}
-    {page==="zaman"         &&<ZamanCizgisiPage/>}
-    {page==="para"          &&<ParaPage/>}
-    {page==="hakkimizda"    &&<HakkimizdaPage/>}
-    {page==="iletisim"      &&<IletisimPage/>}
-    {page==="gizlilik"      &&<GizlilikPage/>}
-    {page==="pro"           &&<ProPage/>}
-  </Wrapper>;
 }
 
 function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
