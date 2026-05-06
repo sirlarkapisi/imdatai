@@ -1289,6 +1289,76 @@ function EmojiTahmin(){
   </div>;
 }
 
+// Aliases for routing compatibility
+const EmojiGuess = EmojiTahmin;
+const KariyerSimPage = KariyerSim;
+
+// ══ MODEL DEDEKTİF ══
+const DEDEKTIF_Q=[
+  {text:"Yapay zekanın geleceği konusunda hem heyecanlı hem de endişeliyim. İş piyasasındaki etkileri beni düşündürüyor.",model:"İnsan",ipucu:"Karma duygu + belirsizlik insani özellik"},
+  {text:"2026 yılı itibarıyla ChatGPT, GPT-5.5 modeli ile süper uygulama dönemini başlatmıştır. Kod, tarayıcı ve ses tek platformda birleşmiştir.",model:"ChatGPT",ipucu:"Ansiklopedik dil, kesin tarih, teknik özet GPT tarzı"},
+  {text:"İlginç bir soru. Bu konuyu birden fazla açıdan değerlendirmek gerekiyor: hem etik boyutu hem de pratik sonuçları açısından.",model:"Claude",ipucu:"Nüanslı yaklaşım, etik vurgu, yapılandırılmış düşünme Claude'a özgü"},
+  {text:"Merhaba! Bugün çok güzel bir gün. Balkonuma oturdum, kahvemi içiyorum. Siz ne yapıyorsunuz?",model:"İnsan",ipucu:"Kişisel anı, gündelik dil, soru sona ekleme insan özelliği"},
+  {text:"Google'ın Gemini modeli, 2 milyon token context window kapasitesiyle tüm rakiplerini geride bırakmaktadır.",model:"Gemini",ipucu:"Google ürününü öne çıkarma, teknik terimler, Gemini tarzı"},
+  {text:"Kod yazarken fark ettim: bazen en basit çözüm en iyisidir. 3 gün uğraştım, sonunda 2 satırla hallettim.",model:"İnsan",ipucu:"Kişisel deneyim, zaman belirtimi, duygusal sonuç insan yazısı"},
+  {text:"Bu soruyu yanıtlamak için öncelikle terminolojiyi netleştirmem gerekiyor. 'Yapay zeka' çok geniş bir kavramsal alanı kapsar.",model:"Claude",ipucu:"Tanım netleştirme, akademik ton, geniş perspektif Claude'a özgü"},
+  {text:"Haha ya bu çok komik oldu. Arkadaşım tam o anda geldi ve her şeyi mahvetti lol. Neyse olsun.",model:"İnsan",ipucu:"Günlük konuşma, 'lol', kısaltmalar insan yazısı"},
+  {text:"ChatGPT vs Claude karşılaştırmasında şu faktörler incelenmeli: context window uzunluğu, kod performansı ve hallüsinasyon oranları.",model:"ChatGPT",ipucu:"Maddeli yapı, profesyonel ton, karşılaştırmalı analiz GPT tarzı"},
+  {text:"Türkiye'de AI kullanımının bu kadar yüksek olması gerçekten şaşırtıcı. Sanırım Türk insanının teknolojiye açıklığı etkili.",model:"İnsan",ipucu:"Kişisel yorum, 'sanırım', tahmin insan yazısı"},
+  {text:"İstanbul'u ziyaret edecekseniz, Kapalıçarşı ve Boğaz turu mutlaka yapılması gereken aktiviteler arasında yer alır.",model:"Gemini",ipucu:"Turizm dili, tavsiye üslubu, Gemini bu tarzı çok kullanır"},
+  {text:"Bu konuda kesin bir cevap vermek doğru olmaz. Ancak mevcut kanıtlar pek çok faktörün etkili olduğunu gösteriyor.",model:"Claude",ipucu:"Belirsizliği kabul, kanıt odaklı, dikkatli ifade Claude'a özgü"},
+];
+
+function ModelDedektifPage(){
+  const[phase,setPhase]=useState("menu");const[qi,setQi]=useState(0);const[sel,setSel]=useState(null);const[shown,setShown]=useState(false);const[score,setScore]=useState(0);
+  const q=DEDEKTIF_Q[qi%DEDEKTIF_Q.length];
+  const opts=["İnsan","ChatGPT","Claude","Gemini"];
+  function guess(o){if(shown)return;setSel(o);setShown(true);if(o===q.model){setScore(s=>s+15);playSound("correct");}else playSound("wrong");}
+  function next(){if(qi>=DEDEKTIF_Q.length-1)setPhase("end");else{setQi(i=>i+1);setSel(null);setShown(false);}}
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {phase==="menu"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:16,animation:"float 2s ease-in-out infinite"}}>🔍</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#00dcff",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>Model Dedektif</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24}}>Bu metni kim yazdı? İnsan mı, ChatGPT mi, Claude mu, Gemini mi?<br/>{DEDEKTIF_Q.length} farklı metin örneği!</div>
+      <button onClick={()=>{setPhase("play");setQi(0);setSel(null);setShown(false);setScore(0);}} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Dedektif Ol 🔍</button>
+    </div>}
+    {phase==="play"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+        <div style={{fontSize:12,color:"#475569"}}>{qi+1}/{DEDEKTIF_Q.length}</div>
+        <div style={{fontSize:12,color:"#00dcff",fontWeight:700}}>💎 {score} puan</div>
+      </div>
+      <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:18}}>
+        <div style={{width:`${((qi+1)/DEDEKTIF_Q.length)*100}%`,height:"100%",background:"linear-gradient(90deg,#00dcff,#a855f7)",borderRadius:2}}/>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:16,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:9,color:"#334155",marginBottom:8}}>BU METNİ KİM YAZDI?</div>
+        <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.8,fontStyle:"italic"}}>"{q.text}"</div>
+        {shown&&<div style={{marginTop:12,fontSize:11,color:"#64748b",background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"8px 12px"}}>💡 {q.ipucu}</div>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+        {opts.map(o=>{
+          const oc={İnsan:"#34d399",ChatGPT:"#00dcff",Claude:"#a855f7",Gemini:"#fb923c"}[o]||"#475569";
+          let bg=`${oc}06`,bord=`${oc}18`,tc="#94a3b8";
+          if(shown){if(o===q.model){bg=`${oc}12`;bord=`${oc}40`;tc=oc;}else if(o===sel){bg="rgba(244,114,182,0.12)";bord="rgba(244,114,182,0.4)";tc="#f472b6";}}
+          else if(sel===o){bg=`${oc}10`;bord=`${oc}30`;tc=oc;}
+          return <button key={o} onClick={()=>guess(o)} style={{padding:"14px",borderRadius:12,border:`1px solid ${bord}`,background:bg,color:tc,fontSize:12,cursor:shown?"default":"pointer",fontFamily:"inherit",fontWeight:600}}>
+            {{İnsan:"👤",ChatGPT:"🤖",Claude:"🧠",Gemini:"🌟"}[o]} {o}
+          </button>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",borderRadius:12,fontSize:14,fontFamily:"inherit"}}>{qi<DEDEKTIF_Q.length-1?"Sonraki →":"Sonuç 🏆"}</button>}
+    </div>}
+    {phase==="end"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>🔍</div>
+      <div style={{fontSize:22,fontWeight:900,color:"#00dcff",fontFamily:"'Space Grotesk',sans-serif",marginBottom:16}}>{score}/{DEDEKTIF_Q.length*15} Puan!</div>
+      <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+        <button onClick={()=>navigator.clipboard?.writeText(`Model Dedektif'te ${score} puan aldım! 🔍 imdatai.com #IMDATAI`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.08)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+        <button onClick={()=>{setPhase("play");setQi(0);setSel(null);setShown(false);setScore(0);}} className="btn-primary" style={{padding:"10px 24px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+      </div>
+    </div>}
+  </div>;
+}
+
 function KariyerSim(){
   const[phase,setPhase]=useState("intro");const[si,setSi]=useState(0);const[score,setScore]=useState(0);const[sonuclar,setSonuclar]=useState([]);const[shown,setShown]=useState(false);const[sel,setSel]=useState(null);const[confetti,setConfetti]=useState(false);
   const s=KARIYER_SCENARIOS[si];
