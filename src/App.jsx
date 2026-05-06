@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // ── CHATBOT — Gemini API ──────────────────────────────────
-const WORKER_URL = "https://db0d0210.imdataiworker.pages.dev"; // Worker kurulunca bu URL aktif olur
+const WORKER_URL = "https://imdatai-gemini.imdatuysal.workers.dev"; // Worker kurulunca bu URL aktif olur
 
 async function askGemini(msg, history=[]){
   try {
@@ -666,6 +666,690 @@ function PBg(){
   return <canvas ref={r} style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:.5}}/>;
 }
 
+function PBg(){
+  const r=useRef();
+  useEffect(()=>{const c=r.current;if(!c)return;const x=c.getContext("2d");c.width=c.offsetWidth;c.height=c.offsetHeight;const W=c.width,H=c.height;let af;const pts=Array.from({length:35},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.3+.4,cl:Math.random()>.5?"rgba(0,220,255,":"rgba(168,85,247,"}));function d(){x.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=p.cl+"0.45)";x.fill();});pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const dv=Math.hypot(a.x-b.x,a.y-b.y);if(dv<90){x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.strokeStyle=`rgba(0,220,255,${(1-dv/90)*.06})`;x.lineWidth=.5;x.stroke();}}));af=requestAnimationFrame(d);}d();return()=>cancelAnimationFrame(af);},[]);
+  return <canvas ref={r} style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:.5}}/>;
+}
+
+// ══════════════════════════════════════════════════════════
+// SES SİSTEMİ — Web Audio API
+// ══════════════════════════════════════════════════════════
+const Sound = {
+  ctx: null,
+  init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();},
+  play(freq,dur=0.15,type="sine",vol=0.3){
+    try{this.init();const o=this.ctx.createOscillator();const g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);o.frequency.value=freq;o.type=type;g.gain.setValueAtTime(vol,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+dur);o.start();o.stop(this.ctx.currentTime+dur);}catch(e){}
+  },
+  correct(){this.play(880,0.1);setTimeout(()=>this.play(1100,0.15),100);},
+  wrong(){this.play(220,0.3,"sawtooth",0.2);},
+  click(){this.play(440,0.05,"square",0.1);},
+  levelUp(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.play(f,0.2),i*100));},
+  victory(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.play(f,0.3),i*80));},
+  tick(){this.play(660,0.05,"square",0.15);},
+};
+
+// ══════════════════════════════════════════════════════════
+// PARTİKEL EFEKTLERİ
+// ══════════════════════════════════════════════════════════
+function Particles({x,y,color="#00dcff",count=20,onDone}){
+  const[pts,setPts]=useState(()=>Array.from({length:count},(_,i)=>({id:i,x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8-3,life:1,size:Math.random()*6+3})));
+  useEffect(()=>{
+    let af;let t=0;
+    function tick(){
+      t++;
+      setPts(p=>p.map(pt=>({...pt,x:pt.x+pt.vx,y:pt.y+pt.vy,vy:pt.vy+0.2,life:pt.life-0.04})).filter(pt=>pt.life>0));
+      if(t>60){onDone?.();return;}
+      af=requestAnimationFrame(tick);
+    }
+    af=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(af);
+  },[]);
+  return <div style={{position:"fixed",top:0,left:0,pointerEvents:"none",zIndex:9999}}>
+    {pts.map(p=><div key={p.id} style={{position:"absolute",left:p.x,top:p.y,width:p.size,height:p.size,borderRadius:"50%",background:color,opacity:p.life,transform:"translate(-50%,-50%)",boxShadow:`0 0 ${p.size*2}px ${color}`}}/>)}
+  </div>;
+}
+
+function Confetti({onDone}){
+  const colors=["#00dcff","#a855f7","#f472b6","#34d399","#fb923c","#fbbf24"];
+  const[pts,setPts]=useState(()=>Array.from({length:80},(_,i)=>({id:i,x:Math.random()*window.innerWidth,y:-20,vx:(Math.random()-0.5)*4,vy:Math.random()*4+2,life:1,color:colors[i%colors.length],size:Math.random()*8+4,rot:Math.random()*360})));
+  useEffect(()=>{let af;let t=0;function tick(){t++;setPts(p=>p.map(pt=>({...pt,x:pt.x+pt.vx,y:pt.y+pt.vy,life:pt.life-0.008,rot:pt.rot+3})));if(t>180){onDone?.();return;}af=requestAnimationFrame(tick);}af=requestAnimationFrame(tick);return()=>cancelAnimationFrame(af);},[]);
+  return <div style={{position:"fixed",top:0,left:0,pointerEvents:"none",zIndex:9999,width:"100%",height:"100%",overflow:"hidden"}}>
+    {pts.map(p=><div key={p.id} style={{position:"absolute",left:p.x,top:p.y,width:p.size,height:p.size,background:p.color,opacity:p.life,transform:`rotate(${p.rot}deg)`,borderRadius:2}}/>)}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// SCROLL ANİMASYON HOOK
+// ══════════════════════════════════════════════════════════
+function useScrollReveal(){
+  useEffect(()=>{
+    const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("visible");}});},{threshold:0.1});
+    document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
+    return()=>obs.disconnect();
+  },[]);
+}
+
+// ══════════════════════════════════════════════════════════
+// DÜNYA HARİTASI SİMÜLASYONU
+// ══════════════════════════════════════════════════════════
+const WORLD_DOTS=[
+  // [x%, y%, ülke, yoğunluk 0-100, renk]
+  [48,22,"Türkiye",95,"#00dcff"],[20,38,"ABD",85,"#a855f7"],[50,18,"Rusya",70,"#60a5fa"],
+  [47,30,"Almanya",78,"#34d399"],[47,28,"İngiltere",82,"#f472b6"],[48,32,"Fransa",75,"#fb923c"],
+  [78,25,"Çin",80,"#fbbf24"],[78,38,"Hindistan",72,"#34d399"],[84,25,"Japonya",88,"#00dcff"],
+  [22,55,"Brezilya",60,"#fb923c"],[50,50,"Nijerya",40,"#a855f7"],[80,45,"Avustralya",65,"#60a5fa"],
+  [46,35,"İtalya",70,"#f472b6"],[48,20,"Ukrayna",55,"#34d399"],[57,28,"Kazakistan",45,"#fbbf24"],
+  [77,28,"Kore",85,"#00dcff"],[30,24,"Kanada",75,"#a855f7"],[46,26,"Polonya",68,"#60a5fa"],
+  [55,32,"İran",50,"#f472b6"],[63,32,"Pakistan",55,"#fb923c"],[75,32,"Tayland",60,"#34d399"],
+  [20,45,"Meksika",58,"#00dcff"],[35,35,"İspanya",72,"#a855f7"],[52,28,"Türkmenistan",35,"#60a5fa"],
+];
+
+function WorldMapSim(){
+  const r=useRef();const[hover,setHover]=useState(null);const[pulseTime,setPulseTime]=useState(0);
+  useEffect(()=>{const id=setInterval(()=>setPulseTime(t=>t+1),50);return()=>clearInterval(id);},[]);
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    const x=c.getContext("2d");const W=c.width=c.offsetWidth;const H=c.height=c.offsetHeight;
+    x.clearRect(0,0,W,H);
+    // Izgara çizgileri
+    x.strokeStyle="rgba(0,220,255,0.04)";x.lineWidth=0.5;
+    for(let i=0;i<=10;i++){x.beginPath();x.moveTo(i*W/10,0);x.lineTo(i*W/10,H);x.stroke();}
+    for(let i=0;i<=5;i++){x.beginPath();x.moveTo(0,i*H/5);x.lineTo(W,i*H/5);x.stroke();}
+    // Ülke noktaları
+    WORLD_DOTS.forEach(([px,py,name,intensity,color])=>{
+      const cx=px/100*W,cy=py/100*H;
+      const pulse=Math.sin(pulseTime*0.1+px)*0.3+0.7;
+      const size=3+(intensity/100)*8;
+      // Glow
+      const grd=x.createRadialGradient(cx,cy,0,cx,cy,size*3);
+      grd.addColorStop(0,color.replace(")"`,${0.4*pulse})`).replace("rgb","rgba").replace("#","")); 
+      // Basit çizim
+      x.beginPath();x.arc(cx,cy,size*pulse,0,Math.PI*2);
+      x.fillStyle=color+(Math.round(180*pulse).toString(16));
+      x.fill();
+      // Halka animasyonu
+      x.beginPath();x.arc(cx,cy,size*pulse*2,0,Math.PI*2);
+      x.strokeStyle=color+"44";x.lineWidth=0.5;x.stroke();
+      // Türkiye için özel
+      if(name==="Türkiye"){
+        x.beginPath();x.arc(cx,cy,size*pulse*3,0,Math.PI*2);
+        x.strokeStyle="#00dcff88";x.lineWidth=1;x.stroke();
+      }
+    });
+  },[pulseTime]);
+  return <div style={{position:"relative",width:"100%",height:220,background:"rgba(0,0,0,0.3)",borderRadius:14,overflow:"hidden",border:"1px solid rgba(0,220,255,0.1)"}}>
+    <canvas ref={r} style={{width:"100%",height:"100%"}}/>
+    <div style={{position:"absolute",top:8,left:12,fontSize:10,color:"#00dcff",fontWeight:700,letterSpacing:".1em"}}>🌍 DÜNYA AI KULLANIM HARİTASI</div>
+    <div style={{position:"absolute",top:8,right:12,display:"flex",gap:12}}>
+      {[["#00dcff","Yüksek"],["#a855f7","Orta"],["#60a5fa","Düşük"]].map(([c,l])=><div key={l} style={{display:"flex",gap:4,alignItems:"center"}}><div style={{width:6,height:6,borderRadius:"50%",background:c}}/><span style={{fontSize:9,color:"#475569"}}>{l}</span></div>)}
+    </div>
+    <div style={{position:"absolute",bottom:8,left:12,fontSize:10,color:"#fb923c",fontWeight:700}}>🇹🇷 Türkiye — Dünya #1 (%94.49)</div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// NÖRAL AĞ SİMÜLASYONU
+// ══════════════════════════════════════════════════════════
+function NeuralNetSim(){
+  const r=useRef();const[active,setActive]=useState(false);const[inputText,setInputText]=useState("Yapay zeka");
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    const x=c.getContext("2d");const W=c.width=c.offsetWidth;const H=c.height=150;
+    const layers=[[0.15,0.2,0.35,0.5,0.65,0.8,0.95],[0.2,0.4,0.6,0.8],[0.3,0.5,0.7],[0.5]];
+    const nodes=layers.map((layer,li)=>layer.map(ny=>({x:(li/(layers.length-1))*W*0.9+W*0.05,y:ny*H,active:Math.random()>0.5,val:Math.random()})));
+    let t=0;let af;
+    function draw(){
+      t+=0.05;x.clearRect(0,0,W,H);
+      nodes.forEach((layer,li)=>{
+        if(li<nodes.length-1){
+          layer.forEach(n1=>{nodes[li+1].forEach(n2=>{
+            const strength=(Math.sin(t+n1.x+n2.y)*0.5+0.5);
+            x.beginPath();x.moveTo(n1.x,n1.y);x.lineTo(n2.x,n2.y);
+            x.strokeStyle=active?`rgba(0,220,255,${strength*0.4})`:`rgba(100,116,139,${strength*0.15})`;
+            x.lineWidth=strength*(active?1.5:0.5);x.stroke();
+          });});
+        }
+        layer.forEach(n=>{
+          const pulse=Math.sin(t*2+n.x*0.01)*0.3+0.7;
+          const size=(active?4:2.5)*pulse;
+          x.beginPath();x.arc(n.x,n.y,size,0,Math.PI*2);
+          x.fillStyle=active?`rgba(0,220,255,${pulse})`:`rgba(71,85,105,${pulse*0.6})`;
+          x.fill();
+          if(active){x.beginPath();x.arc(n.x,n.y,size*2.5,0,Math.PI*2);x.strokeStyle=`rgba(168,85,247,${pulse*0.3})`;x.lineWidth=0.5;x.stroke();}
+        });
+      });
+      af=requestAnimationFrame(draw);
+    }
+    draw();return()=>cancelAnimationFrame(af);
+  },[active]);
+  return <div style={{background:"rgba(0,0,0,0.4)",borderRadius:14,padding:"16px",border:"1px solid rgba(168,85,247,0.2)"}}>
+    <div style={{fontSize:10,color:"#a855f7",fontWeight:700,letterSpacing:".1em",marginBottom:10}}>🧠 NÖRAL AĞ SİMÜLASYONU — AI Nasıl Düşünür?</div>
+    <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10,flexWrap:"wrap"}}>
+      <input value={inputText} onChange={e=>setInputText(e.target.value)} placeholder="Bir şeyler yaz..." style={{flex:1,minWidth:120,background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:8,color:"#e2e8f0",padding:"6px 10px",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
+      <button onClick={()=>{setActive(true);Sound.levelUp();setTimeout(()=>setActive(false),3000);}} style={{padding:"6px 14px",borderRadius:8,border:"none",background:active?"linear-gradient(135deg,#a855f7,#00dcff)":"rgba(168,85,247,0.15)",color:active?"#fff":"#a855f7",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,transition:"all .3s"}}>
+        {active?"🔥 İşleniyor...":"⚡ İşle"}
+      </button>
+    </div>
+    <canvas ref={r} style={{width:"100%",height:150,display:"block"}}/>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:8,fontSize:9,color:"#334155"}}>
+      <span>Girdi Katmanı</span><span>Gizli Katmanlar</span><span>Çıktı</span>
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// TOKEN YAĞMURU
+// ══════════════════════════════════════════════════════════
+function TokenRain(){
+  const tokens=["GPT","AI","LLM","Claude","Token","Gemini","Prompt","RLHF","RAG","MCP","AGI","SWE","API","GPU","TPU","INT8","FP16","CUDA","PyTorch","TF","Llama","MoE","LoRA","PEFT","VLLM","Attn"];
+  const colors=["#00dcff","#a855f7","#34d399","#f472b6","#fb923c","#60a5fa"];
+  const[drops,setDrops]=useState(()=>Array.from({length:12},(_,i)=>({id:i,x:Math.random()*100,y:Math.random()*-100,speed:0.3+Math.random()*0.7,token:tokens[Math.floor(Math.random()*tokens.length)],color:colors[Math.floor(Math.random()*colors.length)],size:9+Math.random()*5,opacity:0.3+Math.random()*0.7})));
+  useEffect(()=>{const id=setInterval(()=>{setDrops(d=>d.map(drop=>{const ny=drop.y+drop.speed;return ny>110?{...drop,y:-10,x:Math.random()*100,token:tokens[Math.floor(Math.random()*tokens.length)],color:colors[Math.floor(Math.random()*colors.length)]}:{...drop,y:ny};}));},40);return()=>clearInterval(id);},[]);
+  return <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:1}}>
+    {drops.map(d=><div key={d.id} style={{position:"absolute",left:`${d.x}%`,top:`${d.y}%`,color:d.color,fontSize:d.size,fontWeight:700,opacity:d.opacity,fontFamily:"monospace",textShadow:`0 0 8px ${d.color}`,transition:"none",userSelect:"none"}}>{d.token}</div>)}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// NAV TOOLTIP
+// ══════════════════════════════════════════════════════════
+const NAV_TOOLTIPS={
+  home:{icon:"🏠",desc:"Ana sayfa — Tüm içeriklere hızlı erişim",count:""},
+  haberler:{icon:"📰",desc:"16 güncel AI haberi — GPT, Claude, Gemini son gelişmeler",count:"16"},
+  blog:{icon:"✍️",desc:"10 kapsamlı AI makalesi — Türkçe, ücretsiz",count:"10"},
+  claude:{icon:"🧠",desc:"Kodlamada #1 · SWE-bench %87.6 · 1M Token",count:"6 bölüm"},
+  chatgpt:{icon:"🤖",desc:"Dünyanın en popüler AI'ı · 900M kullanıcı",count:"5 bölüm"},
+  gemini:{icon:"🌟",desc:"Google'ın AI'ı · 2M Token dünya rekoru",count:"4 bölüm"},
+  ogrenme:{icon:"🎓",desc:"AI nedir, türleri, tarihçe, Türkiye istatistikleri",count:"5 sekme"},
+  prompt:{icon:"💡",desc:"75 prompt örneği · 13 kategori · Kopyalanabilir",count:"75+"},
+  karsilastirma:{icon:"🆚",desc:"5 kategoride AI araç karşılaştırması",count:"5"},
+  sozluk:{icon:"📖",desc:"69 AI terimi — Türkçe açıklamalar",count:"69"},
+  dizin:{icon:"🌐",desc:"40+ AI aracı · 8 kategori · Detaylı açıklamalar",count:"40+"},
+  iqtest:{icon:"🧠",desc:"AI IQ Testi — 10 soru, puan, paylaşılabilir kart",count:""},
+  puan:{icon:"💡",desc:"Promptunu yapıştır, Gemini puanlasın",count:""},
+  oneri:{icon:"🎯",desc:"Mesleğine özel AI araç paketi",count:"6 meslek"},
+  aistatus:{icon:"📡",desc:"Tüm AI araçlarının anlık durumu",count:""},
+  galeri:{icon:"🎨",desc:"12 AI görseli ve prompt şablonları",count:"12"},
+  quiz:{icon:"🧩",desc:"20 soruluk AI quiz — Puanlamalı",count:"20"},
+  oyun:{icon:"🎮",desc:"8 interaktif AI oyunu — Ses ve efektli",count:"8"},
+  topluluk:{icon:"💬",desc:"12 topluluk promptu — Paylaş ve keşfet",count:"12"},
+  kariyer:{icon:"🚀",desc:"8 AI mesleği — Maaşlar ve yol haritası",count:"8"},
+  para:{icon:"💰",desc:"AI ile gelir yolları — Adım adım rehber",count:"4 yol"},
+  pro:{icon:"⭐",desc:"Premium özellikler — Yakında",count:""},
+};
+
+function NavTooltip({id,children}){
+  const[show,setShow]=useState(false);const t=NAV_TOOLTIPS[id];
+  if(!t)return children;
+  return <div style={{position:"relative",display:"inline-block"}} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)}>
+    {children}
+    {show&&<div style={{position:"absolute",top:"calc(100% + 8px)",left:"50%",transform:"translateX(-50%)",zIndex:999,background:"rgba(8,12,28,0.98)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,padding:"10px 13px",minWidth:180,maxWidth:220,backdropFilter:"blur(20px)",boxShadow:"0 8px 32px rgba(0,0,0,0.6)",pointerEvents:"none",whiteSpace:"normal",animation:"fadeIn .15s ease"}}>
+      <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:5}}>
+        <span style={{fontSize:14}}>{t.icon}</span>
+        <span style={{fontSize:11,fontWeight:700,color:"#e2e8f0"}}>{NAV_TOOLTIPS[id]&&id.charAt(0).toUpperCase()+id.slice(1)}</span>
+        {t.count&&<span style={{fontSize:9,background:"rgba(0,220,255,0.15)",color:"#00dcff",padding:"1px 6px",borderRadius:4}}>{t.count}</span>}
+      </div>
+      <div style={{fontSize:10,color:"#64748b",lineHeight:1.5}}>{t.desc}</div>
+      <div style={{position:"absolute",top:-5,left:"50%",transform:"translateX(-50%)",width:8,height:8,background:"rgba(8,12,28,0.98)",border:"1px solid rgba(0,220,255,0.2)",borderTop:"none",borderRight:"none",transform:"translateX(-50%) rotate(135deg)"}}/>
+    </div>}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// YENİ OYUNLAR VERİSİ
+// ══════════════════════════════════════════════════════════
+
+// AI TRİVİA MARATHON — 50 soru
+const TRIVIA_Q=[
+  {q:"Transformer mimarisi kaç yılında yayınlandı?",o:["2015","2017","2019","2021"],a:1,c:"#00dcff",cat:"Tarih"},
+  {q:"GPT'nin açılımı nedir?",o:["General Purpose Transformer","Generative Pre-trained Transformer","Global Processing Technology","Graph Processing Tool"],a:1,c:"#a855f7",cat:"Terim"},
+  {q:"Anthropic'in kuruluş yılı nedir?",o:["2019","2020","2021","2022"],a:2,c:"#34d399",cat:"Şirket"},
+  {q:"İlk ChatGPT hangi model üzerine çalışıyordu?",o:["GPT-2","GPT-3","GPT-3.5","GPT-4"],a:2,c:"#fb923c",cat:"Model"},
+  {q:"'RLHF' ne anlama gelir?",o:["Rapid Learning Human Framework","Reinforcement Learning from Human Feedback","Recursive Language Human Filter","Real-time Learning Human Function"],a:1,c:"#f472b6",cat:"Teknik"},
+  {q:"Midjourney v1 ne zaman çıktı?",o:["2020","2021","2022","2023"],a:2,c:"#60a5fa",cat:"Tarih"},
+  {q:"Alan Turing testi kaç yılında önerildi?",o:["1945","1950","1956","1960"],a:1,c:"#00dcff",cat:"Tarih"},
+  {q:"'Attention is All You Need' makalesi kime aittir?",o:["OpenAI","Google Brain","Anthropic","Meta AI"],a:1,c:"#a855f7",cat:"Araştırma"},
+  {q:"Stable Diffusion hangi tür modele aittir?",o:["LLM","Diffusion","GAN","VAE"],a:1,c:"#34d399",cat:"Model Türü"},
+  {q:"GPT-4'ün çıkış tarihi nedir?",o:["Kasım 2022","Mart 2023","Haziran 2023","Eylül 2023"],a:1,c:"#fb923c",cat:"Tarih"},
+  {q:"Claude'u geliştiren şirket nedir?",o:["OpenAI","Google","Anthropic","Microsoft"],a:2,c:"#a855f7",cat:"Şirket"},
+  {q:"'Hallüsinasyon' kavramı AI'da neyi ifade eder?",o:["Görsel üretim","Uydurma bilgi sunmak","Hafıza kaybı","Hız düşüşü"],a:1,c:"#f472b6",cat:"Kavram"},
+  {q:"DALL-E'yi kim geliştirdi?",o:["Google","Meta","OpenAI","Stability AI"],a:2,c:"#60a5fa",cat:"Şirket"},
+  {q:"Llama modeli kimin ürünüdür?",o:["OpenAI","Google","Meta","Apple"],a:2,c:"#00dcff",cat:"Şirket"},
+  {q:"ElevenLabs ne tür bir AI aracıdır?",o:["Görsel üretim","Ses/TTS","Kod asistanı","Video üretim"],a:1,c:"#34d399",cat:"Araç"},
+  {q:"'Context window' ne anlama gelir?",o:["Ekran boyutu","Modelin işleyebildiği max metin","Bellek hızı","Yanıt süresi"],a:1,c:"#fb923c",cat:"Teknik"},
+  {q:"Perplexity AI neyi farklı yapıyor?",o:["Görsel üretir","Kaynaklı cevap verir","Kod yazar","Ses üretir"],a:1,c:"#f472b6",cat:"Araç"},
+  {q:"'Fine-tuning' nedir?",o:["Model küçültme","Modeli özel veriyle yeniden eğitme","Model hızlandırma","Veri temizleme"],a:1,c:"#60a5fa",cat:"Teknik"},
+  {q:"Sora'yı kim geliştirdi?",o:["Google","Runway","OpenAI","Pika"],a:2,c:"#00dcff",cat:"Şirket"},
+  {q:"'RAG' ne anlama gelir?",o:["Random AI Generator","Retrieval-Augmented Generation","Rapid API Gateway","Real AI Graph"],a:1,c:"#a855f7",cat:"Teknik"},
+  {q:"Cursor hangi şirket tarafından geliştirilmiştir?",o:["OpenAI","Anysphere","Microsoft","Google"],a:1,c:"#34d399",cat:"Şirket"},
+  {q:"'MCP' protokolü kim tarafından geliştirildi?",o:["OpenAI","Google","Anthropic","Microsoft"],a:2,c:"#fb923c",cat:"Protokol"},
+  {q:"Imagen, Google'ın hangi tür modeli?",o:["LLM","Ses","Görsel","Video"],a:2,c:"#f472b6",cat:"Model"},
+  {q:"SWE-bench neyi ölçer?",o:["Yazma hızı","Yazılım mühendisliği performansı","Görsel kalite","Ses kalitesi"],a:1,c:"#60a5fa",cat:"Benchmark"},
+  {q:"'Vibe coding' 2026'da neyi ifade eder?",o:["Müzikle kodlama","Söyleyerek kodlama","Görsel kodlama","Ses ile kodlama"],a:1,c:"#00dcff",cat:"Trend"},
+  {q:"DeepSeek hangi ülkenin ürünüdür?",o:["ABD","Japonya","Çin","Güney Kore"],a:2,c:"#a855f7",cat:"Şirket"},
+  {q:"'Temperature' parametresi ne kontrol eder?",o:["Yanıt hızı","Yaratıcılık seviyesi","Bellek kullanımı","Token sayısı"],a:1,c:"#34d399",cat:"Parametre"},
+  {q:"HeyGen ne tür bir AI aracıdır?",o:["Görsel","Ses","Avatar video","Kod"],a:2,c:"#fb923c",cat:"Araç"},
+  {q:"'Few-shot' prompting ne demektir?",o:["Az sorgu","2-5 örnek vererek yaptırma","Hızlı yanıt","Kısa prompt"],a:1,c:"#f472b6",cat:"Prompt"},
+  {q:"OpenAI'ın değeri 2025'te kaçtır?",o:["$50M","$157B","$300B","$1T"],a:1,c:"#60a5fa",cat:"İş"},
+  {q:"Constitutional AI hangi şirketin yaklaşımı?",o:["OpenAI","Google","Anthropic","Meta"],a:2,c:"#00dcff",cat:"Güvenlik"},
+  {q:"Gemini 3.1 Ultra'nın context window'u kaçtır?",o:["128K","500K","1M","2M"],a:3,c:"#a855f7",cat:"Model"},
+  {q:"Claude Opus 4.7'nin SWE-bench skoru?",o:["%72.3","%80.8","%87.6","%95.2"],a:2,c:"#34d399",cat:"Benchmark"},
+  {q:"'Multimodal' AI ne anlama gelir?",o:["Çok dilli","Metin+görsel+ses işleyebilen","Hızlı","Güçlü"],a:1,c:"#fb923c",cat:"Kavram"},
+  {q:"Türkiye AI trafiğinde kaçıncı sıradadır?",o:["3.","5.","2.","1."],a:3,c:"#f472b6",cat:"Türkiye"},
+  {q:"Suno ne tür içerik üretir?",o:["Görsel","Müzik","Video","Kod"],a:1,c:"#60a5fa",cat:"Araç"},
+  {q:"'Embedding' ne anlama gelir?",o:["Gömme/vektör dönüşümü","Şifreleme","Sıkıştırma","Hızlandırma"],a:0,c:"#00dcff",cat:"Teknik"},
+  {q:"GitHub Copilot hangi şirketin ürünü?",o:["Google","GitHub/Microsoft","OpenAI","Meta"],a:1,c:"#a855f7",cat:"Araç"},
+  {q:"'AGI' ne demektir?",o:["Advanced GPU Integration","Artificial General Intelligence","Automated Graph Intelligence","All GPU Included"],a:1,c:"#34d399",cat:"Kavram"},
+  {q:"Phi modelleri kim tarafından geliştirildi?",o:["Google","OpenAI","Microsoft","Apple"],a:2,c:"#fb923c",cat:"Şirket"},
+  {q:"'Zero-shot' prompting ne demektir?",o:["Hızlı prompt","Örnek vermeden yaptırma","Çok kısa prompt","Boş prompt"],a:1,c:"#f472b6",cat:"Prompt"},
+  {q:"Runway ML ne tür içerik üretir?",o:["Müzik","Görsel","Video","Ses"],a:2,c:"#60a5fa",cat:"Araç"},
+  {q:"'Quantization' ne yapar?",o:["Model küçültür, verimli hale getirir","Model büyütür","Model kopyalar","Model siler"],a:0,c:"#00dcff",cat:"Teknik"},
+  {q:"ChatGPT'nin kaç ülkede kullanıcısı var?",o:["50+","100+","175+","200+"],a:2,c:"#a855f7",cat:"İstatistik"},
+  {q:"'Agentic AI' ne demektir?",o:["Görsel AI","Otonom görev yapan AI","Sesli AI","Hızlı AI"],a:1,c:"#34d399",cat:"Kavram"},
+  {q:"v0.dev ne tür bir AI aracıdır?",o:["Blog yazma","UI/React bileşen üretimi","Ses üretimi","Video üretimi"],a:1,c:"#fb923c",cat:"Araç"},
+  {q:"'LoRA' tekniği ne için kullanılır?",o:["Görsel üretim","Verimli fine-tuning","Hızlı inference","Veri temizleme"],a:1,c:"#f472b6",cat:"Teknik"},
+  {q:"Gamma hangi tür içerik üretir?",o:["Kod","Sunum/Prezantasyon","Görsel","Ses"],a:1,c:"#60a5fa",cat:"Araç"},
+  {q:"'Task Budget' özelliği kimin ürünü?",o:["OpenAI","Google","Anthropic","Meta"],a:2,c:"#00dcff",cat:"Özellik"},
+  {q:"MCP'nin kaç kurulumu var?",o:["10M+","50M+","97M+","200M+"],a:2,c:"#a855f7",cat:"İstatistik"},
+];
+
+// PROMPT ROULETTE — 40 görev
+const ROULETTE_TASKS=[
+  {task:"LinkedIn için viral açılış cümlesi yaz",kat:"İçerik",renk:"#00dcff",sure:30,ipucu:"Şok edici istatistikle başla"},
+  {task:"Prompt mühendisliği nedir? 3 cümlede açıkla",kat:"Eğitim",renk:"#a855f7",sure:25,ipucu:"Temel tanım, neden önemli, örnek"},
+  {task:"'AI ile iş bulma' için 5 anahtar kelime say",kat:"Kariyer",renk:"#34d399",sure:20,ipucu:"SEO odaklı düşün"},
+  {task:"ChatGPT'ye nasıl daha iyi soru sorulur? 3 ipucu",kat:"Prompt",renk:"#fb923c",sure:30,ipucu:"Rol, bağlam, format"},
+  {task:"Yapay zeka korkutucu mu? 2 cümleyle savun",kat:"Tartışma",renk:"#f472b6",sure:25,ipucu:"Araç olduğunu vurgula"},
+  {task:"Midjourney ile hangi 3 şeyi üretirdin?",kat:"Yaratıcı",renk:"#60a5fa",sure:20,ipucu:"Pratik ve yaratıcı ol"},
+  {task:"AI ile para kazanmanın en hızlı 3 yolu",kat:"Gelir",renk:"#fbbf24",sure:30,ipucu:"Gerçekçi, uygulanabilir"},
+  {task:"Claude'un en büyük avantajı nedir?",kat:"Model",renk:"#a855f7",sure:20,ipucu:"1M token veya SWE-bench"},
+  {task:"'Hallüsinasyon' nasıl önlenir? 2 yöntem",kat:"Güvenlik",renk:"#f472b6",sure:25,ipucu:"RAG, doğrulama"},
+  {task:"2026'da AI'ın en çok hangi sektörü değiştirdiği?",kat:"Analiz",renk:"#34d399",sure:25,ipucu:"Sağlık, eğitim veya hukuk"},
+  {task:"Mükemmel prompt için 3 kural yaz",kat:"Prompt",renk:"#00dcff",sure:30,ipucu:"Rol, bağlam, format"},
+  {task:"ElevenLabs ile ne yapılabilir?",kat:"Araç",renk:"#60a5fa",sure:20,ipucu:"Ses klonlama, TTS, müzik"},
+  {task:"AI öğrenmek için ücretsiz 3 kaynak öner",kat:"Eğitim",renk:"#fb923c",sure:30,ipucu:"Coursera, fast.ai, YouTube"},
+  {task:"Türkiye'de AI fırsatı var mı? Neden?",kat:"Türkiye",renk:"#f472b6",sure:25,ipucu:"%94 trafik, içerik boşluğu"},
+  {task:"Cursor ile geliştirme nasıl değişti?",kat:"Kod",renk:"#a855f7",sure:25,ipucu:"Vibe coding, Background Agents"},
+  {task:"AI IQ testini kaçta geçerdin? Neden?",kat:"Kişisel",renk:"#34d399",sure:20,ipucu:"Dürüst ve eğlenceli ol"},
+  {task:"ChatGPT Plus $20'a değer mi? 2 cümle",kat:"Fiyat",renk:"#00dcff",sure:25,ipucu:"Günlük kullanıma göre değerlendir"},
+  {task:"Gemini'nin Google Drive entegrasyonu neden önemli?",kat:"Araç",renk:"#34d399",sure:25,ipucu:"Workflow, verimlilik"},
+  {task:"AI ile bir blog yazısı 20 dakikada nasıl hazırlanır?",kat:"İçerik",renk:"#fb923c",sure:30,ipucu:"Outline, Claude, düzenleme"},
+  {task:"'Constitutional AI' nedir? Basit anlat",kat:"Güvenlik",renk:"#f472b6",sure:25,ipucu:"AI kendi kendini denetler"},
+  {task:"Dijital pazarlamada hangi 2 AI aracı şart?",kat:"Pazarlama",renk:"#60a5fa",sure:20,ipucu:"ChatGPT + Canva/Midjourney"},
+  {task:"AI'ın hallüsinasyon yaptığını nasıl anlarsın?",kat:"Güvenlik",renk:"#a855f7",sure:25,ipucu:"Kaynaksız iddia, aşırı özgüven"},
+  {task:"Perplexity vs ChatGPT — ne zaman Perplexity?",kat:"Karşılaştırma",renk:"#00dcff",sure:25,ipucu:"Araştırma, güncel bilgi"},
+  {task:"AI ile CV nasıl güçlendirilir? 3 adım",kat:"Kariyer",renk:"#34d399",sure:30,ipucu:"Claude, ATS, sayısal başarılar"},
+  {task:"Token nedir? Simit analojisiyle anlat",kat:"Eğitim",renk:"#fb923c",sure:25,ipucu:"Yaratıcı ve anlaşılır ol"},
+  {task:"2027'de AI nasıl olacak? 2 tahmin",kat:"Gelecek",renk:"#f472b6",sure:25,ipucu:"AGI, ajanlar, robotik"},
+  {task:"Midjourney v7 için en iyi 3 prompt ipucu",kat:"Görsel",renk:"#60a5fa",sure:30,ipucu:"--ar, --v 7, stil tanımı"},
+  {task:"AI asistanı en çok hangi görevde kullanıyorsun?",kat:"Kişisel",renk:"#a855f7",sure:20,ipucu:"Gerçek ve özgün cevap"},
+  {task:"LLM'leri birbirinden ne ayırır?",kat:"Teknik",renk:"#00dcff",sure:25,ipucu:"Eğitim verisi, RLHF, context"},
+  {task:"AI ile müzik üretmek etik mi?",kat:"Etik",renk:"#34d399",sure:25,ipucu:"Sanatçı hakları, telif"},
+  {task:"Sora ile gerçek filmden farkı var mı?",kat:"Araç",renk:"#fb923c",sure:20,ipucu:"Tutarsızlıklar, detaylar"},
+  {task:"AI öğretmeni geçer mi? Tartış",kat:"Eğitim",renk:"#f472b6",sure:25,ipucu:"Kişiselleşme vs empati"},
+  {task:"Prompt mühendisi olmak için ne gerekir?",kat:"Kariyer",renk:"#60a5fa",sure:30,ipucu:"Deney, model bilgisi, yazma"},
+  {task:"RAG sistemi neden halüsinasyonu azaltır?",kat:"Teknik",renk:"#a855f7",sure:25,ipucu:"Gerçek kaynak, doğrulama"},
+  {task:"AI ile sanat üretmek gerçek sanat mı?",kat:"Felsefe",renk:"#00dcff",sure:25,ipucu:"Yaratıcılık tanımı"},
+  {task:"GPT-5.5'in en büyük yeniliği nedir?",kat:"Model",renk:"#34d399",sure:20,ipucu:"Süper uygulama, Codex entegrasyonu"},
+  {task:"Türkiye'de AI startup için hangi alan en karlı?",kat:"Girişim",renk:"#fb923c",sure:30,ipucu:"Eğitim, sağlık, hukuk"},
+  {task:"'Agentic AI' 2026'da hayatı nasıl değiştiriyor?",kat:"Gelecek",renk:"#f472b6",sure:25,ipucu:"Otonom görev, Background Agents"},
+  {task:"Ücretsiz AI araçlarıyla aylık ne kadar kazanılabilir?",kat:"Gelir",renk:"#60a5fa",sure:25,ipucu:"Freelance, danışmanlık, içerik"},
+  {task:"Claude ve ChatGPT'yi aynı anda kullanmalı mı?",kat:"Strateji",renk:"#a855f7",sure:25,ipucu:"Claude kod, ChatGPT genel"},
+];
+
+// EMOJİ TAHMİN — 50 emoji seti
+const EMOJI_SETS=[
+  {emoji:"🧠⚡💻",cevap:"AI Yazılım Geliştirme",ipucu:"Zeka + hız + kod"},
+  {emoji:"📝🤖✨",cevap:"AI İçerik Üretimi",ipucu:"Metin + robot + büyü"},
+  {emoji:"🎨🖼️✨",cevap:"Görsel AI / Midjourney",ipucu:"Sanat + görsel + sihir"},
+  {emoji:"🔊🎙️🤖",cevap:"ElevenLabs / Ses AI",ipucu:"Ses + mikrofon + robot"},
+  {emoji:"🧬🔬💊",cevap:"AI Sağlık Uygulamaları",ipucu:"Gen + araştırma + ilaç"},
+  {emoji:"📊📈🤖",cevap:"AI Finans Analizi",ipucu:"Grafik + artış + robot"},
+  {emoji:"🎬🎥✨",cevap:"AI Video Üretimi",ipucu:"Film + kamera + sihir"},
+  {emoji:"🏠🔑🤖",cevap:"AI Gayrimenkul",ipucu:"Ev + anahtar + robot"},
+  {emoji:"📚🧠🎓",cevap:"AI Eğitim Platformu",ipucu:"Kitap + beyin + mezuniyet"},
+  {emoji:"🚗⚡🤖",cevap:"Otonom Araç AI",ipucu:"Araba + elektrik + robot"},
+  {emoji:"🌍💬🤖",cevap:"AI Çeviri",ipucu:"Dünya + konuşma + robot"},
+  {emoji:"🎵🎸🤖",cevap:"AI Müzik / Suno",ipucu:"Müzik + gitar + robot"},
+  {emoji:"💊🩺🤖",cevap:"AI Doktor Asistanı",ipucu:"İlaç + stetoskop + robot"},
+  {emoji:"📧✍️⚡",cevap:"AI E-posta Yazımı",ipucu:"Mail + yazma + hız"},
+  {emoji:"🔍📖🤖",cevap:"Perplexity AI",ipucu:"Arama + okuma + robot"},
+  {emoji:"💻⌨️🧠",cevap:"Cursor / Kod AI",ipucu:"Ekran + klavye + beyin"},
+  {emoji:"🎯📊🤖",cevap:"AI Pazarlama",ipucu:"Hedef + grafik + robot"},
+  {emoji:"🏋️💪🤖",cevap:"AI Fitness Koçu",ipucu:"Spor + güç + robot"},
+  {emoji:"👨‍🍳🍳🤖",cevap:"AI Yemek Tarifi",ipucu:"Aşçı + pişirme + robot"},
+  {emoji:"🌱🌿🤖",cevap:"AI Tarım",ipucu:"Bitki + doğa + robot"},
+  {emoji:"⚖️📜🤖",cevap:"AI Hukuk Asistanı",ipucu:"Terazi + belge + robot"},
+  {emoji:"🔐🛡️🤖",cevap:"AI Siber Güvenlik",ipucu:"Kilit + kalkan + robot"},
+  {emoji:"✈️🌍🤖",cevap:"AI Seyahat Planlaması",ipucu:"Uçak + dünya + robot"},
+  {emoji:"🧹🏠⚡",cevap:"AI Ev Otomasyonu",ipucu:"Temizlik + ev + hız"},
+  {emoji:"👗🎨🤖",cevap:"AI Moda Tasarımı",ipucu:"Kıyafet + sanat + robot"},
+  {emoji:"🎮🕹️🧠",cevap:"AI Oyun Geliştirme",ipucu:"Oyun + joystick + beyin"},
+  {emoji:"🛒💳🤖",cevap:"AI E-ticaret",ipucu:"Alışveriş + kart + robot"},
+  {emoji:"🌡️💉🤖",cevap:"AI Tanı Sistemi",ipucu:"Ateş + iğne + robot"},
+  {emoji:"📰✍️⚡",cevap:"AI Gazetecilik",ipucu:"Haber + yazma + hız"},
+  {emoji:"🏛️📚🤖",cevap:"AI Kütüphane Sistemi",ipucu:"Müze + kitap + robot"},
+  {emoji:"🔭🌌🤖",cevap:"AI Astronomi",ipucu:"Teleskop + uzay + robot"},
+  {emoji:"🎓📝🤖",cevap:"AI Sınav Hazırlığı",ipucu:"Mezuniyet + test + robot"},
+  {emoji:"💬🌐🤖",cevap:"AI Sohbet Botu",ipucu:"Konuşma + web + robot"},
+  {emoji:"🧩🎮⚡",cevap:"AI Bulmaca Çözücü",ipucu:"Bulmaca + oyun + hız"},
+  {emoji:"📱📲🤖",cevap:"AI Mobil Uygulama",ipucu:"Telefon + bağlantı + robot"},
+  {emoji:"🖥️💡🧠",cevap:"AGI / Genel AI",ipucu:"Ekran + fikir + beyin"},
+  {emoji:"🐕🐱🤖",cevap:"AI Evcil Hayvan Bakımı",ipucu:"Köpek + kedi + robot"},
+  {emoji:"🌊⚡🤖",cevap:"AI Enerji Yönetimi",ipucu:"Dalga + elektrik + robot"},
+  {emoji:"🚀🛸🤖",cevap:"AI Uzay Araştırması",ipucu:"Roket + UFO + robot"},
+  {emoji:"🎭🎪🤖",cevap:"AI Sanat & Eğlence",ipucu:"Tiyatro + sirk + robot"},
+  {emoji:"🧪⚗️🤖",cevap:"AI İlaç Keşfi",ipucu:"Deney + kimya + robot"},
+  {emoji:"📡🌐🤖",cevap:"AI İletişim Ağı",ipucu:"Anten + web + robot"},
+  {emoji:"🏦💰🤖",cevap:"AI Bankacılık",ipucu:"Banka + para + robot"},
+  {emoji:"🎯🏹🤖",cevap:"AI Hedefleme Sistemi",ipucu:"Hedef + ok + robot"},
+  {emoji:"🌸🌺🤖",cevap:"AI Çevre Koruma",ipucu:"Çiçek + doğa + robot"},
+  {emoji:"🏗️🔧🤖",cevap:"AI İnşaat Planlama",ipucu:"Bina + alet + robot"},
+  {emoji:"🔬🧫🤖",cevap:"AI Biyoteknoloji",ipucu:"Mikroskop + kültür + robot"},
+  {emoji:"🎼🎹🤖",cevap:"AI Beste Yapma",ipucu:"Müzik notası + piyano + robot"},
+  {emoji:"🌍🗺️🤖",cevap:"AI Harita & Navigasyon",ipucu:"Dünya + harita + robot"},
+  {emoji:"💡🔋🤖",cevap:"AI Enerji Tasarrufu",ipucu:"Fikir + batarya + robot"},
+];
+
+// KARİYER SİMÜLASYONU — 30 senaryo
+const KARIYER_SCENARIOS=[
+  {id:1,text:"2026 yılı. AI konusunda hiçbir bilgin yok. Ne yaparsın?",opts:[{t:"ChatGPT kullanmaya başla, 1 saat/gün",s:2,sonuc:"İyi başlangıç! Pratik en iyi öğretmen."},{t:"Önce teori öğren, kitap oku",s:1,sonuc:"Yavaş ilerleyeceksin. Dene-yanıl daha etkili."},{t:"Bekle, AI geçici bir trend",s:-1,sonuc:"Yanlış! AI kalıcı. Geç kaldın."}],c:"#00dcff"},
+  {id:2,text:"İş hayatında Claude veya ChatGPT kullanmayı öğrendin. Bir sonraki adım?",opts:[{t:"Prompt tekniklerini derinleştir",s:2,sonuc:"Harika! Prompt kalitesi = çıktı kalitesi."},{t:"Aynı şeyleri yapmaya devam et",s:0,sonuc:"Duraksama. Sürekli öğrenmelisin."},{t:"Meslektaşlarına öğret, danışman ol",s:3,sonuc:"Mükemmel! En hızlı kariyer hamlesi."}],c:"#a855f7"},
+  {id:3,text:"Şirketin AI araçlarından korkuyor. Pozisyonun tehlikede mi?",opts:[{t:"AI araçlarında uzmanlaş, değer yarat",s:3,sonuc:"Doğru! 'AI kullanan biri seni geçer.'"},{t:"Sessizce çalışmaya devam et",s:-1,sonuc:"Risk var. AI bilen birini alabilirler."},{t:"AI bölümüne geç, yeni beceriler öğren",s:2,sonuc:"İyi hamle! Şirkette dönüşümün öncüsü ol."}],c:"#34d399"},
+  {id:4,text:"Freelancer olarak çalışmak istiyorsun. AI ile başlamak için?",opts:[{t:"Prompt mühendisliği hizmeti sun",s:2,sonuc:"Türkiye'de talep var, arz yok. Harika!"},{t:"AI ile içerik üretimi",s:3,sonuc:"En hızlı gelir yolu! Başla hemen."},{t:"AI danışmanlığı, şirketlere satış",s:2,sonuc:"İyi yol ama daha fazla deneyim gerek."}],c:"#fb923c"},
+  {id:5,text:"Müşterinden büyük bir proje teklifi geldi. AI ile halleder misin?",opts:[{t:"Kabul et, Claude ile yap",s:3,sonuc:"Doğru cesaret! Claude Opus 4.7 güçlü."},{t:"Reddet, çok büyük",s:-1,sonuc:"Kaçırılmış fırsat. AI'la yapabilirdin."},{t:"Yarısını kabul et, test et",s:1,sonuc:"Makul ama agresif ol. Tam fiyat iste."}],c:"#f472b6"},
+  {id:6,text:"AI aracını hallüsinasyon yaptı, yanlış bilgi verdi. Ne yaparsın?",opts:[{t:"Çapraz kontrol yap, her zaman doğrula",s:3,sonuc:"Mükemmel! Kritik bilgileri mutlaka doğrula."},{t:"Direkt müşteriye gönder",s:-2,sonuc:"Tehlikeli! Güven kaybedersin."},{t:"Claude'a sor, doğrulama iste",s:2,sonuc:"İyi! Farklı model çapraz doğrulama yapar."}],c:"#60a5fa"},
+  {id:7,text:"AI sektöründe iş ilanı gördün. Gerekli beceriler eksik. Ne yaparsın?",opts:[{t:"Başvur, eksikleri öğrenirken tamamla",s:2,sonuc:"Doğru! İş başında öğrenme çok değerli."},{t:"Başvurma, hazır değilsin",s:-1,sonuc:"Yanlış! Hazır olmak beklersen hiç başvuramazsın."},{t:"1 ay yoğun öğren, sonra başvur",s:3,sonuc:"Harika! Hızlı öğrenme + motivasyon göster."}],c:"#fbbf24"},
+  {id:8,text:"Birisi sana 'AI her şeyi yapacak, insana gerek kalmayacak' dedi.",opts:[{t:"Kısmen katılmıyorum, insan denetimi şart",s:3,sonuc:"Doğru! AI araç, insan karar verici."},{t:"Haklı, gelecek korkutucu",s:-1,sonuc:"Bu kaygı seni durdurmasın. Adapte ol."},{t:"AI gelişirse insanlar yeni işler bulur",s:2,sonuc:"İyi bakış açısı! Tarih böyle söylüyor."}],c:"#a855f7"},
+];
+
+// ══════════════════════════════════════════════════════════
+// YENİ OYUN SAYFASI
+// ══════════════════════════════════════════════════════════
+function OyunlarPage({setPage}){
+  const games=[
+    {id:"dedektif",icon:"🕵️",title:"AI mi İnsan mı?",desc:"Metni gör, kim yazdı tahmin et",color:"#00dcff",tag:"Klasik",difficulty:"Kolay"},
+    {id:"trivia",icon:"🏆",title:"AI Trivia Marathon",desc:"50 soruluk bilgi maratonu, streak sistemi",color:"#a855f7",tag:"Marathon",difficulty:"Orta"},
+    {id:"roulette",icon:"🎰",title:"Prompt Roulette",desc:"30sn'de görev tamamla, puan topla",color:"#34d399",tag:"Hızlı",difficulty:"Orta"},
+    {id:"emoji",icon:"😀",title:"AI Emoji Tahmin",desc:"Emojilerden AI kavramını bul",color:"#fb923c",tag:"Eğlenceli",difficulty:"Kolay"},
+    {id:"kariyer",icon:"💼",title:"AI Kariyer Simülasyonu",desc:"Seçimlerle AI kariyerini şekillendir",color:"#f472b6",tag:"Simülasyon",difficulty:"Kolay"},
+    {id:"quiz",icon:"🧩",title:"AI Quiz",desc:"20 soruluk klasik quiz",color:"#60a5fa",tag:"Quiz",difficulty:"Orta"},
+    {id:"iqtest",icon:"🧠",title:"AI IQ Testi",desc:"10 soruda AI IQ'nu ölç",color:"#fbbf24",tag:"Test",difficulty:"Zor"},
+    {id:"puan",icon:"💡",title:"Prompt Puanlayıcı",desc:"Promptunu Gemini ile analiz et",color:"#f472b6",tag:"AI",difficulty:"Kolay"},
+  ];
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{textAlign:"center",marginBottom:32}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:6}}>İNTERAKTİF</div>
+      <div style={{fontSize:28,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>🎮 Oyunlar & İnteraktif</div>
+      <div style={{fontSize:13,color:"#64748b",maxWidth:480,margin:"0 auto"}}>AI'ı öğrenmenin en eğlenceli yolu — Ses efektleri, animasyonlar, puan sistemi</div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}}>
+      {games.map(g=>(
+        <div key={g.id} onClick={()=>setPage(g.id)} style={{background:`linear-gradient(135deg,${g.color}10,rgba(0,0,0,0))`,border:`1px solid ${g.color}30`,borderRadius:18,padding:"22px",cursor:"pointer",transition:"all .25s",position:"relative",overflow:"hidden"}} className="card-hover"
+          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow=`0 12px 40px ${g.color}30`;Sound.click();}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
+          <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:.06}}>{g.icon}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+            <div style={{fontSize:36}}>{g.icon}</div>
+            <div style={{display:"flex",gap:6,flexDirection:"column",alignItems:"flex-end"}}>
+              <span style={{fontSize:9,background:`${g.color}20`,color:g.color,padding:"2px 8px",borderRadius:5,fontWeight:700}}>{g.tag}</span>
+              <span style={{fontSize:9,color:"#334155"}}>{g.difficulty}</span>
+            </div>
+          </div>
+          <div style={{fontSize:15,fontWeight:800,color:"#e2e8f0",marginBottom:6,fontFamily:"'Space Grotesk',sans-serif"}}>{g.title}</div>
+          <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:14}}>{g.desc}</div>
+          <div style={{display:"flex",justifyContent:"flex-end"}}>
+            <div style={{fontSize:11,color:g.color,fontWeight:700}}>Oyna →</div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div style={{marginTop:32,background:"rgba(0,220,255,0.05)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:14,padding:"18px",textAlign:"center"}}>
+      <div style={{fontSize:12,color:"#64748b"}}>🔔 Yakında daha fazla oyun • AI Kelime Zinciri • Token Sayma • Model Yarışması</div>
+    </div>
+  </div>;
+}
+
+function TriviaMarathon(){
+  const[phase,setPhase]=useState("intro");const[qi,setQi]=useState(0);const[score,setScore]=useState(0);const[streak,setStreak]=useState(0);const[maxStreak,setMaxStreak]=useState(0);const[sel,setSel]=useState(null);const[shown,setShown]=useState(false);const[confetti,setConfetti]=useState(false);const[particles,setParticles]=useState(null);const[timer,setTimer]=useState(20);
+  const q=TRIVIA_Q[qi];
+  useEffect(()=>{if(phase!=="test"||shown)return;const id=setInterval(()=>{setTimer(t=>{if(t<=1){clearInterval(id);handleTimeout();return 0;}Sound.tick();return t-1;});},1000);return()=>clearInterval(id);},[phase,qi,shown]);
+  function handleTimeout(){setSel(-1);setShown(true);setStreak(0);}
+  function answer(i,e){
+    if(shown)return;Sound.click();setSel(i);setShown(true);
+    const correct=i===q.a;
+    if(correct){
+      const pts=10+(streak*5)+Math.max(0,timer*2);setScore(s=>s+pts);
+      const ns=streak+1;setStreak(ns);setMaxStreak(m=>Math.max(m,ns));
+      Sound.correct();
+      if(ns>=3)Sound.levelUp();
+      const rect=e?.currentTarget?.getBoundingClientRect();
+      setParticles({x:rect?.left||200,y:rect?.top||300,color:q.c});
+    }else{Sound.wrong();setStreak(0);}
+  }
+  function next(){
+    if(qi<TRIVIA_Q.length-1){setQi(i=>i+1);setSel(null);setShown(false);setTimer(20);}
+    else{setPhase("result");Sound.victory();setConfetti(true);}
+  }
+  return <div style={{padding:"28px 20px",maxWidth:700,margin:"0 auto"}}>
+    {confetti&&<Confetti onDone={()=>setConfetti(false)}/>}
+    {particles&&<Particles x={particles.x} y={particles.y} color={particles.color} onDone={()=>setParticles(null)}/>}
+    {phase==="intro"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏆</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Trivia Marathon</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>50 soruluk AI bilgi maratonu. Streak sistemi ile bonus puan. Ne kadar uzun tutabilirsin?</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,maxWidth:360,margin:"0 auto 28px"}}>
+        {[["🔥","Streak","Bonus puan"],["⏱️","20sn","Her soru"],["🏅","50","Soru sayısı"]].map(([e,t,d])=>(
+          <div key={t} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:12,padding:"14px"}}>
+            <div style={{fontSize:22,marginBottom:5}}>{e}</div><div style={{fontSize:12,fontWeight:700,color:"#a855f7"}}>{t}</div><div style={{fontSize:10,color:"#475569"}}>{d}</div>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>setPhase("test")} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Maratonu Başlat 🚀</button>
+    </div>}
+    {phase==="test"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{fontSize:11,color:"#64748b"}}>Soru {qi+1}/50</div>
+          <Tag text={q.cat} color={q.c} size={9}/>
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          {streak>=2&&<div style={{fontSize:11,color:"#fb923c",fontWeight:700,animation:"pulse 1s infinite"}}>🔥 {streak} Streak!</div>}
+          <div style={{fontSize:12,fontWeight:700,color:"#34d399"}}>⭐ {score}</div>
+          <div style={{fontSize:12,fontWeight:700,color:timer<=5?"#f472b6":timer<=10?"#fb923c":"#94a3b8",transition:"color .3s"}}>⏱️ {timer}s</div>
+        </div>
+      </div>
+      <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:3,marginBottom:4}}>
+        <div style={{width:`${(qi/50)*100}%`,height:"100%",background:`linear-gradient(90deg,${q.c},#a855f7)`,borderRadius:3,transition:"width .4s"}}/>
+      </div>
+      <div style={{height:3,background:"rgba(255,255,255,0.04)",borderRadius:2,marginBottom:20}}>
+        <div style={{width:`${(timer/20)*100}%`,height:"100%",background:timer<=5?"#f472b6":timer<=10?"#fb923c":"#00dcff",borderRadius:2,transition:"width 1s linear"}}/>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${q.c}30`,borderRadius:16,padding:"20px",marginBottom:16}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.6,fontFamily:"'Space Grotesk',sans-serif"}}>{q.q}</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+        {q.o.map((o,i)=>{
+          let bg="rgba(255,255,255,0.03)",bc=`${q.c}20`,color="#94a3b8";
+          if(shown){if(i===q.a){bg="rgba(52,211,153,0.12)";bc="rgba(52,211,153,0.5)";color="#34d399";}
+          else if(i===sel&&i!==q.a){bg="rgba(244,114,182,0.12)";bc="rgba(244,114,182,0.5)";color="#f472b6";}}
+          else if(sel===i){bg=`${q.c}15`;bc=`${q.c}50`;color=q.c;}
+          return <button key={i} onClick={(e)=>answer(i,e)} style={{padding:"13px 16px",borderRadius:11,border:`1px solid ${bc}`,background:bg,color,fontSize:13,textAlign:"left",cursor:shown?"default":"pointer",fontFamily:"inherit",transition:"all .2s",transform:shown&&i===q.a?"scale(1.01)":"scale(1)"}}>{["A","B","C","D"][i]}. {o}</button>;
+        })}
+      </div>
+      {shown&&<div>
+        <div style={{background:`${q.c}08`,border:`1px solid ${q.c}25`,borderRadius:11,padding:"12px",fontSize:12,color:"#94a3b8",marginBottom:12,lineHeight:1.7}}>{sel===q.a?`🎯 Doğru! +${10+(streak*5)} puan`:"❌ Yanlış — "} {TRIVIA_Q[qi].q}</div>
+        <button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>{qi<49?"Sonraki →":"Sonucu Gör 🏆"}</button>
+      </div>}
+    </div>}
+    {phase==="result"&&<div style={{textAlign:"center"}}>
+      <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.1),rgba(0,220,255,0.08))",border:"1px solid rgba(0,220,255,0.3)",borderRadius:20,padding:"32px",marginBottom:20}}>
+        <div style={{fontSize:56,marginBottom:10}}>🏆</div>
+        <div style={{fontSize:20,fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:"#e2e8f0",marginBottom:6}}>Marathon Tamamlandı!</div>
+        <div style={{fontSize:40,fontWeight:900,color:"#00dcff",marginBottom:4}}>⭐ {score}</div>
+        <div style={{fontSize:13,color:"#64748b",marginBottom:20}}>Max Streak: 🔥{maxStreak} · 50/50 soru tamamlandı</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+          <button onClick={()=>navigator.clipboard?.writeText(`IMDATAI AI Trivia Marathon'da ${score} puan aldım! 🏆 Max streak: ${maxStreak}\nSen kaç alırsın? imdatai.com`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.1)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+          <button onClick={()=>{setPhase("intro");setQi(0);setScore(0);setStreak(0);setSel(null);setShown(false);setTimer(20);}} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+function PromptRoulette(){
+  const[phase,setPhase]=useState("intro");const[score,setScore]=useState(0);const[taskIdx,setTaskIdx]=useState(null);const[timer,setTimer]=useState(30);const[inp,setInp]=useState("");const[done,setDone]=useState(false);const[round,setRound]=useState(0);const[history,setHistory]=useState([]);const[particles,setParticles]=useState(null);
+  const task=taskIdx!==null?ROULETTE_TASKS[taskIdx]:null;
+  useEffect(()=>{if(phase!=="game"||done)return;const id=setInterval(()=>{setTimer(t=>{if(t<=1){clearInterval(id);timeout();return 0;}Sound.tick();return t-1;});},1000);return()=>clearInterval(id);},[phase,taskIdx,done]);
+  function spinRoulette(){const idx=Math.floor(Math.random()*ROULETTE_TASKS.length);setTaskIdx(idx);setTimer(ROULETTE_TASKS[idx].sure);setInp("");setDone(false);setPhase("game");Sound.click();}
+  function timeout(){setDone(true);Sound.wrong();}
+  function submit(e){
+    if(!inp.trim()||done)return;
+    const pts=Math.round(10+timer*2+(inp.length>50?5:0));setScore(s=>s+pts);setDone(true);setRound(r=>r+1);
+    setHistory(h=>[...h,{task:task.task,cevap:inp,puan:pts}]);Sound.correct();
+    setParticles({x:e.currentTarget.getBoundingClientRect().left,y:e.currentTarget.getBoundingClientRect().top,color:task.renk});
+  }
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {particles&&<Particles x={particles.x} y={particles.y} color={particles.color} onDone={()=>setParticles(null)}/>}
+    {phase==="intro"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🎰</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>Prompt Roulette</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>Rastgele görev gelir. 30 saniyede cevap yaz. Ne kadar çok puan alabilirsin?</div>
+      <button onClick={spinRoulette} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>🎰 Çevir!</button>
+    </div>}
+    {phase==="game"&&task&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <Tag text={task.kat} color={task.renk}/>
+          <div style={{fontSize:11,color:"#64748b"}}>Tur {round+1}</div>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#34d399"}}>⭐ {score}</div>
+          <div style={{fontSize:14,fontWeight:900,color:timer<=5?"#f472b6":timer<=10?"#fb923c":"#94a3b8"}}>{timer}s</div>
+        </div>
+      </div>
+      <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:20}}>
+        <div style={{width:`${(timer/task.sure)*100}%`,height:"100%",background:timer<=5?"#f472b6":timer<=10?"#fb923c":task.renk,transition:"width 1s linear",borderRadius:2}}/>
+      </div>
+      <div style={{background:`${task.renk}08`,border:`1px solid ${task.renk}30`,borderRadius:16,padding:"22px",marginBottom:16,textAlign:"center"}}>
+        <div style={{fontSize:9,color:task.renk,letterSpacing:".1em",marginBottom:8}}>GÖREV</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:10}}>{task.task}</div>
+        <div style={{fontSize:11,color:"#64748b",fontStyle:"italic"}}>💡 İpucu: {task.ipucu}</div>
+      </div>
+      {!done?<div>
+        <textarea value={inp} onChange={e=>setInp(e.target.value)} rows={3} style={{width:"100%",background:"rgba(255,255,255,0.03)",border:`1px solid ${task.renk}30`,borderRadius:12,color:"#e2e8f0",padding:"14px",fontSize:13,fontFamily:"inherit",outline:"none",resize:"none",boxSizing:"border-box",marginBottom:12}} placeholder="Cevabını yaz..."/>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={submit} disabled={!inp.trim()} className="btn-primary" style={{flex:1,padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit",opacity:inp.trim()?1:0.5}}>✅ Gönder</button>
+          <button onClick={spinRoulette} style={{padding:"12px 18px",borderRadius:12,border:"1px solid rgba(255,255,255,0.1)",background:"transparent",color:"#475569",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>Geç</button>
+        </div>
+      </div>:<div>
+        <div style={{background:inp.trim()?"rgba(52,211,153,0.08)":"rgba(244,114,182,0.08)",border:`1px solid ${inp.trim()?"rgba(52,211,153,0.3)":"rgba(244,114,182,0.3)"}`,borderRadius:12,padding:"14px",marginBottom:14,fontSize:12,color:"#94a3b8",lineHeight:1.7}}>
+          {inp.trim()?`✅ Harika! +${Math.round(10+timer*2+(inp.length>50?5:0))} puan kazandın!`:"⏰ Süre bitti!"}
+        </div>
+        <button onClick={spinRoulette} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>🎰 Yeni Görev!</button>
+      </div>}
+    </div>}
+  </div>;
+}
+
+function EmojiTahmin(){
+  const[phase,setPhase]=useState("intro");const[idx,setIdx]=useState(0);const[inp,setInp]=useState("");const[shown,setShown]=useState(false);const[score,setScore]=useState(0);const[particles,setParticles]=useState(null);
+  const q=EMOJI_SETS[idx];
+  function check(){
+    if(!inp.trim())return;setShown(true);
+    const normalized=inp.toLowerCase().replace(/\s+/g," ").trim();
+    const correct=q.cevap.toLowerCase();
+    if(correct.includes(normalized)||normalized.includes(correct.split(" ")[0].toLowerCase())){setScore(s=>s+10);Sound.correct();setParticles({x:200,y:300,color:"#fb923c"});}
+    else Sound.wrong();
+  }
+  function next(){setIdx(i=>(i+1)%EMOJI_SETS.length);setInp("");setShown(false);Sound.click();}
+  return <div style={{padding:"28px 20px",maxWidth:580,margin:"0 auto",textAlign:"center"}}>
+    {particles&&<Particles x={particles.x} y={particles.y} color={particles.color} count={30} onDone={()=>setParticles(null)}/>}
+    {phase==="intro"&&<div>
+      <div style={{fontSize:64,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>😀</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Emoji Tahmin</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24}}>Emojileri gör, AI kavramını tahmin et. 50 farklı konu!</div>
+      <button onClick={()=>setPhase("game")} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Oyna! 🎮</button>
+    </div>}
+    {phase==="game"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <div style={{fontSize:11,color:"#64748b"}}>{idx+1}/{EMOJI_SETS.length}</div>
+        <div style={{fontSize:14,fontWeight:800,color:"#fb923c"}}>⭐ {score}</div>
+      </div>
+      <div style={{background:"linear-gradient(135deg,rgba(251,146,60,0.1),rgba(0,0,0,0))",border:"1px solid rgba(251,146,60,0.3)",borderRadius:20,padding:"32px",marginBottom:20}}>
+        <div style={{fontSize:72,marginBottom:8,letterSpacing:8,filter:shown?"none":"blur(0)"}}>{q.emoji}</div>
+        <div style={{fontSize:11,color:"#475569"}}>💡 İpucu: {q.ipucu}</div>
+      </div>
+      {!shown?<div>
+        <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&check()} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(251,146,60,0.2)",borderRadius:12,color:"#e2e8f0",padding:"14px 16px",fontSize:14,fontFamily:"inherit",outline:"none",textAlign:"center",marginBottom:12,boxSizing:"border-box"}} placeholder="Ne olduğunu tahmin et..."/>
+        <button onClick={check} disabled={!inp.trim()} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>Tahmin Et!</button>
+      </div>:<div>
+        <div style={{background:q.cevap.toLowerCase().includes(inp.toLowerCase().split(" ")[0])?"rgba(52,211,153,0.1)":"rgba(244,114,182,0.1)",border:`1px solid ${q.cevap.toLowerCase().includes(inp.toLowerCase().split(" ")[0])?"rgba(52,211,153,0.4)":"rgba(244,114,182,0.4)"}`,borderRadius:12,padding:"16px",marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:4}}>{q.cevap}</div>
+          <div style={{fontSize:11,color:"#64748b"}}>{q.ipucu}</div>
+        </div>
+        <button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>Sonraki →</button>
+      </div>}
+    </div>}
+  </div>;
+}
+
+function KariyerSim(){
+  const[phase,setPhase]=useState("intro");const[si,setSi]=useState(0);const[score,setScore]=useState(0);const[sonuclar,setSonuclar]=useState([]);const[shown,setShown]=useState(false);const[sel,setSel]=useState(null);const[confetti,setConfetti]=useState(false);
+  const s=KARIYER_SCENARIOS[si];
+  function choose(opt,i){if(shown)return;setSel(i);setShown(true);setScore(sc=>sc+Math.max(0,opt.s));setSonuclar(r=>[...r,{senaryo:s.text,secim:opt.t,sonuc:opt.sonuc,puan:opt.s}]);if(opt.s>=2)Sound.correct();else if(opt.s<0)Sound.wrong();else Sound.click();}
+  function next(){if(si<KARIYER_SCENARIOS.length-1){setSi(i=>i+1);setShown(false);setSel(null);}else{setPhase("result");Sound.victory();setConfetti(true);}}
+  const maxPuan=KARIYER_SCENARIOS.reduce((s,sc)=>s+Math.max(...sc.opts.map(o=>o.s)),0);
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {confetti&&<Confetti onDone={()=>setConfetti(false)}/>}
+    {phase==="intro"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>💼</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Kariyer Simülasyonu</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>8 gerçek hayat senaryosu. Seçimlerinle AI kariyerini şekillendir. Doğru kararlar seni zirveye taşır!</div>
+      <button onClick={()=>setPhase("game")} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Kariyere Başla 🚀</button>
+    </div>}
+    {phase==="game"&&s&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
+        <div style={{fontSize:11,color:"#64748b"}}>Senaryo {si+1}/{KARIYER_SCENARIOS.length}</div>
+        <div style={{fontSize:12,fontWeight:700,color:"#34d399"}}>⭐ Puan: {score}</div>
+      </div>
+      <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:20}}>
+        <div style={{width:`${((si)/KARIYER_SCENARIOS.length)*100}%`,height:"100%",background:`linear-gradient(90deg,${s.c},#a855f7)`,borderRadius:2,transition:"width .5s"}}/>
+      </div>
+      <div style={{background:`${s.c}08`,border:`1px solid ${s.c}25`,borderRadius:16,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:9,color:s.c,letterSpacing:".1em",marginBottom:8}}>SENARYO</div>
+        <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.7,fontFamily:"'Space Grotesk',sans-serif"}}>{s.text}</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
+        {s.opts.map((o,i)=>{
+          let bg="rgba(255,255,255,0.03)",bc="rgba(255,255,255,0.08)",color="#94a3b8";
+          if(shown&&sel===i){
+            if(o.s>=2){bg="rgba(52,211,153,0.1)";bc="rgba(52,211,153,0.4)";color="#34d399";}
+            else if(o.s<0){bg="rgba(244,114,182,0.1)";bc="rgba(244,114,182,0.4)";color="#f472b6";}
+            else{bg="rgba(251,146,60,0.1)";bc="rgba(251,146,60,0.4)";color="#fb923c";}
+          }
+          return <button key={i} onClick={()=>choose(o,i)} style={{padding:"14px 16px",borderRadius:12,border:`1px solid ${bc}`,background:bg,color,fontSize:12,textAlign:"left",cursor:shown?"default":"pointer",fontFamily:"inherit",lineHeight:1.5,transition:"all .2s"}}>{o.t}{shown&&sel===i&&<div style={{fontSize:10,marginTop:6,fontStyle:"italic",color:"#64748b"}}>💬 {o.sonuc}</div>}</button>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>{si<KARIYER_SCENARIOS.length-1?"Sonraki Senaryo →":"Sonucu Gör 🎯"}</button>}
+    </div>}
+    {phase==="result"&&<div style={{textAlign:"center"}}>
+      <div style={{background:"linear-gradient(135deg,rgba(251,146,60,0.1),rgba(168,85,247,0.08))",border:"1px solid rgba(251,146,60,0.3)",borderRadius:20,padding:"32px",marginBottom:20}}>
+        <div style={{fontSize:56,marginBottom:10}}>{score>=14?"🚀":score>=8?"📈":"🌱"}</div>
+        <div style={{fontSize:18,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>Kariyer Profili</div>
+        <div style={{fontSize:32,fontWeight:900,color:"#fb923c",marginBottom:4}}>{score>=14?"AI Lideri":score>=8?"AI Uzmanı":"AI Başlangıcı"}</div>
+        <div style={{fontSize:13,color:"#64748b",marginBottom:8}}>{score}/{maxPuan} puan</div>
+        <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,marginBottom:20,maxWidth:400,margin:"0 auto 20px"}}>{score>=14?"Mükemmel kararlar! AI kariyer yolculuğunda lidersin.":score>=8?"İyi ilerliyorsun! Birkaç alanda gelişim var.":"Başlangıç aşamadasın. Öğren sayfamızı ziyaret et!"}</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+          <button onClick={()=>navigator.clipboard?.writeText(`IMDATAI AI Kariyer Simülasyonunda '${score>=14?"AI Lideri":score>=8?"AI Uzmanı":"AI Başlangıcı"}' profili aldım! 💼\nimdatai.com`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(251,146,60,0.3)",background:"rgba(251,146,60,0.1)",color:"#fb923c",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+          <button onClick={()=>{setPhase("intro");setSi(0);setScore(0);setSonuclar([]);setSel(null);setShown(false);}} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
 // ══════════════════════════════════════════════════════════
 // SAYFALAR
 // ══════════════════════════════════════════════════════════
@@ -673,9 +1357,267 @@ function PBg(){
 // 1. ANA SAYFA
 function HomePage({setPage,user,setUser}){
   const[typed,setTyped]=useState("");
-  const words=["İçerik Üretimi","Kod Yazımı","Görsel Tasarım","Para Kazanma","CV Analizi","Araştırma"];
+  const words=["İçerik Üretimi","Kod Yazımı","Görsel Tasarım","Para Kazanma","CV Analizi","Araştırma","Proje Yönetimi","Veri Analizi"];
   const wi=useRef(0),ci=useRef(0),del=useRef(false);
-  useEffect(()=>{const t=setInterval(()=>{const w=words[wi.current];if(!del.current){if(ci.current<=w.length){setTyped(w.slice(0,ci.current));ci.current++;}else setTimeout(()=>{del.current=true;},1400);}else{if(ci.current>0){ci.current--;setTyped(w.slice(0,ci.current));}else{del.current=false;wi.current=(wi.current+1)%words.length;}}},80);return()=>clearInterval(t);},[]);
+  useEffect(()=>{const t=setInterval(()=>{const w=words[wi.current];if(!del.current){if(ci.current<=w.length){setTyped(w.slice(0,ci.current));ci.current++;}else setTimeout(()=>{del.current=true;},1400);}else{if(ci.current>0){ci.current--;setTyped(w.slice(0,ci.current));}else{del.current=false;wi.current=(wi.current+1)%words.length;}}},70);return()=>clearInterval(t);},[]);
+  const[email,setEmail]=useState("");const[sent,setSent]=useState(false);
+  const[level,setLevel]=useState(null);
+  const levelPages={beginner:["ogrenme","sozluk","haberler"],mid:["prompt","karsilastirma","claude"],expert:["dizin","kariyer","para"]};
+
+  return <div>
+    {/* ═══ HERO — MATRIX RAIN + TAM DOLU ═══ */}
+    <section style={{position:"relative",minHeight:"96vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 20px 40px",overflow:"hidden",textAlign:"center"}}>
+      {/* Matrix Rain Canvas */}
+      <MatrixRain/>
+      {/* Radial glow */}
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 70% 60% at 50% 50%,rgba(0,220,255,0.07) 0%,rgba(168,85,247,0.04) 40%,transparent 70%)",pointerEvents:"none"}}/>
+      {/* Animated grid lines */}
+      <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(0,220,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,220,255,0.03) 1px,transparent 1px)",backgroundSize:"60px 60px",pointerEvents:"none"}}/>
+      <div style={{position:"relative",zIndex:2,maxWidth:760}}>
+        {/* Badges */}
+        <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:18,flexWrap:"wrap"}}>
+          {[["🇹🇷","AI Trafiğinde #1","#fb923c"],["📡","Canlı Güncelleme","#34d399"],["🆓","Tamamen Ücretsiz","#00dcff"],["🤖","Gemini AI","#a855f7"]].map(([e,t,c])=>(
+            <div key={t} style={{fontSize:10,color:c,background:`${c}12`,padding:"5px 12px",borderRadius:14,border:`1px solid ${c}25`,fontWeight:600,backdropFilter:"blur(8px)"}}>{e} {t}</div>
+          ))}
+        </div>
+        {/* Live badge */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(0,220,255,0.08)",border:"1px solid rgba(0,220,255,0.25)",borderRadius:24,padding:"7px 20px",marginBottom:24,fontSize:11,color:"#00dcff",letterSpacing:".12em",backdropFilter:"blur(10px)"}}>
+          <span style={{width:7,height:7,background:"#00dcff",borderRadius:"50%",animation:"blink 1.2s infinite",boxShadow:"0 0 8px #00dcff"}}/> TÜRKİYE AI TRAFİĞİNDE DÜNYA #1 — %94.49
+        </div>
+        {/* Main title */}
+        <h1 style={{fontSize:"clamp(32px,7vw,68px)",fontWeight:900,lineHeight:1.02,margin:"0 0 16px",letterSpacing:"-.03em",fontFamily:"'Space Grotesk',sans-serif"}}>
+          <span style={{background:"linear-gradient(135deg,#fff,#e2e8f0)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>AI ile </span>
+          <span style={{background:"linear-gradient(135deg,#00dcff,#a855f7,#f472b6)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradient 3s linear infinite"}}>{typed}<span style={{animation:"blink 0.9s infinite",WebkitTextFillColor:"rgba(0,220,255,0.8)"}}>|</span></span>
+          <br/><span style={{fontSize:"48%",background:"linear-gradient(135deg,#64748b,#475569)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontWeight:500,letterSpacing:"-.01em"}}>saniyeler içinde, tamamen Türkçe.</span>
+        </h1>
+        <p style={{fontSize:15,color:"#475569",margin:"0 auto 32px",maxWidth:520,lineHeight:1.9}}>AI haberleri · Araç rehberleri · Prompt kütüphanesi · İnteraktif oyunlar · Dünya haritası simülasyonu · Topluluk</p>
+        {/* CTA Buttons */}
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:40}}>
+          <button onClick={()=>setPage("haberler")} className="btn-primary" style={{padding:"14px 28px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>📰 Haberleri Gör</button>
+          <button onClick={()=>setPage("iqtest")} style={{padding:"14px 24px",fontSize:14,borderRadius:12,border:"1px solid rgba(168,85,247,0.4)",background:"rgba(168,85,247,0.08)",color:"#a855f7",cursor:"pointer",fontFamily:"inherit",fontWeight:700,backdropFilter:"blur(8px)"}}>🧠 AI IQ Testi</button>
+          <button onClick={()=>setPage("trivia")} style={{padding:"14px 24px",fontSize:14,borderRadius:12,border:"1px solid rgba(52,211,153,0.4)",background:"rgba(52,211,153,0.08)",color:"#34d399",cursor:"pointer",fontFamily:"inherit",fontWeight:700,backdropFilter:"blur(8px)"}}>🎮 Oyun Oyna</button>
+          <button onClick={()=>setPage("puan")} style={{padding:"14px 24px",fontSize:14,borderRadius:12,border:"1px solid rgba(251,146,60,0.4)",background:"rgba(251,146,60,0.08)",color:"#fb923c",cursor:"pointer",fontFamily:"inherit",fontWeight:700,backdropFilter:"blur(8px)"}}>💡 Prompt Puanla</button>
+        </div>
+        {/* Floating stats */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,maxWidth:540,margin:"0 auto"}}>
+          {[["20+","Sayfa","#00dcff"],["75+","Prompt","#a855f7"],["10","Oyun","#34d399"],["69","AI Terimi","#fb923c"]].map(([n,l,c])=>(
+            <div key={l} style={{background:`${c}08`,border:`1px solid ${c}18`,borderRadius:12,padding:"12px 8px",backdropFilter:"blur(8px)"}}>
+              <div style={{fontSize:20,fontWeight:900,color:c}}>{n}</div>
+              <div style={{fontSize:9,color:"#475569",marginTop:2}}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Scroll hint */}
+      <div style={{position:"absolute",bottom:24,left:"50%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",alignItems:"center",gap:4,animation:"float 2s ease-in-out infinite"}}>
+        <div style={{fontSize:9,color:"#334155",letterSpacing:".1em"}}>KAYDIR</div>
+        <div style={{width:1,height:24,background:"linear-gradient(rgba(0,220,255,0.5),transparent)"}}/>
+      </div>
+    </section>
+
+    {/* ═══ HIZLI BAŞLANGIÇ ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.04))",border:"1px solid rgba(0,220,255,0.15)",borderRadius:20,padding:"28px",textAlign:"center"}}>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#00dcff",marginBottom:8}}>KİŞİSELLEŞTİRİLMİŞ BAŞLANGIÇ</div>
+          <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>🚀 Seviyeni Seç, Yolculuğuna Başla</div>
+          <div style={{fontSize:12,color:"#64748b",marginBottom:20}}>Seviyene göre sana özel içerikler ve araçlar sunalım</div>
+          <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:level?16:0}}>
+            {[["🟢","Yeni Başladım","AI'ı hiç kullanmadım","beginner","#34d399"],["🟡","Biraz Biliyorum","Temel seviyedeyim","mid","#fb923c"],["🔴","Uzman Olmak İstiyorum","Derinlemesine öğrenmek istiyorum","expert","#f472b6"]].map(([e,t,d,key,c])=>(
+              <button key={key} onClick={()=>setLevel(level===key?null:key)} style={{padding:"14px 20px",borderRadius:14,border:`2px solid ${level===key?c:c+"30"}`,background:level===key?`${c}12`:"rgba(255,255,255,0.02)",color:level===key?c:"#64748b",cursor:"pointer",fontFamily:"inherit",transition:"all .2s",minWidth:180}}>
+                <div style={{fontSize:22,marginBottom:6}}>{e}</div>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:3}}>{t}</div>
+                <div style={{fontSize:10,opacity:.7}}>{d}</div>
+              </button>
+            ))}
+          </div>
+          {level&&<div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",animation:"fadeIn .3s ease"}}>
+            {levelPages[level].map(p=>{const n=p==="ogrenme"?"🎓 AI Öğren":p==="sozluk"?"📖 Sözlük":p==="haberler"?"📰 Haberler":p==="prompt"?"💡 Prompt":p==="karsilastirma"?"🆚 Karşılaştır":p==="claude"?"🧠 Claude":p==="dizin"?"🛠️ Araç Dizini":p==="kariyer"?"🚀 Kariyer":"💰 Para";return <button key={p} onClick={()=>setPage(p)} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>{n}</button>;})}
+          </div>}
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ DÜNYA HARİTASI + CANLI GÖSTERGELERr ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <div style={{marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:4}}>CANLI SİMÜLASYON</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🌍 Dünya Genelinde AI Kullanımı</div></div>
+          <Tag text="● Canlı" color="#34d399"/>
+        </div>
+        <WorldMapSim/>
+      </div>
+    </section>
+
+    {/* ═══ NÖRAL AĞ SİMÜLASYONU ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.15)"}}>
+      <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
+        <div style={{marginBottom:16,textAlign:"center"}}>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:4}}>ETKİLEŞİMLİ</div>
+          <div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🧠 Nöral Ağ Simülasyonu</div>
+          <div style={{fontSize:11,color:"#64748b",marginTop:4}}>Mouse ile etkileşime gir — AI nasıl "düşünür" gör</div>
+        </div>
+        <NeuralNetSim/>
+      </div>
+    </section>
+
+    {/* ═══ GÜNLÜK AI İPUCU ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{background:`linear-gradient(135deg,${todayTip.renk}08,transparent)`,border:`1px solid ${todayTip.renk}22`,borderRadius:18,padding:"22px",display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
+          <div style={{width:48,height:48,borderRadius:12,background:`${todayTip.renk}18`,border:`1px solid ${todayTip.renk}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>💡</div>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:8,flexWrap:"wrap"}}>
+              <div style={{fontSize:9,letterSpacing:".2em",color:todayTip.renk}}>BUGÜNÜN İPUCU</div>
+              <Tag text={todayTip.araç} color={todayTip.renk}/>
+              <Tag text="Her gün güncellenir" color="#475569" size={8}/>
+            </div>
+            <div style={{fontSize:14,color:"#e2e8f0",lineHeight:1.7,marginBottom:10,fontWeight:500}}>{todayTip.tip}</div>
+            <button onClick={()=>navigator.clipboard?.writeText(todayTip.tip)} style={{fontSize:11,color:todayTip.renk,background:`${todayTip.renk}12`,border:`1px solid ${todayTip.renk}25`,borderRadius:8,padding:"6px 14px",cursor:"pointer",fontFamily:"inherit"}}>Kopyala 📋</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ CLAUDE ÖNE ÇIKAR ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}>
+      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
+        <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.1),rgba(0,220,255,0.05))",border:"1px solid rgba(168,85,247,0.3)",borderRadius:18,padding:"28px",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-30,right:-30,fontSize:140,opacity:.04}}>🧠</div>
+          <div style={{position:"relative",zIndex:1}}>
+            <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
+              <span style={{fontSize:38}}>🧠</span>
+              <div>
+                <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:3}}>ÖZEL BÖLÜM</div>
+                <div style={{fontSize:21,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>Claude — Neden Herkesin Konuştuğu AI?</div>
+              </div>
+            </div>
+            <div style={{fontSize:13,color:"#64748b",lineHeight:1.9,marginBottom:20}}>Anthropic'in geliştirdiği Claude, 2026'da kodlama testlerinde dünya birincisi oldu. <strong style={{color:"#a855f7"}}>SWE-bench %87.6</strong> ile gerçek yazılım problemlerini insanlardan daha iyi çözüyor. <strong style={{color:"#a855f7"}}>1 milyon token</strong> ile kitap boyutu belgeler. <strong style={{color:"#a855f7"}}>Constitutional AI</strong> ile en az hallüsinasyon.</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:10,marginBottom:20}}>
+              {[["🏆","Kodlamada #1","SWE-bench %87.6","#a855f7"],["📚","1M Token","750.000 kelime","#00dcff"],["🔒","En Güvenli","Constitutional AI","#34d399"],["🤖","Agentic","Task Budget","#fb923c"]].map(([e,t,d,c])=>(
+                <div key={t} onClick={()=>setPage("claude")} style={{background:`${c}08`,border:`1px solid ${c}18`,borderRadius:11,padding:"13px",cursor:"pointer"}} className="card-hover">
+                  <div style={{fontSize:20,marginBottom:5}}>{e}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:2}}>{t}</div>
+                  <div style={{fontSize:10,color:"#475569"}}>{d}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button onClick={()=>setPage("claude")} className="btn-primary" style={{padding:"12px 24px",fontSize:13,borderRadius:11,fontFamily:"inherit"}}>🧠 Claude Tam Rehber →</button>
+              <button onClick={()=>setPage("chatgpt")} style={{padding:"12px 20px",borderRadius:11,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.06)",color:"#00dcff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>🤖 ChatGPT</button>
+              <button onClick={()=>setPage("gemini")} style={{padding:"12px 20px",borderRadius:11,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.06)",color:"#34d399",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>🌟 Gemini</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ HABERLER ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>SON DAKİKA</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>📰 AI Haberleri</div></div>
+          <button onClick={()=>setPage("haberler")} style={{fontSize:11,color:"#00dcff",background:"none",border:"1px solid rgba(0,220,255,0.2)",borderRadius:8,padding:"5px 14px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:11}}>
+          {NEWS.slice(0,6).map((n,i)=>(
+            <Card key={i} color={n.color} style={{padding:"16px"}} onClick={()=>setPage("haberler")} className="card-hover">
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:9}}>
+                <Tag text={n.tag} color={n.color}/><div style={{display:"flex",gap:5,alignItems:"center"}}>{n.hot&&<Tag text="🔥" color="#ff6b6b" size={8}/>}<span style={{fontSize:9,color:"#334155"}}>{n.time}</span></div>
+              </div>
+              <div style={{fontSize:22,marginBottom:8}}>{n.emoji}</div>
+              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:5,lineHeight:1.4}}>{n.title}</div>
+              <div style={{fontSize:11,color:"#475569",lineHeight:1.6,marginBottom:8}}>{n.desc}</div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#334155"}}><span>📰 {n.src}</span><span>📖 {n.read}</span></div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ OYUNLAR SPOTLIGHT ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}>
+      <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:3}}>İNTERAKTİF</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🎮 Oyunlar & İnteraktif Araçlar</div></div>
+          <button onClick={()=>setPage("oyunlar")} style={{fontSize:11,color:"#f472b6",background:"none",border:"1px solid rgba(244,114,182,0.3)",borderRadius:8,padding:"5px 14px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
+          {[{id:"trivia",e:"🏆",t:"AI Trivia Marathon",d:"100+ soru, streak sistemi, sesli",c:"#fb923c",badge:"Popüler"},{id:"roulette",e:"🎡",t:"Prompt Roulette",d:"30 saniyelik görev yarışı",c:"#a855f7",badge:"Viral"},{id:"dedektif",e:"🔍",t:"Model Dedektif",d:"GPT mi Claude mi Gemini mi?",c:"#00dcff",badge:"Zor"},{id:"emoji",e:"😄",t:"AI Emoji Tahmin",d:"Emoji → AI kavramı bul",c:"#34d399",badge:"Eğlenceli"},{id:"kariyer_sim",e:"🎭",t:"Kariyer Simülasyonu",d:"AI çağında meslek seç",c:"#f472b6",badge:"Yeni"},{id:"puan",e:"💡",t:"Prompt Puanla",d:"Promptunu Gemini analiz eder",c:"#60a5fa",badge:"Araç"}].map(g=>(
+            <div key={g.id} onClick={()=>setPage(g.id)} className="card-hover" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:14,padding:"18px",cursor:"pointer",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:8,right:8}}><Tag text={g.badge} color={g.c} size={8}/></div>
+              <div style={{fontSize:32,marginBottom:10}}>{g.e}</div>
+              <div style={{fontSize:13,fontWeight:700,color:g.c,marginBottom:4}}>{g.t}</div>
+              <div style={{fontSize:11,color:"#475569",lineHeight:1.5}}>{g.d}</div>
+              <div style={{marginTop:12,fontSize:11,color:g.c,fontWeight:600}}>Oyna →</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ TÜRKİYE LEADERBOARD ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{marginBottom:14}}><div style={{fontSize:9,letterSpacing:".2em",color:"#fb923c",marginBottom:3}}>🇹🇷 CANLI</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>Türkiye AI Kullanım Sıralaması</div></div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10}}>
+          {[{s:"İstanbul",p:100,c:"#00dcff",r:1,n:"2.1M"},{s:"Ankara",p:68,c:"#a855f7",r:2,n:"890K"},{s:"İzmir",p:52,c:"#34d399",r:3,n:"620K"},{s:"Bursa",p:38,c:"#fb923c",r:4,n:"410K"},{s:"Antalya",p:31,c:"#f472b6",r:5,n:"340K"},{s:"Adana",p:22,c:"#60a5fa",r:6,n:"230K"}].map(s=>(
+            <div key={s.s} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${s.c}18`,borderRadius:12,padding:"13px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <div style={{width:22,height:22,borderRadius:"50%",background:`${s.c}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:s.c}}>{s.r}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{s.s}</div>
+                </div>
+                <div style={{fontSize:11,color:s.c,fontWeight:700}}>{s.n}</div>
+              </div>
+              <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:3}}><div style={{width:`${s.p}%`,height:"100%",background:s.c,borderRadius:3}}/></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ AI ALARM ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}>
+      <div style={{maxWidth:680,margin:"0 auto",paddingTop:32}}>
+        <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.07),rgba(168,85,247,0.05))",border:"1px solid rgba(0,220,255,0.2)",borderRadius:18,padding:"24px",textAlign:"center"}}>
+          <div style={{fontSize:30,marginBottom:10}}>🔔</div>
+          <div style={{fontSize:16,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>AI Alarm — Değişiklikleri Kaçırma</div>
+          <div style={{fontSize:12,color:"#64748b",marginBottom:16,lineHeight:1.7}}>ChatGPT fiyatı değişince, yeni model çıkınca, Türkiye'yi etkileyen AI haberleri olunca hemen haber ver!</div>
+          {sent?<div style={{fontSize:13,color:"#34d399",fontWeight:700,padding:"12px"}}>✅ Kaydedildin! İlk uyarıda haberdar edeceğiz.</div>:<div style={{display:"flex",gap:8,maxWidth:420,margin:"0 auto",flexWrap:"wrap",justifyContent:"center"}}>
+            <input style={{flex:1,minWidth:200,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,color:"#e2e8f0",padding:"11px 14px",fontSize:13,fontFamily:"inherit",outline:"none"}} placeholder="E-posta adresin..." value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&email.includes("@")&&setSent(true)}/>
+            <button onClick={()=>{if(email.includes("@"))setSent(true);}} className="btn-primary" style={{padding:"11px 22px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔔 Alarm Kur</button>
+          </div>}
+          <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:12,flexWrap:"wrap"}}>
+            {["ChatGPT fiyat değişimi","Yeni Claude modeli","Türkiye AI haberleri","Midjourney güncellemesi"].map(t=><div key={t} style={{fontSize:10,color:"#334155",background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"4px 10px"}}>{t}</div>)}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ TRENDING ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>BU HAFTA</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🔥 Trending AI Konuları</div></div>
+          <Tag text="Canlı" color="#00dcff"/>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
+          {TRENDING.map(t=>(
+            <Card key={t.rank} color="#00dcff" style={{padding:"13px 15px",display:"flex",gap:12,alignItems:"center"}} className="card-hover">
+              <div style={{width:34,height:34,borderRadius:9,background:"rgba(0,220,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{t.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{t.topic}</div><Tag text={t.tag} color="#00dcff" size={7}/></div>
+                <div style={{fontSize:10,color:"#475569",lineHeight:1.5,marginBottom:5}}>{t.desc}</div>
+                <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2}}><div style={{width:`${t.heat}%`,height:"100%",background:`linear-gradient(90deg,#00dcff,#a855f7)`,borderRadius:2}}/></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  </div>;
+}
   const[vidIdx,setVidIdx]=useState(null);
   const videos=[{id:"jGKE4w_VTWY",title:"ChatGPT vs Claude vs Gemini 2026",ch:"AI Explained"},{id:"8UXPZ1ZeEZA",title:"En İyi Ücretsiz AI Araçları",ch:"Matt Wolfe"},{id:"hfIUstzHs9A",title:"Prompt Engineering Rehberi",ch:"Fireship"}];
   const tiktoks=[{emoji:"🤖",title:"Claude ile 30sn'de blog yaz",views:""},{emoji:"💰",title:"AI ile ayda 10K TL kazan",views:""},{emoji:"⚡",title:"ChatGPT hileleri",views:""}];
@@ -2342,8 +3284,593 @@ function KariyerPage(){
 }
 
 // ══════════════════════════════════════════════════════════
-// MATRIX RAIN + YENİ SAYFALAR
+// SİMÜLASYONLAR
 // ══════════════════════════════════════════════════════════
+
+function WorldMapSim(){
+  const r=useRef();const[hover,setHover]=useState(null);
+  const countries=[
+    {name:"Türkiye",x:530,y:195,r:14,color:"#00dcff",users:"94.49%",rank:"#1"},
+    {name:"ABD",x:180,y:190,r:12,color:"#a855f7",users:"88.2%",rank:"#2"},
+    {name:"Almanya",x:480,y:170,r:10,color:"#34d399",users:"82.1%",rank:"#3"},
+    {name:"Japonya",x:750,y:195,r:10,color:"#fb923c",users:"79.4%",rank:"#4"},
+    {name:"Brezilya",x:270,y:290,r:11,color:"#f472b6",users:"76.8%",rank:"#5"},
+    {name:"Hindistan",x:640,y:230,r:11,color:"#60a5fa",users:"73.2%",rank:"#6"},
+    {name:"İngiltere",x:455,y:162,r:8,color:"#34d399",users:"71.9%",rank:"#7"},
+    {name:"Fransa",x:465,y:175,r:8,color:"#a855f7",users:"69.3%",rank:"#8"},
+    {name:"Kanada",x:160,y:160,r:9,color:"#00dcff",users:"68.1%",rank:"#9"},
+    {name:"Avustralya",x:750,y:320,r:9,color:"#fb923c",users:"65.7%",rank:"#10"},
+  ];
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    c.width=c.offsetWidth;c.height=c.offsetHeight;
+    let frame;let t=0;
+    function draw(){
+      t+=0.02;
+      ctx.clearRect(0,0,c.width,c.height);
+      // Grid
+      ctx.strokeStyle="rgba(0,220,255,0.04)";ctx.lineWidth=0.5;
+      for(let i=0;i<c.width;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,c.height);ctx.stroke();}
+      for(let i=0;i<c.height;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(c.width,i);ctx.stroke();}
+      // Countries
+      countries.forEach((co,i)=>{
+        const pulse=Math.sin(t+i)*0.3+0.7;
+        // Glow
+        const grad=ctx.createRadialGradient(co.x,co.y,0,co.x,co.y,co.r*4);
+        grad.addColorStop(0,co.color+"44");grad.addColorStop(1,"transparent");
+        ctx.fillStyle=grad;ctx.beginPath();ctx.arc(co.x,co.y,co.r*4,0,Math.PI*2);ctx.fill();
+        // Circle
+        ctx.fillStyle=co.color+(Math.round(pulse*99).toString(16).padStart(2,"0"));
+        ctx.beginPath();ctx.arc(co.x,co.y,co.r*pulse,0,Math.PI*2);ctx.fill();
+        // Ring
+        ctx.strokeStyle=co.color+"66";ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.arc(co.x,co.y,co.r*pulse*1.8,0,Math.PI*2);ctx.stroke();
+        // Label
+        ctx.fillStyle="#e2e8f0";ctx.font="bold 10px Inter,sans-serif";
+        ctx.textAlign="center";ctx.fillText(co.name,co.x,co.y+co.r*2+12);
+      });
+      // Connection lines from Turkey
+      const tr=countries[0];
+      countries.slice(1).forEach((co,i)=>{
+        if(i>3)return;
+        ctx.strokeStyle=`rgba(0,220,255,${0.06+Math.sin(t+i)*0.03})`;
+        ctx.lineWidth=0.8;
+        ctx.setLineDash([4,8]);
+        ctx.beginPath();ctx.moveTo(tr.x,tr.y);ctx.lineTo(co.x,co.y);ctx.stroke();
+        ctx.setLineDash([]);
+      });
+      frame=requestAnimationFrame(draw);
+    }
+    draw();
+    return()=>cancelAnimationFrame(frame);
+  },[]);
+  return <div style={{position:"relative"}}>
+    <canvas ref={r} style={{width:"100%",height:360,background:"rgba(0,0,0,0.3)",borderRadius:16,border:"1px solid rgba(0,220,255,0.1)",cursor:"crosshair"}}/>
+    <div style={{position:"absolute",bottom:12,left:12,display:"flex",gap:8,flexWrap:"wrap"}}>
+      {countries.slice(0,5).map(c=>(
+        <div key={c.name} style={{fontSize:9,color:c.color,background:`${c.color}12`,padding:"3px 8px",borderRadius:6,border:`1px solid ${c.color}20`}}>{c.rank} {c.name}</div>
+      ))}
+    </div>
+    <div style={{position:"absolute",top:12,right:12,background:"rgba(0,0,0,0.7)",borderRadius:10,padding:"10px 14px",backdropFilter:"blur(10px)"}}>
+      <div style={{fontSize:9,color:"#475569",marginBottom:4}}>🇹🇷 TÜRKİYE</div>
+      <div style={{fontSize:18,fontWeight:900,color:"#00dcff"}}>94.49%</div>
+      <div style={{fontSize:9,color:"#34d399"}}>Dünya #1</div>
+    </div>
+  </div>;
+}
+
+function NeuralNetSim(){
+  const r=useRef();const mouse=useRef({x:0,y:0});
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    c.width=c.offsetWidth;c.height=c.offsetHeight;
+    const W=c.width,H=c.height;
+    // Network layers
+    const layers=[[3,5],[5,8],[8,6],[6,4],[4,2]];
+    const nodes=[];
+    const layerX=layers.map((_,i)=>W*0.12+i*(W*0.19));
+    layers.forEach((layer,li)=>{
+      layer[0];
+      for(let ni=0;ni<layer[0];ni++){
+        nodes.push({layer:li,idx:ni,x:layerX[li],y:H/2+(ni-(layer[0]-1)/2)*(H/(layer[0]+1)),val:Math.random(),active:false,color:["#00dcff","#a855f7","#34d399","#fb923c","#f472b6"][li]});
+      }
+    });
+    let frame;let t=0;
+    c.addEventListener("mousemove",e=>{const rect=c.getBoundingClientRect();mouse.current={x:e.clientX-rect.left,y:e.clientY-rect.top};});
+    function draw(){
+      t+=0.025;
+      ctx.clearRect(0,0,W,H);
+      // Background gradient
+      const bg=ctx.createLinearGradient(0,0,W,H);
+      bg.addColorStop(0,"rgba(0,0,0,0)");bg.addColorStop(1,"rgba(168,85,247,0.02)");
+      ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+      // Animate node values
+      nodes.forEach(n=>{n.val=0.4+0.6*Math.abs(Math.sin(t+n.layer*0.7+n.idx*1.2));});
+      // Draw connections
+      nodes.forEach(n=>{
+        const nextLayer=nodes.filter(m=>m.layer===n.layer+1);
+        nextLayer.forEach(m=>{
+          const strength=n.val*m.val;
+          const dx=mouse.current.x-n.x,dy=mouse.current.y-n.y;
+          const near=Math.hypot(dx,dy)<80;
+          ctx.strokeStyle=near?`${n.color}${Math.round(strength*99).toString(16).padStart(2,"0")}`:`rgba(255,255,255,${strength*0.08})`;
+          ctx.lineWidth=near?strength*2:strength*0.8;
+          ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(m.x,m.y);ctx.stroke();
+        });
+      });
+      // Draw nodes
+      nodes.forEach(n=>{
+        const dx=mouse.current.x-n.x,dy=mouse.current.y-n.y;
+        const near=Math.hypot(dx,dy)<80;
+        const size=(near?14:8)*n.val+4;
+        const grad=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,size*2);
+        grad.addColorStop(0,n.color+"cc");grad.addColorStop(1,n.color+"00");
+        ctx.fillStyle=grad;ctx.beginPath();ctx.arc(n.x,n.y,size*2,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=n.color;ctx.beginPath();ctx.arc(n.x,n.y,size,0,Math.PI*2);ctx.fill();
+        if(near){ctx.fillStyle="#fff";ctx.font="9px Inter";ctx.textAlign="center";ctx.fillText((n.val*100).toFixed(0)+"%",n.x,n.y+size+12);}
+      });
+      // Labels
+      ["Girdi","Gizli 1","Gizli 2","Gizli 3","Çıktı"].forEach((l,i)=>{
+        ctx.fillStyle="rgba(255,255,255,0.2)";ctx.font="10px Inter";ctx.textAlign="center";ctx.fillText(l,layerX[i],H-10);
+      });
+      frame=requestAnimationFrame(draw);
+    }
+    draw();
+    return()=>cancelAnimationFrame(frame);
+  },[]);
+  return <canvas ref={r} style={{width:"100%",height:300,background:"rgba(0,0,0,0.25)",borderRadius:16,border:"1px solid rgba(168,85,247,0.15)",cursor:"crosshair"}}/>;
+}
+
+// ══════════════════════════════════════════════════════════
+// SES SİSTEMİ
+// ══════════════════════════════════════════════════════════
+function playSound(type){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    const cfg={correct:{f:880,t:0.12,shape:"sine"},wrong:{f:200,t:0.18,shape:"sawtooth"},level:{f:[523,659,784],t:0.08,shape:"sine"},tick:{f:440,t:0.04,shape:"square"},victory:{f:[523,659,784,1047],t:0.12,shape:"sine"}};
+    const c=cfg[type]||cfg.tick;
+    if(Array.isArray(c.f)){
+      c.f.forEach((freq,i)=>setTimeout(()=>{const o2=ac.createOscillator(),g2=ac.createGain();o2.connect(g2);g2.connect(ac.destination);o2.type=c.shape;o2.frequency.value=freq;g2.gain.setValueAtTime(0.15,ac.currentTime);g2.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+c.t);o2.start();o2.stop(ac.currentTime+c.t);},i*120));
+    } else {
+      o.type=c.shape;o.frequency.value=c.f;g.gain.setValueAtTime(0.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+c.t);o.start();o.stop(ac.currentTime+c.t);
+    }
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+// OYUNLAR SAYFASI
+// ══════════════════════════════════════════════════════════
+function OyunlarPage({setPage}){
+  const games=[
+    {id:"trivia",e:"🏆",t:"AI Trivia Marathon",d:"100+ soru, streak sistemi, ateş efekti",c:"#fb923c",badge:"En Popüler",detail:"Sorular zinciri yap, streak bonusları kazan!"},
+    {id:"roulette",e:"🎡",t:"Prompt Roulette",d:"30 saniyede prompt yaz, puan kazan",c:"#a855f7",badge:"Viral",detail:"Rastgele görev, süre baskısı, yüksek puan!"},
+    {id:"dedektif",e:"🔍",t:"Model Dedektif",d:"GPT mi Claude mi Gemini mi yazdı?",c:"#00dcff",badge:"Zor",detail:"30+ farklı metin örneği, model özelliklerini öğren"},
+    {id:"emoji",e:"😄",t:"AI Emoji Tahmin",d:"Emoji kombinasyonundan AI kavramı bul",c:"#34d399",badge:"Eğlenceli",detail:"50+ emoji bulmaca, sesli efektler"},
+    {id:"kariyer_sim",e:"🎭",t:"AI Kariyer Simülasyonu",d:"AI çağında meslek seçimini simüle et",c:"#f472b6",badge:"Yeni",detail:"40+ senaryo, dallanma sistemi, kariyer puanı"},
+    {id:"iqtest",e:"🧠",t:"AI IQ Testi",d:"10 soruluk AI bilgi testi, IQ puanı",c:"#60a5fa",badge:"Paylaşılabilir",detail:"Sonuç kartı oluştur, sosyal medyada paylaş"},
+    {id:"puan",e:"💡",t:"Prompt Puanlayıcı",d:"Promptunu Gemini AI analiz eder",c:"#00dcff",badge:"Araç",detail:"Güçlü/zayıf yönler, iyileştirilmiş versiyon"},
+    {id:"zaman",e:"⏱️",t:"Zaman Hesaplayıcı",d:"AI ile kaç saat tasarruf edersin?",c:"#34d399",badge:"Faydalı",detail:"Mesleğine göre hesapla, paylaş"},
+    {id:"oneri",e:"🎯",t:"Kişisel AI Önerisi",d:"Mesleğine özel AI araç paketi",c:"#fb923c",badge:"Kişisel",detail:"6 meslek kategorisi, özel öneriler"},
+    {id:"aistatus",e:"📡",t:"AI Araç Durumu",d:"Tüm AI araçları çalışıyor mu?",c:"#f472b6",badge:"Canlı",detail:"OpenAI, Anthropic, Google status takibi"},
+  ];
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:5}}>İNTERAKTİF</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🎮 Oyunlar & İnteraktif Araçlar</div>
+      <div style={{fontSize:12,color:"#64748b",marginTop:4}}>Öğrenirken eğlen · Ses efektleri · Puan sistemi · Paylaşılabilir sonuçlar</div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
+      {games.map(g=>(
+        <div key={g.id} onClick={()=>setPage(g.id)} className="card-hover" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:16,padding:"20px",cursor:"pointer",position:"relative",overflow:"hidden",transition:"all .2s"}}>
+          <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${g.c},transparent)`}}/>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+            <div style={{fontSize:36}}>{g.e}</div>
+            <Tag text={g.badge} color={g.c} size={8}/>
+          </div>
+          <div style={{fontSize:14,fontWeight:700,color:g.c,marginBottom:6,fontFamily:"'Space Grotesk',sans-serif"}}>{g.t}</div>
+          <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:8}}>{g.d}</div>
+          <div style={{fontSize:10,color:"#334155",lineHeight:1.5,marginBottom:14}}>{g.detail}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{fontSize:11,color:g.c,fontWeight:700}}>Başla →</div>
+            <div style={{width:32,height:32,borderRadius:8,background:`${g.c}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{g.e}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>;
+}
+
+// ══ TRİVİA MARATHON ══
+const TRIVIA_Q=[
+  {q:"ChatGPT kaç günde 1 milyon kullanıcıya ulaştı?",o:["30","5","14","60"],a:1,cat:"Tarih"},
+  {q:"GPT-5.5'in 2026'daki en büyük yeniliği nedir?",o:["Daha hızlı yanıt","Süper uygulama (Codex+tarayıcı)","Ücretsiz plan","Ses kalitesi"],a:1,cat:"Model"},
+  {q:"Claude Opus 4.7'nin SWE-bench skoru nedir?",o:["%72","%80.8","%87.6","%95"],a:2,cat:"Model"},
+  {q:"Türkiye AI trafiğinde dünya kaçıncısıdır?",o:["5.","2.","3.","1."],a:3,cat:"Türkiye"},
+  {q:"Gemini 3.1 Ultra'nın context window'u?",o:["128K","500K","1M","2M"],a:3,cat:"Model"},
+  {q:"Constitutional AI'ı kim geliştirdi?",o:["OpenAI","Google","Anthropic","Meta"],a:2,cat:"Güvenlik"},
+  {q:"'Hallüsinasyon' AI bağlamında ne demek?",o:["Yavaşlama","Uydurma bilgiyi gerçek sunmak","Görsel hata","Ses bozulması"],a:1,cat:"Terim"},
+  {q:"MCP protokolünü kim geliştirdi?",o:["OpenAI","Google","Meta","Anthropic"],a:3,cat:"Teknik"},
+  {q:"Vibe Coding ne demek?",o:["Müzik ile kod","Söyleyerek kod yazmak","Gece kodlama","Takım çalışması"],a:1,cat:"Trend"},
+  {q:"RAG açılımı nedir?",o:["Random AI Generator","Retrieval-Augmented Generation","Real AI Graph","Rapid API Gateway"],a:1,cat:"Teknik"},
+  {q:"1 milyon token kaç kelimeye eşittir?",o:["100K","500K","750K","1.5M"],a:2,cat:"Teknik"},
+  {q:"Cursor hangi editörü temel alır?",o:["Vim","Emacs","VS Code","Sublime"],a:2,cat:"Araçlar"},
+  {q:"ElevenLabs ne için kullanılır?",o:["Görsel üretim","Ses/Seslendirme AI","Kod yazma","Video üretim"],a:1,cat:"Araçlar"},
+  {q:"ChatGPT Plus aylık ne kadar?",o:["$10","$15","$20","$30"],a:2,cat:"Fiyat"},
+  {q:"Midjourney v7'nin öne çıkan özelliği?",o:["Daha ucuz","Fotorealizm mükemmeliyeti","Türkçe desteği","Video üretim"],a:1,cat:"Görsel"},
+  {q:"DALL-E 3 hangi şirkete ait?",o:["Google","Anthropic","Adobe","OpenAI"],a:3,cat:"Görsel"},
+  {q:"Perplexity ne için idealdir?",o:["Görsel üretim","Kaynaklı araştırma","Ses dublajı","Kod yazma"],a:1,cat:"Araçlar"},
+  {q:"'Fine-tuning' ne demek?",o:["Ses ayarı","Modeli özel veriyle eğitmek","API hızlandırma","Prompt düzenleme"],a:1,cat:"Teknik"},
+  {q:"Türkiye'de AI kullananların kaçı ChatGPT kullanır?",o:["%72","%82.5","%90.24","%98"],a:2,cat:"Türkiye"},
+  {q:"Claude'un context window'u ne kadar?",o:["32K","128K","500K","1M"],a:3,cat:"Model"},
+  {q:"AGI ne anlama gelir?",o:["Yapay Genel Zeka","Anlık Grafik İşleme","Otomatik Görüntü İndeksi","Gelişmiş Grafik AI"],a:0,cat:"Terim"},
+  {q:"Suno ne üretir?",o:["Görsel","Müzik","Video","Kod"],a:1,cat:"Araçlar"},
+  {q:"'Chain of Thought' tekniği ne sağlar?",o:["Hızlı yanıt","Adım adım düşünme","Kısa cevap","Görsel üretim"],a:1,cat:"Prompt"},
+  {q:"Token sayımında 1 token ortalama kaç kelime?",o:["2-3 kelime","1 kelime","3/4 kelime","5 kelime"],a:2,cat:"Teknik"},
+  {q:"Gamma ne için kullanılır?",o:["Kod yazma","Sunum oluşturma","Ses üretim","Görsel üretim"],a:1,cat:"Araçlar"},
+  {q:"HeyGen ne üretir?",o:["Müzik","Kod","Avatar video","Görsel"],a:2,cat:"Araçlar"},
+  {q:"Adobe Firefly'ın öne çıkan özelliği?",o:["Ücretsiz","Ticari kullanım güvenli","En kaliteli","Türkçe"],a:1,cat:"Görsel"},
+  {q:"Llama modelleri kime ait?",o:["Google","OpenAI","Meta","Amazon"],a:2,cat:"Model"},
+  {q:"'Zero-shot' prompting ne demek?",o:["Örnek vermeden istemek","Sıfır puan almak","Bedava kullanım","Hızlı yanıt"],a:0,cat:"Prompt"},
+  {q:"DeepSeek hangi ülkenin AI şirketi?",o:["Japonya","Kore","Hindistan","Çin"],a:3,cat:"Dünya"},
+  {q:"SWE-bench ne ölçer?",o:["Hız","Yazarlık kalitesi","Yazılım mühendisliği","Güvenlik"],a:2,cat:"Teknik"},
+  {q:"Task Budget özelliği hangi modelde var?",o:["GPT-5.5","Gemini Ultra","Claude Opus 4.7","Llama 4"],a:2,cat:"Model"},
+  {q:"Runway hangi alanda öne çıkar?",o:["Müzik","Video düzenleme AI","Kod","Görsel üretim"],a:1,cat:"Araçlar"},
+  {q:"Canva AI'ın temel özelliği?",o:["Kod yazma","Grafik ve tasarım AI","Ses üretim","Video"],a:1,cat:"Araçlar"},
+  {q:"'Embedding' ne demek?",o:["Gömme","Metni sayısal vektöre dönüştürme","Görsel ekleme","Ses işleme"],a:1,cat:"Teknik"},
+  {q:"n8n ne için kullanılır?",o:["Görsel üretim","İş akışı otomasyonu","Ses üretim","Kod yazma"],a:1,cat:"Araçlar"},
+  {q:"RLHF açılımı nedir?",o:["Robotik Öğrenme","İnsan Geri Bildirimli Pekiştirmeli Öğrenme","Gerçek Zamanlı İşleme","Hızlı Dil"],a:1,cat:"Teknik"},
+  {q:"Türkiye'de AI girişim sayısı 2026'da kaçı aştı?",o:["100","200","300","500"],a:2,cat:"Türkiye"},
+  {q:"Sora ne üretir?",o:["Müzik","Görsel","Video","Kod"],a:2,cat:"Araçlar"},
+  {q:"Apple Intelligence 2.0'ın özelliği?",o:["Bulut tabanlı","Cihaz üstünde AI","En güçlü model","En ucuz"],a:1,cat:"Araçlar"},
+  {q:"'Few-shot' prompting kaç örnek verir?",o:["0","1","2-5","10+"],a:2,cat:"Prompt"},
+  {q:"Anthropic ne zaman kuruldu?",o:["2019","2020","2021","2022"],a:2,cat:"Tarih"},
+  {q:"GPT-4o'daki 'o' ne anlama gelir?",o:["Optimal","Omni","Online","Open"],a:1,cat:"Model"},
+  {q:"Doktorların yüzde kaçı 2026'da AI kullanıyor?",o:["%48","%60","%72","%85"],a:2,cat:"Dünya"},
+  {q:"MCP kaç kurulum aşmıştır?",o:["10M","50M","97M","200M"],a:2,cat:"Teknik"},
+  {q:"'Grounding' tekniği ne amaçlar?",o:["Hız","Hallüsinasyonu azaltma","Görsel üretim","Ses kalitesi"],a:1,cat:"Teknik"},
+  {q:"AB AI Yasası hangi yıl yürürlüğe girdi?",o:["2024","2025","2026","2027"],a:2,cat:"Dünya"},
+  {q:"Gemini'yi hangi Google birimi geliştirdi?",o:["Google Brain","DeepMind","Google AI","Google Research"],a:1,cat:"Model"},
+  {q:"'Mixture of Experts' ne için kullanılır?",o:["Güvenlik","Verimli hesaplama","Görsel üretim","Ses işleme"],a:1,cat:"Teknik"},
+  {q:"Perplexity kaç kullanıcıya ulaştı?",o:["5M","15M","30M","100M"],a:2,cat:"Araçlar"},
+];
+
+function TriviaMarathon(){
+  const[phase,setPhase]=useState("menu");const[qi,setQi]=useState(0);const[score,setScore]=useState(0);const[streak,setStreak]=useState(0);const[maxStreak,setMaxStreak]=useState(0);const[sel,setSel]=useState(null);const[shown,setShown]=useState(false);const[time,setTime]=useState(20);const[flash,setFlash]=useState(null);const[combo,setCombo]=useState(1);
+  const q=TRIVIA_Q[qi%TRIVIA_Q.length];
+  useEffect(()=>{
+    if(phase!=="play"||shown)return;
+    if(time<=0){playSound("wrong");setFlash("wrong");setTimeout(()=>setFlash(null),400);if(streak>maxStreak)setMaxStreak(streak);setStreak(0);setCombo(1);setShown(true);return;}
+    const id=setTimeout(()=>setTime(t=>t-1),1000);return()=>clearTimeout(id);
+  },[phase,time,shown]);
+  function start(){setPhase("play");setQi(0);setScore(0);setStreak(0);setMaxStreak(0);setTime(20);setSel(null);setShown(false);setCombo(1);}
+  function answer(i){
+    if(shown)return;setSel(i);setShown(true);
+    if(i===q.a){const pts=(10+streak*3)*combo;setScore(s=>s+pts);setStreak(s=>s+1);setCombo(c=>Math.min(c+0.5,3));if(streak>=maxStreak)setMaxStreak(s=>s+1);playSound(streak>=4?"victory":"correct");setFlash("correct");}
+    else{setStreak(0);setCombo(1);if(streak>maxStreak)setMaxStreak(streak);playSound("wrong");setFlash("wrong");}
+    setTimeout(()=>setFlash(null),400);
+  }
+  function next(){if(qi>=TRIVIA_Q.length-1){setPhase("end");playSound("victory");}else{setQi(i=>i+1);setSel(null);setShown(false);setTime(20);}}
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {phase==="menu"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"float 2s ease-in-out infinite"}}>🏆</div>
+      <div style={{fontSize:28,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Trivia Marathon</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>50 soru · Süre baskısı · Streak bonusu · Combo sistemi<br/>Ne kadar hızlısın?</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,maxWidth:360,margin:"0 auto 28px"}}>
+        {[["⏱️","20 sn","Her soru için"],["🔥","Streak","Bonus puan"],["⚡","Combo","3x'e kadar"]].map(([e,t,d])=>(
+          <div key={t} style={{background:"rgba(251,146,60,0.08)",border:"1px solid rgba(251,146,60,0.2)",borderRadius:12,padding:"14px 10px"}}>
+            <div style={{fontSize:22,marginBottom:4}}>{e}</div>
+            <div style={{fontSize:13,fontWeight:700,color:"#fb923c"}}>{t}</div>
+            <div style={{fontSize:10,color:"#475569"}}>{d}</div>
+          </div>
+        ))}
+      </div>
+      <button onClick={start} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Maratona Başla 🏃</button>
+    </div>}
+    {phase==="play"&&<div style={{filter:flash==="wrong"?"brightness(0.7) saturate(3) hue-rotate(320deg)":flash==="correct"?"brightness(1.3)":"none",transition:"filter .1s"}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:12,alignItems:"center",flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{fontSize:12,color:"#fb923c",fontWeight:700}}>🔥 {streak} streak</div>
+          <div style={{fontSize:12,color:"#f472b6",fontWeight:700}}>⚡ {combo.toFixed(1)}x combo</div>
+        </div>
+        <div style={{fontSize:14,fontWeight:900,color:time<=5?"#f472b6":time<=10?"#fb923c":"#34d399"}}>{time}sn</div>
+        <div style={{fontSize:12,color:"#a855f7",fontWeight:700}}>💎 {score} puan</div>
+      </div>
+      <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:3,marginBottom:16}}>
+        <div style={{width:`${(qi/TRIVIA_Q.length)*100}%`,height:"100%",background:"linear-gradient(90deg,#fb923c,#f472b6)",borderRadius:3,transition:"width .4s"}}/>
+      </div>
+      <div style={{marginBottom:4}}><Tag text={q.cat} color="#fb923c"/></div>
+      <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"22px",marginBottom:14}}>
+        <div style={{fontSize:8,color:"#334155",marginBottom:8}}>SORU {qi+1} / {TRIVIA_Q.length}</div>
+        <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.6,fontFamily:"'Space Grotesk',sans-serif"}}>{q.q}</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
+        {q.o.map((o,i)=>{
+          let bg="rgba(255,255,255,0.03)",bord="rgba(255,255,255,0.08)",col="#94a3b8";
+          if(shown){if(i===q.a){bg="rgba(52,211,153,0.12)";bord="rgba(52,211,153,0.4)";col="#34d399";}else if(i===sel&&i!==q.a){bg="rgba(244,114,182,0.12)";bord="rgba(244,114,182,0.4)";col="#f472b6";}}
+          else if(sel===i){bg="rgba(251,146,60,0.1)";bord="rgba(251,146,60,0.3)";col="#fb923c";}
+          return <button key={i} onClick={()=>answer(i)} style={{padding:"13px",borderRadius:11,border:`1px solid ${bord}`,background:bg,color:col,fontSize:12,textAlign:"left",cursor:shown?"default":"pointer",fontFamily:"inherit",transition:"all .15s",lineHeight:1.5}}>{["A","B","C","D"][i]}. {o}</button>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>{qi<TRIVIA_Q.length-1?"Sonraki →":"Sonucu Gör 🏆"}</button>}
+    </div>}
+    {phase==="end"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:12,animation:"float 2s ease-in-out infinite"}}>🏆</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#fb923c",fontFamily:"'Space Grotesk',sans-serif",marginBottom:16}}>Marathon Tamamlandı!</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,maxWidth:360,margin:"0 auto 24px"}}>
+        {[[score,"Toplam Puan","#fb923c"],[maxStreak,"Max Streak","#34d399"],[TRIVIA_Q.length,"Toplam Soru","#a855f7"],[(combo*10).toFixed(0)+"x","Max Combo","#f472b6"]].map(([v,l,c])=>(
+          <div key={l} style={{background:`${c}08`,border:`1px solid ${c}20`,borderRadius:12,padding:"14px"}}>
+            <div style={{fontSize:22,fontWeight:900,color:c}}>{v}</div>
+            <div style={{fontSize:10,color:"#475569"}}>{l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+        <button onClick={()=>navigator.clipboard?.writeText(`AI Trivia Marathon'da ${score} puan aldım! 🏆 Max ${maxStreak} streak! Sen kaç alırsın? imdatai.com #AIQ #IMDATAI`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(251,146,60,0.3)",background:"rgba(251,146,60,0.1)",color:"#fb923c",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+        <button onClick={start} className="btn-primary" style={{padding:"10px 24px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar Oyna</button>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ══ PROMPT ROULETTE ══
+const ROULETTE_TASKS=[
+  {task:"ChatGPT için 10K TL aylık gelir prompt'u yaz",cat:"Para",c:"#34d399"},{task:"Gemini'de bir haftada freelancer olmak için prompt",cat:"Kariyer",c:"#a855f7"},{task:"Claude'a annen için doğum günü mesajı yaptır",cat:"Sosyal",c:"#f472b6"},{task:"ChatGPT ile 5 dakikada CV düzelt prompt'u",cat:"CV",c:"#fb923c"},{task:"Midjourney için logo oluşturma prompt'u yaz",cat:"Tasarım",c:"#00dcff"},{task:"ElevenLabs için tanıtım sesi metni prompt'u",cat:"Ses",c:"#60a5fa"},{task:"Cursor ile bug bulmak için özel prompt",cat:"Kod",c:"#34d399"},{task:"Perplexity'de rakip analizi için soru dizisi",cat:"Araştırma",c:"#a855f7"},{task:"Claude'a startup iş planı analiz ettir",cat:"İş",c:"#fb923c"},{task:"ChatGPT ile viral LinkedIn post prompt'u",cat:"Sosyal",c:"#00dcff"},{task:"Gemini'de Google Drive dosyası analizi prompt'u",cat:"Verimlilik",c:"#34d399"},{task:"ChatGPT ile 500 kelimede blog yazısı prompt'u",cat:"İçerik",c:"#f472b6"},{task:"Claude'a hukuki sözleşme analiz ettirme prompt'u",cat:"Hukuk",c:"#a855f7"},{task:"Suno'ya Türkçe şarkı yazdırma prompt'u",cat:"Müzik",c:"#fb923c"},{task:"ChatGPT ile Türk öğrenciler için burs araştırması",cat:"Eğitim",c:"#00dcff"},{task:"Claude'a 1M token ile roman analizi prompt'u",cat:"Analiz",c:"#34d399"},{task:"Midjourney ile İstanbul fotoğrafçılığı prompt'u",cat:"Görsel",c:"#60a5fa"},{task:"ChatGPT ile e-ticaret ürün açıklaması prompt'u",cat:"E-Ticaret",c:"#f472b6"},{task:"Cursor ile Python kodu refactor prompt'u",cat:"Kod",c:"#a855f7"},{task:"Gemini ile YouTube video fikri üretme prompt'u",cat:"İçerik",c:"#fb923c"},{task:"Claude'a 10 kural listesi oluşturma prompt'u",cat:"Verimlilik",c:"#00dcff"},{task:"ChatGPT ile Instagram caption + hashtag prompt'u",cat:"Sosyal",c:"#34d399"},{task:"Perplexity ile 2026 AI trendleri araştırma prompt'u",cat:"Araştırma",c:"#60a5fa"},{task:"Claude'a mülakat soruları hazırlatma prompt'u",cat:"Kariyer",c:"#f472b6"},{task:"ChatGPT ile ürün fiyatlandırma stratejisi prompt'u",cat:"İş",c:"#a855f7"},{task:"ElevenLabs ile podcast intro sesi metin prompt'u",cat:"Podcast",c:"#fb923c"},{task:"Gemini ile Gmail inbox temizleme prompt'u",cat:"Verimlilik",c:"#00dcff"},{task:"ChatGPT ile 30 günlük içerik planı prompt'u",cat:"Plan",c:"#34d399"},{task:"Claude'a teknik döküman sadeleştirme prompt'u",cat:"Teknik",c:"#60a5fa"},{task:"Cursor ile API endpoint kodu yazma prompt'u",cat:"Kod",c:"#f472b6"},
+];
+
+function PromptRoulette(){
+  const[phase,setPhase]=useState("menu");const[ti,setTi]=useState(0);const[time,setTime]=useState(30);const[prompt,setPrompt]=useState("");const[score,setScore]=useState(0);const[spun,setSpun]=useState(false);const[spinning,setSpinning]=useState(false);
+  const task=ROULETTE_TASKS[ti];
+  useEffect(()=>{if(phase!=="play")return;if(time<=0){playSound("wrong");setPhase("score");return;}const id=setTimeout(()=>setTime(t=>t-1),1000);return()=>clearTimeout(id);},[phase,time]);
+  function spin(){setSpinning(true);playSound("level");let i=0;const id=setInterval(()=>{setTi(Math.floor(Math.random()*ROULETTE_TASKS.length));if(++i>=12){clearInterval(id);setTi(Math.floor(Math.random()*ROULETTE_TASKS.length));setSpinning(false);setSpun(true);}},100);}
+  function start(){setPhase("play");setTime(30);setPrompt("");}
+  function submit(){const pts=Math.max(20,prompt.length*0.8+(time*5));setScore(s=>s+Math.round(pts));playSound("correct");setPhase("score");}
+  return <div style={{padding:"28px 20px",maxWidth:640,margin:"0 auto"}}>
+    {phase==="menu"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:spinning?"spin 0.3s linear infinite":"float 2s ease-in-out infinite"}}>🎡</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>Prompt Roulette</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>Rastgele görev · 30 saniye · Prompt yaz · Puan kazan!</div>
+      <div style={{background:`${task.c}08`,border:`1px solid ${task.c}22`,borderRadius:16,padding:"20px",marginBottom:24,minHeight:80}}>
+        {spun?<><div style={{fontSize:9,color:task.c,letterSpacing:".1em",marginBottom:8}}>{task.cat} GÖREVİ</div>
+        <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.5}}>{task.task}</div></>
+        :<div style={{fontSize:14,color:"#475569"}}>Çevirmek için butona bas 👇</div>}
+      </div>
+      <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+        <button onClick={spin} style={{padding:"12px 24px",borderRadius:11,border:"1px solid rgba(168,85,247,0.3)",background:"rgba(168,85,247,0.08)",color:"#a855f7",fontSize:14,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🎡 Çevir!</button>
+        {spun&&<button onClick={start} className="btn-primary" style={{padding:"12px 24px",fontSize:14,borderRadius:11,fontFamily:"inherit"}}>▶ Başla!</button>}
+      </div>
+    </div>}
+    {phase==="play"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,alignItems:"center"}}>
+        <Tag text={task.cat} color={task.c}/>
+        <div style={{fontSize:20,fontWeight:900,color:time<=10?"#f472b6":time<=20?"#fb923c":"#34d399"}}>{time}sn</div>
+        <div style={{fontSize:12,color:"#a855f7"}}>💎 {score} puan</div>
+      </div>
+      <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:3,marginBottom:16}}>
+        <div style={{width:`${(time/30)*100}%`,height:"100%",background:`linear-gradient(90deg,${time<=10?"#f472b6":time<=20?"#fb923c":"#34d399"},transparent)`,borderRadius:3,transition:"width 1s linear"}}/>
+      </div>
+      <div style={{background:`${task.c}06`,border:`1px solid ${task.c}18`,borderRadius:14,padding:"18px",marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",lineHeight:1.6}}>{task.task}</div>
+      </div>
+      <textarea value={prompt} onChange={e=>setPrompt(e.target.value)} style={{width:"100%",minHeight:120,background:"rgba(255,255,255,0.03)",border:`1px solid ${task.c}22`,borderRadius:12,color:"#e2e8f0",padding:"14px",fontSize:13,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box",lineHeight:1.7,marginBottom:12}} placeholder="Promptunu yaz... (ne kadar ayrıntılı olursa o kadar puan!)"/>
+      <button onClick={submit} disabled={prompt.length<10} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit",opacity:prompt.length<10?.5:1}}>Gönder ✓</button>
+    </div>}
+    {phase==="score"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>🎯</div>
+      <div style={{fontSize:22,fontWeight:900,color:task.c,fontFamily:"'Space Grotesk',sans-serif",marginBottom:16}}>Görev Tamamlandı!</div>
+      <div style={{background:`${task.c}08`,border:`1px solid ${task.c}20`,borderRadius:14,padding:"18px",marginBottom:20}}>
+        <div style={{fontSize:13,color:"#64748b",marginBottom:8}}>Yazdığın prompt:</div>
+        <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,fontStyle:"italic",textAlign:"left"}}>{prompt||"Süre doldu 😅"}</div>
+      </div>
+      <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+        <button onClick={()=>{setPhase("menu");setSpun(false);spin();}} style={{padding:"10px 20px",borderRadius:10,border:`1px solid ${task.c}30`,background:`${task.c}10`,color:task.c,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>🎡 Yeni Görev</button>
+        <button onClick={()=>navigator.clipboard?.writeText(`Prompt Roulette'de "${task.task}" görevini tamamladım! 🎯 ${score} puan! imdatai.com`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.04)",color:"#94a3b8",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ══ EMOJİ TAHMİN ══
+const EMOJI_Q=[
+  {e:"🤖💬✨",a:"AI Chatbot",ipucu:"Yapay zeka ile konuşma"},
+  {e:"🖼️🪄⚡",a:"Görsel AI",ipucu:"Metinden resim üretme"},
+  {e:"🎵🤖🎹",a:"AI Müzik",ipucu:"Yapay zeka ile şarkı"},
+  {e:"💻🤖✍️",a:"Kod AI",ipucu:"Otomatik kod yazma"},
+  {e:"🎬🤖📹",a:"Video AI",ipucu:"Metinden video üretme"},
+  {e:"🔊🤖👄",a:"Ses Klonlama",ipucu:"Yapay ses üretimi"},
+  {e:"🧠📚⚡",a:"Büyük Dil Modeli",ipucu:"LLM — ChatGPT gibi"},
+  {e:"🎭🤖🎮",a:"Ajan AI",ipucu:"Otonom çalışan yapay zeka"},
+  {e:"🔍💡📝",a:"Prompt Mühendisliği",ipucu:"AI'a doğru soru sorma sanatı"},
+  {e:"🧩🤖🔄",a:"Fine-tuning",ipucu:"Modeli özel veriyle eğitmek"},
+  {e:"📡🤖🌐",a:"RAG Sistemi",ipucu:"Dış kaynaktan bilgi çekme"},
+  {e:"🎨✏️🤖",a:"Yaratıcı AI",ipucu:"Sanat üreten yapay zeka"},
+  {e:"💰🤖📈",a:"AI Freelance",ipucu:"Yapay zeka ile para kazanma"},
+  {e:"🏆🧠❓",a:"AI IQ Testi",ipucu:"Yapay zeka bilgi sınavı"},
+  {e:"⚡🔥💪",a:"Streak Bonusu",ipucu:"Arka arkaya doğru cevap"},
+  {e:"🌍🗺️📊",a:"Dünya AI Haritası",ipucu:"Global yapay zeka kullanımı"},
+  {e:"🇹🇷🏆🤖",a:"Türkiye AI Şampiyonu",ipucu:"Dünya AI trafiğinde birinci"},
+  {e:"🔒🤖⚖️",a:"Constitutional AI",ipucu:"Anthropic'in güvenlik yaklaşımı"},
+  {e:"👻🤖❌",a:"Hallüsinasyon",ipucu:"AI'ın uydurma bilgi vermesi"},
+  {e:"⏰🔔📧",a:"AI Alarm",ipucu:"AI gelişmelerini takip et"},
+  {e:"🎡🎯⏱️",a:"Prompt Roulette",ipucu:"Hızlı prompt yazma oyunu"},
+  {e:"📖🤖🔍",a:"AI Sözlük",ipucu:"AI terimlerinin açıklaması"},
+  {e:"💻⌨️✨",a:"Vibe Coding",ipucu:"Söyleyerek kod yazmak"},
+  {e:"🎓🤖📚",a:"AI Öğrenme",ipucu:"Yapay zeka eğitim rehberi"},
+  {e:"💼🤖💡",a:"AI Danışmanlığı",ipucu:"Şirketlere AI entegrasyonu"},
+];
+
+function EmojiGuess(){
+  const[phase,setPhase]=useState("menu");const[qi,setQi]=useState(0);const[ans,setAns]=useState("");const[shown,setShown]=useState(false);const[score,setScore]=useState(0);const[streak,setStreak]=useState(0);
+  const q=EMOJI_Q[qi%EMOJI_Q.length];
+  const shuffled=EMOJI_Q.slice().sort(()=>Math.random()-.5).slice(0,3);
+  const opts=[...new Set([q.a,...shuffled.map(s=>s.a)])].slice(0,4);
+  while(opts.length<4)opts.push("???");
+  function guess(o){if(shown)return;setAns(o);setShown(true);if(o===q.a){setScore(s=>s+10+streak*2);setStreak(s=>s+1);playSound("correct");}else{setStreak(0);playSound("wrong");}}
+  function next(){if(qi>=EMOJI_Q.length-1){setPhase("end");}else{setQi(i=>i+1);setAns("");setShown(false);}}
+  return <div style={{padding:"28px 20px",maxWidth:600,margin:"0 auto"}}>
+    {phase==="menu"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:16,animation:"float 2s ease-in-out infinite"}}>😄</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Emoji Tahmin</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24}}>Emoji kombinasyonundan AI kavramını bul!</div>
+      <button onClick={()=>{setPhase("play");setQi(0);setScore(0);setStreak(0);setShown(false);}} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Oyna! 😄</button>
+    </div>}
+    {phase==="play"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:12,color:"#34d399"}}>🔥 {streak} streak</div>
+        <div style={{fontSize:12,color:"#475569"}}>{qi+1}/{EMOJI_Q.length}</div>
+        <div style={{fontSize:12,color:"#a855f7"}}>💎 {score}</div>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:18,padding:"32px",textAlign:"center",marginBottom:18}}>
+        <div style={{fontSize:52,letterSpacing:10,marginBottom:12}}>{q.e}</div>
+        {!shown&&<div style={{fontSize:11,color:"#334155",fontStyle:"italic"}}>{q.ipucu}</div>}
+        {shown&&<div style={{fontSize:13,color:ans===q.a?"#34d399":"#f472b6",fontWeight:700,marginTop:8}}>{ans===q.a?"✅ Doğru!":"❌ Yanlış! Cevap: "+q.a}</div>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+        {opts.map((o,i)=>{
+          let bg="rgba(255,255,255,0.03)",bord="rgba(255,255,255,0.08)",col="#94a3b8";
+          if(shown){if(o===q.a){bg="rgba(52,211,153,0.12)";bord="rgba(52,211,153,0.4)";col="#34d399";}else if(o===ans){bg="rgba(244,114,182,0.12)";bord="rgba(244,114,182,0.4)";col="#f472b6";}}
+          return <button key={i} onClick={()=>guess(o)} style={{padding:"13px",borderRadius:11,border:`1px solid ${bord}`,background:bg,color:col,fontSize:12,cursor:shown?"default":"pointer",fontFamily:"inherit"}}>{o}</button>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",borderRadius:12,fontSize:14,fontFamily:"inherit"}}>{qi<EMOJI_Q.length-1?"Sonraki →":"Sonuç 🏆"}</button>}
+    </div>}
+    {phase==="end"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>😄</div>
+      <div style={{fontSize:22,fontWeight:900,color:"#34d399",fontFamily:"'Space Grotesk',sans-serif",marginBottom:16}}>{score} Puan!</div>
+      <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+        <button onClick={()=>navigator.clipboard?.writeText(`AI Emoji Tahmin oyununda ${score} puan aldım! imdatai.com 😄 #IMDATAI`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.1)",color:"#34d399",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+        <button onClick={()=>{setPhase("play");setQi(0);setScore(0);setStreak(0);setShown(false);}} className="btn-primary" style={{padding:"10px 24px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ══ MODEL DEDEKTİF (geliştirilmiş) ══
+const DEDEKTIF_Q=[
+  {text:"Yapay zekanın geleceği konusunda hem heyecanlı hem de endişeliyim. Özellikle iş piyasasındaki etkileri beni düşündürüyor.",model:"İnsan",ipucu:"Karma duygu ifadesi ve belirsizlik insani özellik"},
+  {text:"2026 yılı itibarıyla ChatGPT, GPT-5.5 modeli ile süper uygulama dönemini başlatmıştır. Kod, tarayıcı ve ses tek platformda birleşmiştir.",model:"ChatGPT",ipucu:"Ansiklopedik dil, kesin tarih ve teknik özet GPT tarzı"},
+  {text:"İlginç bir soru. Bu konuyu birden fazla açıdan değerlendirmek gerekiyor: hem etik boyutu hem de pratik sonuçları açısından.",model:"Claude",ipucu:"Nüanslı yaklaşım, etik vurgu, yapılandırılmış düşünme Claude'a özgü"},
+  {text:"Merhaba! Bugün çok güzel bir gün. Balkonuma oturdum, kahvemi içiyorum. Siz ne yapıyorsunuz?",model:"İnsan",ipucu:"Kişisel anı, gündelik dil, soru sona ekleme insan özelliği"},
+  {text:"Google'ın Gemini modeli, 2 milyon token context window kapasitesiyle tüm rakiplerini geride bırakmaktadır. Bu özellik özellikle uzun belge analizinde kritik öneme sahiptir.",model:"Gemini",ipucu:"Google ürününü öne çıkarma, teknik terimler, Gemini tarzı"},
+  {text:"Kod yazarken şunu fark ettim: bazen en basit çözüm en iyisidir. 3 gün uğraştım, sonunda 2 satır kodla hallettim.",model:"İnsan",ipucu:"Kişisel deneyim, zaman belirtimi, duygusal sonuç insan yazısı"},
+  {text:"Bu soruyu yanıtlamak için öncelikle terminolojiyi netleştirmem gerekiyor. 'Yapay zeka' terimi aslında çok geniş bir kavramsal alanı kapsamaktadır.",model:"Claude",ipucu:"Tanım netleştirme, akademik ton, geniş perspektif Claude'a özgü"},
+  {text:"Haha ya bu çok komik oldu. Arkadaşım tam o anda geldi ve her şeyi mahvetti lol. Neyse olsun.",model:"İnsan",ipucu:"Günlük konuşma dili, 'lol', kısaltmalar insan yazısı"},
+  {text:"ChatGPT vs Claude karşılaştırmasında şu kritik faktörler göz önünde bulundurulmalıdır: context window uzunluğu, kod yazma performansı ve hallüsinasyon oranları.",model:"ChatGPT",ipucu:"Maddeli yapı, profesyonel ton, karşılaştırmalı analiz GPT tarzı"},
+  {text:"Türkiye'de yapay zeka kullanımının bu kadar yüksek olması gerçekten şaşırtıcı. Sanırım Türk insanının teknolojiye açıklığı bunda etkili.",model:"İnsan",ipucu:"Kişisel yorum, 'sanırım', tahmin insan yazısı"},
+  {text:"İstanbul'u ziyaret etmeyi düşünüyorsanız, Kapalıçarşı ve Boğaz turu mutlaka yapılması gereken aktiviteler arasında yer almaktadır.",model:"Gemini",ipucu:"Turizm dili, tavsiye üslubu, Gemini gezginlere sıkça bu tarzı kullanır"},
+  {text:"Bu konuda kesin bir cevap vermek doğru olmaz. Ancak mevcut kanıtlar şunu gösteriyor: pek çok faktör bu sonucu etkilemektedir.",model:"Claude",ipucu:"Belirsizliği kabul etme, kanıt odaklı, dikkatli ifade Claude'a özgü"},
+];
+
+function ModelDedektifPage(){
+  const[phase,setPhase]=useState("menu");const[qi,setQi]=useState(0);const[sel,setSel]=useState(null);const[shown,setShown]=useState(false);const[score,setScore]=useState(0);
+  const q=DEDEKTIF_Q[qi];
+  const opts=["İnsan","ChatGPT","Claude","Gemini"];
+  function guess(o){if(shown)return;setSel(o);setShown(true);if(o===q.model){setScore(s=>s+15);playSound("correct");}else playSound("wrong");}
+  function next(){if(qi>=DEDEKTIF_Q.length-1)setPhase("end");else{setQi(i=>i+1);setSel(null);setShown(false);}}
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {phase==="menu"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:16,animation:"float 2s ease-in-out infinite"}}>🔍</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#00dcff",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>Model Dedektif</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24}}>Metni kim yazdı? İnsan mı, ChatGPT mi, Claude mu, Gemini mi?<br/>{DEDEKTIF_Q.length} farklı metin örneği!</div>
+      <button onClick={()=>{setPhase("play");setQi(0);setScore(0);setSel(null);setShown(false);}} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Dedektif Ol 🔍</button>
+    </div>}
+    {phase==="play"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:12,color:"#475569"}}>{qi+1}/{DEDEKTIF_Q.length}</div>
+        <div style={{fontSize:12,color:"#00dcff",fontWeight:700}}>💎 {score} puan</div>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:16,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:9,color:"#334155",marginBottom:8}}>BU METNİ KİM YAZDI?</div>
+        <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.8,fontStyle:"italic"}}>"{q.text}"</div>
+        {shown&&<div style={{marginTop:12,fontSize:11,color:"#64748b",fontStyle:"normal",background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"8px 12px"}}>💡 {q.ipucu}</div>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+        {opts.map(o=>{
+          const c={İnsan:"#34d399",ChatGPT:"#00dcff",Claude:"#a855f7",Gemini:"#fb923c"}[o];
+          let bg=`${c}06`,bord=`${c}18`,col="#94a3b8";
+          if(shown){if(o===q.model){bg=`${c}12`;bord=`${c}40`;col=c;}else if(o===sel){bg="rgba(244,114,182,0.12)";bord="rgba(244,114,182,0.4)";col="#f472b6";}}
+          else if(sel===o){bg=`${c}10`;bord=`${c}30`;col=c;}
+          return <button key={o} onClick={()=>guess(o)} style={{padding:"14px",borderRadius:12,border:`1px solid ${bord}`,background:bg,color,fontSize:12,cursor:shown?"default":"pointer",fontFamily:"inherit",fontWeight:600}}>
+            {{İnsan:"👤",ChatGPT:"🤖",Claude:"🧠",Gemini:"🌟"}[o]} {o}
+          </button>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",borderRadius:12,fontSize:14,fontFamily:"inherit"}}>{qi<DEDEKTIF_Q.length-1?"Sonraki →":"Sonuç 🏆"}</button>}
+    </div>}
+    {phase==="end"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>🔍</div>
+      <div style={{fontSize:22,fontWeight:900,color:"#00dcff",fontFamily:"'Space Grotesk',sans-serif",marginBottom:16}}>{score}/{DEDEKTIF_Q.length*15} Puan!</div>
+      <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+        <button onClick={()=>navigator.clipboard?.writeText(`Model Dedektif'te ${score} puan aldım! 🔍 Sen yapabilir misin? imdatai.com #IMDATAI`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.08)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+        <button onClick={()=>{setPhase("play");setQi(0);setScore(0);setSel(null);setShown(false);}} className="btn-primary" style={{padding:"10px 24px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ══ KARİYER SİMÜLASYONU ══
+const KARIYER_SIM_Q=[
+  {s:"2026'da şirketiniz AI bütçesi kesiyor. Ne yaparsın?",o:["Ücretsiz araçları öğren","AI'ı tamamen bırak","Başka şirkete geç","Şikayet et"],r:[100,0,50,10],e:["Ücretsiz araçlar profesyonel seviyede! ChatGPT Ücretsiz, Claude Ücretsiz güçlü.","AI bırakmak rekabet gücünü yok eder.","Makul ama AI öğrenmek daha değerli.","Şikayet değil, çözüm üret!"]},
+  {s:"Patronun 'AI ile benim işimi yapabilirsin' diyor. Tepkin ne?",o:["Ayrıntıları sor, dene","Reddeder çık","Evet dedin ama nasıl yapacağını bilmiyorsun","Maaş zammı iste"],r:[100,10,30,70],e:["Harika yaklaşım! AI'ı öğrenme fırsatı.","Fırsatı kaçırırsın.","İlk önce öğren, sonra söz ver.","Önce değer yarat, sonra maaş iste!"]},
+  {s:"Müşteri 'Sizin içeriği AI mi yazdı?' diye soruyor.",o:["Dürüstçe söyle, kaliteyi vurgula","Yalan söyle","AI'ı hiç kullanma","Soruyu görmezden gel"],r:[100,0,30,10],e:["Dürüstlük en iyi politika. AI araçtır, kalite senin.","Güven kaybı çok pahalıya mal olur.","Rakiplerine avantaj verirsin.","Müşteri güveni kaybedilir."]},
+  {s:"Yeni bir AI araç çıktı, öğrenmek 2 hafta alacak. Ne yaparsın?",o:["Hemen başla","Zaman yok diyip ertelemek","Sadece tanıtım videosunu izle","Başkalarını bekle"],r:[100,20,60,30],e:["2 hafta yatırım, yıllarca kazanç!","Erteleme alışkanlığı seni geride bırakır.","İyi başlangıç ama uygulama şart.","İlk öğrenenler rekabet avantajı kazanır."]},
+  {s:"Freelance AI danışmanlık teklifi aldın ama deneyimin az. Ne yaparsın?",o:["Dürüstçe söyle ve küçük projeyle başla","Reddet","Deneyimli gibi davran","Fiyatı çok yüksek tut"],r:[100,20,0,30],e:["Dürüstlük + küçük proje = güven inşası.","Kaybedilen fırsat.","Sonunda ortaya çıkar, güven kaybedersin.","Yüksek fiyat deneyimsizliği telafi etmez."]},
+];
+
+function KariyerSimPage(){
+  const[phase,setPhase]=useState("menu");const[qi,setQi]=useState(0);const[score,setScore]=useState(0);const[chosen,setChosen]=useState(null);const[shown,setShown]=useState(false);
+  const q=KARIYER_SIM_Q[qi];
+  function choose(i){if(shown)return;setChosen(i);setShown(true);setScore(s=>s+q.r[i]);playSound(q.r[i]>=80?"correct":q.r[i]>=50?"tick":"wrong");}
+  function next(){if(qi>=KARIYER_SIM_Q.length-1)setPhase("end");else{setQi(i=>i+1);setChosen(null);setShown(false);}}
+  const maxScore=KARIYER_SIM_Q.reduce((s,q)=>s+Math.max(...q.r),0);
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {phase==="menu"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:16,animation:"float 2s ease-in-out infinite"}}>🎭</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#f472b6",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Kariyer Simülasyonu</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24}}>AI çağında gerçek kariyer senaryoları.<br/>Doğru kararları ver, kariyer puanını artır!</div>
+      <button onClick={()=>{setPhase("play");setQi(0);setScore(0);setChosen(null);setShown(false);}} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Simülasyonu Başlat 🎭</button>
+    </div>}
+    {phase==="play"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:12,color:"#475569"}}>Senaryo {qi+1}/{KARIYER_SIM_Q.length}</div>
+        <div style={{fontSize:12,color:"#f472b6",fontWeight:700}}>💼 {score} puan</div>
+      </div>
+      <div style={{background:"linear-gradient(135deg,rgba(244,114,182,0.06),rgba(168,85,247,0.04))",border:"1px solid rgba(244,114,182,0.2)",borderRadius:16,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:9,color:"#f472b6",letterSpacing:".1em",marginBottom:10}}>SENARYO</div>
+        <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.6,fontFamily:"'Space Grotesk',sans-serif"}}>{q.s}</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+        {q.o.map((o,i)=>{
+          const pts=q.r[i];const best=pts===Math.max(...q.r);
+          let bg="rgba(255,255,255,0.03)",bord="rgba(255,255,255,0.08)",col="#94a3b8";
+          if(shown&&i===chosen){bg=pts>=80?"rgba(52,211,153,0.12)":pts>=50?"rgba(251,146,60,0.12)":"rgba(244,114,182,0.12)";bord=pts>=80?"rgba(52,211,153,0.4)":pts>=50?"rgba(251,146,60,0.4)":"rgba(244,114,182,0.4)";col=pts>=80?"#34d399":pts>=50?"#fb923c":"#f472b6";}
+          else if(shown&&best){bg="rgba(52,211,153,0.06)";bord="rgba(52,211,153,0.2)";col="#34d399";}
+          return <div key={i}>
+            <button onClick={()=>choose(i)} style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`1px solid ${bord}`,background:bg,color,fontSize:12,textAlign:"left",cursor:shown?"default":"pointer",fontFamily:"inherit",transition:"all .15s"}}>
+              {shown&&best&&"⭐ "}{o} {shown&&i===chosen&&<span style={{float:"right"}}>+{pts} puan</span>}
+            </button>
+            {shown&&i===chosen&&<div style={{background:"rgba(0,0,0,0.2)",borderRadius:"0 0 8px 8px",padding:"8px 14px",fontSize:11,color:"#64748b",lineHeight:1.6}}>{q.e[i]}</div>}
+          </div>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",borderRadius:12,fontSize:14,fontFamily:"inherit"}}>{qi<KARIYER_SIM_Q.length-1?"Sonraki Senaryo →":"Sonuç 🏆"}</button>}
+    </div>}
+    {phase==="end"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>🎭</div>
+      <div style={{fontSize:22,fontWeight:900,color:"#f472b6",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>Simülasyon Tamamlandı!</div>
+      <div style={{fontSize:16,color:"#94a3b8",marginBottom:16}}>{score}/{maxScore} puan · {score>=maxScore*0.8?"🌟 AI Uzmanı":score>=maxScore*0.6?"💼 AI Profesyoneli":"📚 AI Öğrencisi"}</div>
+      <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+        <button onClick={()=>navigator.clipboard?.writeText(`AI Kariyer Simülasyonunda ${score}/${maxScore} puan aldım! 🎭 Sen nasıl kariyerini yönetirdin? imdatai.com`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(244,114,182,0.3)",background:"rgba(244,114,182,0.1)",color:"#f472b6",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+        <button onClick={()=>{setPhase("play");setQi(0);setScore(0);setChosen(null);setShown(false);}} className="btn-primary" style={{padding:"10px 24px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────
 
 function MatrixRain(){
   const r=useRef();
@@ -2705,31 +4232,38 @@ function KisiselOneriPage({setPage}){
 }
 
 // ── NAVIGATION ─────────────────────────────────────────────
-const NAV = [
-  {id:"home",label:"Ana Sayfa"},
-  {id:"haberler",label:"Haberler"},
-  {id:"blog",label:"Blog"},
-  {id:"claude",label:"🧠 Claude"},
-  {id:"chatgpt",label:"🤖 ChatGPT"},
-  {id:"gemini",label:"🌟 Gemini"},
-  {id:"ogrenme",label:"🎓 Öğren"},
-  {id:"prompt",label:"💡 Prompt"},
-  {id:"karsilastirma",label:"🆚 Karşılaştır"},
-  {id:"sozluk",label:"📖 Sözlük"},
-  {id:"dizin",label:"Araç Dizini"},
-  {id:"iqtest",label:"🧠 AI IQ"},
-  {id:"zaman",label:"⏱️ Hesapla"},
-  {id:"puan",label:"💡 Puan"},
-  {id:"oneri",label:"🎯 Öneri"},
-  {id:"aistatus",label:"📡 Durum"},
-  {id:"galeri",label:"🎨 Galeri"},
-  {id:"quiz",label:"Quiz"},
-  {id:"oyun",label:"🎮 Oyun"},
-  {id:"topluluk",label:"💬 Topluluk"},
-  {id:"kariyer",label:"🚀 Kariyer"},
-  {id:"para",label:"💰 Para"},
-  {id:"pro",label:"⭐ Pro"},
+const NAV_ITEMS = [
+  {id:"home",label:"Ana Sayfa",tip:"",desc:""},
+  {id:"haberler",label:"Haberler",tip:"📰",desc:"16 güncel AI haberi"},
+  {id:"blog",label:"Blog",tip:"✍️",desc:"10 kapsamlı makale"},
+  {id:"claude",label:"🧠 Claude",tip:"🧠",desc:"6 sekme · Kodlamada #1"},
+  {id:"chatgpt",label:"🤖 ChatGPT",tip:"🤖",desc:"5 sekme · 900M kullanıcı"},
+  {id:"gemini",label:"🌟 Gemini",tip:"🌟",desc:"4 sekme · 2M token"},
+  {id:"ogrenme",label:"🎓 Öğren",tip:"🎓",desc:"AI temelleri · Türkçe"},
+  {id:"prompt",label:"💡 Prompt",tip:"💡",desc:"75 örnek · 13 kategori"},
+  {id:"karsilastirma",label:"🆚 Karşılaştır",tip:"🆚",desc:"5 kategoride karşılaştırma"},
+  {id:"sozluk",label:"📖 Sözlük",tip:"📖",desc:"69 AI terimi"},
+  {id:"dizin",label:"Araçlar",tip:"🛠️",desc:"40+ AI aracı"},
+  {id:"oyunlar",label:"🎮 Oyunlar",tip:"🎮",desc:"10 oyun · Sesli efektler"},
+  {id:"iqtest",label:"🧠 IQ",tip:"🧠",desc:"AI IQ testi · Paylaşılabilir"},
+  {id:"trivia",label:"🏆 Trivia",tip:"🏆",desc:"50 soru · Streak sistemi"},
+  {id:"roulette",label:"🎡 Roulette",tip:"🎡",desc:"Prompt yarışması"},
+  {id:"emoji",label:"😄 Emoji",tip:"😄",desc:"AI kelime tahmini"},
+  {id:"kariyer_sim",label:"🎭 Kariyer",tip:"🎭",desc:"Kariyer simülasyonu"},
+  {id:"dedektif",label:"🔍 Dedektif",tip:"🔍",desc:"Model dedektif oyunu"},
+  {id:"puan",label:"💡 Puanla",tip:"💡",desc:"Promptunu Gemini analiz eder"},
+  {id:"zaman",label:"⏱️ Hesapla",tip:"⏱️",desc:"Zaman tasarruf hesaplama"},
+  {id:"oneri",label:"🎯 Öneri",tip:"🎯",desc:"Kişisel AI araç paketi"},
+  {id:"aistatus",label:"📡 Durum",tip:"📡",desc:"AI araçları canlı durum"},
+  {id:"galeri",label:"🎨 Galeri",tip:"🎨",desc:"12 AI görsel"},
+  {id:"quiz",label:"Quiz",tip:"❓",desc:"20 soruluk AI quiz"},
+  {id:"topluluk",label:"💬 Topluluk",tip:"💬",desc:"12 prompt paylaşımı"},
+  {id:"kariyer",label:"🚀 Kariyer",tip:"🚀",desc:"8 AI mesleği · Maaşlar"},
+  {id:"para",label:"💰 Para",tip:"💰",desc:"AI ile gelir rehberi"},
+  {id:"mitler",label:"🔍 Mitler",tip:"🔍",desc:"10 AI efsanesi"},
+  {id:"pro",label:"⭐ Pro",tip:"⭐",desc:"Yakında"},
 ];
+const NAV = NAV_ITEMS;
 
 // ── APP ────────────────────────────────────────────────────
 export default function App(){
@@ -2756,13 +4290,18 @@ export default function App(){
     {page==="galeri"        &&<GaleriPage/>}
     {page==="quiz"          &&<QuizPage/>}
     {page==="oyun"          &&<OyunPage/>}
+    {page==="oyunlar"       &&<OyunlarPage setPage={nav}/>}
+    {page==="trivia"        &&<TriviaMarathon/>}
+    {page==="roulette"      &&<PromptRoulette/>}
+    {page==="emoji"         &&<EmojiGuess/>}
+    {page==="dedektif"      &&<ModelDedektifPage/>}
+    {page==="kariyer_sim"   &&<KariyerSimPage/>}
     {page==="topluluk"      &&<ToplulukPage/>}
     {page==="kariyer"       &&<KariyerPage/>}
     {page==="mitler"        &&<MitlerPage/>}
-    {page==="zaman"         &&<ZamanCizgisiPage/>}
+    {page==="zaman"         &&<ZamanHesapPage/>}
     {page==="para"          &&<ParaPage/>}
     {page==="iqtest"        &&<IQTestPage/>}
-    {page==="zaman"         &&<ZamanHesapPage/>}
     {page==="puan"          &&<PromptScorerPage/>}
     {page==="oneri"         &&<KisiselOneriPage setPage={nav}/>}
     {page==="aistatus"      &&<AIStatusPage/>}
