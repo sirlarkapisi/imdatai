@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // ── CHATBOT — Gemini API ──────────────────────────────────
-const WORKER_URL = "https://imdatai-gemini.imdatuysal.workers.dev"; // Worker kurulunca bu URL aktif olur
+const WORKER_URL = "https://db0d0210.imdataiworker.pages.dev"; // Worker kurulunca bu URL aktif olur
 
 async function askGemini(msg, history=[]){
   try {
