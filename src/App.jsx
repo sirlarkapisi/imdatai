@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // ── CHATBOT — Gemini API ──────────────────────────────────
-const WORKER_URL = "https://db0d0210.imdataiworker.pages.dev"; // Worker kurulunca bu URL aktif olur
+const WORKER_URL = "https://imdatai-gemini.imdatuysal.workers.dev"; // Worker kurulunca bu URL aktif olur
 
 async function askGemini(msg, history=[]){
   try {
@@ -667,147 +667,940 @@ function PBg(){
 }
 
 // ══════════════════════════════════════════════════════════
+// SES SİSTEMİ — Web Audio API
+// ══════════════════════════════════════════════════════════
+const Sound = {
+  ctx: null,
+  init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();},
+  play(freq,dur=0.15,type="sine",vol=0.3){
+    try{this.init();const o=this.ctx.createOscillator();const g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);o.frequency.value=freq;o.type=type;g.gain.setValueAtTime(vol,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+dur);o.start();o.stop(this.ctx.currentTime+dur);}catch(e){}
+  },
+  correct(){this.play(880,0.1);setTimeout(()=>this.play(1100,0.15),100);},
+  wrong(){this.play(220,0.3,"sawtooth",0.2);},
+  click(){this.play(440,0.05,"square",0.1);},
+  levelUp(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.play(f,0.2),i*100));},
+  victory(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.play(f,0.3),i*80));},
+  tick(){this.play(660,0.05,"square",0.15);},
+};
+
+// playSound alias for compatibility
+function playSound(type){
+  if(type==="correct")Sound.correct();
+  else if(type==="wrong")Sound.wrong();
+  else if(type==="level")Sound.levelUp();
+  else if(type==="victory")Sound.victory();
+  else if(type==="tick")Sound.tick();
+  else Sound.click();
+}
+
+
+// ══════════════════════════════════════════════════════════
+// PARTİKEL EFEKTLERİ
+// ══════════════════════════════════════════════════════════
+function Particles({x,y,color="#00dcff",count=20,onDone}){
+  const[pts,setPts]=useState(()=>Array.from({length:count},(_,i)=>({id:i,x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8-3,life:1,size:Math.random()*6+3})));
+  useEffect(()=>{
+    let af;let t=0;
+    function tick(){
+      t++;
+      setPts(p=>p.map(pt=>({...pt,x:pt.x+pt.vx,y:pt.y+pt.vy,vy:pt.vy+0.2,life:pt.life-0.04})).filter(pt=>pt.life>0));
+      if(t>60){onDone?.();return;}
+      af=requestAnimationFrame(tick);
+    }
+    af=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(af);
+  },[]);
+  return <div style={{position:"fixed",top:0,left:0,pointerEvents:"none",zIndex:9999}}>
+    {pts.map(p=><div key={p.id} style={{position:"absolute",left:p.x,top:p.y,width:p.size,height:p.size,borderRadius:"50%",background:color,opacity:p.life,transform:"translate(-50%,-50%)",boxShadow:`0 0 ${p.size*2}px ${color}`}}/>)}
+  </div>;
+}
+
+function Confetti({onDone}){
+  const colors=["#00dcff","#a855f7","#f472b6","#34d399","#fb923c","#fbbf24"];
+  const[pts,setPts]=useState(()=>Array.from({length:80},(_,i)=>({id:i,x:Math.random()*window.innerWidth,y:-20,vx:(Math.random()-0.5)*4,vy:Math.random()*4+2,life:1,color:colors[i%colors.length],size:Math.random()*8+4,rot:Math.random()*360})));
+  useEffect(()=>{let af;let t=0;function tick(){t++;setPts(p=>p.map(pt=>({...pt,x:pt.x+pt.vx,y:pt.y+pt.vy,life:pt.life-0.008,rot:pt.rot+3})));if(t>180){onDone?.();return;}af=requestAnimationFrame(tick);}af=requestAnimationFrame(tick);return()=>cancelAnimationFrame(af);},[]);
+  return <div style={{position:"fixed",top:0,left:0,pointerEvents:"none",zIndex:9999,width:"100%",height:"100%",overflow:"hidden"}}>
+    {pts.map(p=><div key={p.id} style={{position:"absolute",left:p.x,top:p.y,width:p.size,height:p.size,background:p.color,opacity:p.life,transform:`rotate(${p.rot}deg)`,borderRadius:2}}/>)}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// SCROLL ANİMASYON HOOK
+// ══════════════════════════════════════════════════════════
+function useScrollReveal(){
+  useEffect(()=>{
+    const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("visible");}});},{threshold:0.1});
+    document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
+    return()=>obs.disconnect();
+  },[]);
+}
+
+// ══════════════════════════════════════════════════════════
+// DÜNYA HARİTASI SİMÜLASYONU
+// ══════════════════════════════════════════════════════════
+const WORLD_DOTS=[
+  // [x%, y%, ülke, yoğunluk 0-100, renk]
+  [48,22,"Türkiye",95,"#00dcff"],[20,38,"ABD",85,"#a855f7"],[50,18,"Rusya",70,"#60a5fa"],
+  [47,30,"Almanya",78,"#34d399"],[47,28,"İngiltere",82,"#f472b6"],[48,32,"Fransa",75,"#fb923c"],
+  [78,25,"Çin",80,"#fbbf24"],[78,38,"Hindistan",72,"#34d399"],[84,25,"Japonya",88,"#00dcff"],
+  [22,55,"Brezilya",60,"#fb923c"],[50,50,"Nijerya",40,"#a855f7"],[80,45,"Avustralya",65,"#60a5fa"],
+  [46,35,"İtalya",70,"#f472b6"],[48,20,"Ukrayna",55,"#34d399"],[57,28,"Kazakistan",45,"#fbbf24"],
+  [77,28,"Kore",85,"#00dcff"],[30,24,"Kanada",75,"#a855f7"],[46,26,"Polonya",68,"#60a5fa"],
+  [55,32,"İran",50,"#f472b6"],[63,32,"Pakistan",55,"#fb923c"],[75,32,"Tayland",60,"#34d399"],
+  [20,45,"Meksika",58,"#00dcff"],[35,35,"İspanya",72,"#a855f7"],[52,28,"Türkmenistan",35,"#60a5fa"],
+];
+
+function WorldMapSim(){
+  const r=useRef();const[hover,setHover]=useState(null);const[pulseTime,setPulseTime]=useState(0);
+  useEffect(()=>{const id=setInterval(()=>setPulseTime(t=>t+1),50);return()=>clearInterval(id);},[]);
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    const x=c.getContext("2d");const W=c.width=c.offsetWidth;const H=c.height=c.offsetHeight;
+    x.clearRect(0,0,W,H);
+    // Izgara çizgileri
+    x.strokeStyle="rgba(0,220,255,0.04)";x.lineWidth=0.5;
+    for(let i=0;i<=10;i++){x.beginPath();x.moveTo(i*W/10,0);x.lineTo(i*W/10,H);x.stroke();}
+    for(let i=0;i<=5;i++){x.beginPath();x.moveTo(0,i*H/5);x.lineTo(W,i*H/5);x.stroke();}
+    // Ülke noktaları
+    WORLD_DOTS.forEach(([px,py,name,intensity,color])=>{
+      const cx=px/100*W,cy=py/100*H;
+      const pulse=Math.sin(pulseTime*0.1+px)*0.3+0.7;
+      const size=3+(intensity/100)*8;
+      // Glow
+      const grd=x.createRadialGradient(cx,cy,0,cx,cy,size*3);
+      grd.addColorStop(0,`rgba(0,220,255,${0.35*pulse})`);
+      grd.addColorStop(1,'transparent');
+      x.beginPath();x.arc(cx,cy,size*pulse,0,Math.PI*2);
+      x.fillStyle=color+(Math.round(180*pulse).toString(16));
+      x.fill();
+      // Halka animasyonu
+      x.beginPath();x.arc(cx,cy,size*pulse*2,0,Math.PI*2);
+      x.strokeStyle=color+"44";x.lineWidth=0.5;x.stroke();
+      // Türkiye için özel
+      if(name==="Türkiye"){
+        x.beginPath();x.arc(cx,cy,size*pulse*3,0,Math.PI*2);
+        x.strokeStyle="#00dcff88";x.lineWidth=1;x.stroke();
+      }
+    });
+  },[pulseTime]);
+  return <div style={{position:"relative",width:"100%",height:220,background:"rgba(0,0,0,0.3)",borderRadius:14,overflow:"hidden",border:"1px solid rgba(0,220,255,0.1)"}}>
+    <canvas ref={r} style={{width:"100%",height:"100%"}}/>
+    <div style={{position:"absolute",top:8,left:12,fontSize:10,color:"#00dcff",fontWeight:700,letterSpacing:".1em"}}>🌍 DÜNYA AI KULLANIM HARİTASI</div>
+    <div style={{position:"absolute",top:8,right:12,display:"flex",gap:12}}>
+      {[["#00dcff","Yüksek"],["#a855f7","Orta"],["#60a5fa","Düşük"]].map(([c,l])=><div key={l} style={{display:"flex",gap:4,alignItems:"center"}}><div style={{width:6,height:6,borderRadius:"50%",background:c}}/><span style={{fontSize:9,color:"#475569"}}>{l}</span></div>)}
+    </div>
+    <div style={{position:"absolute",bottom:8,left:12,fontSize:10,color:"#fb923c",fontWeight:700}}>🇹🇷 Türkiye — Dünya #1 (%94.49)</div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// NÖRAL AĞ SİMÜLASYONU
+// ══════════════════════════════════════════════════════════
+function NeuralNetSim(){
+  const r=useRef();const[active,setActive]=useState(false);const[inputText,setInputText]=useState("Yapay zeka");
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    const x=c.getContext("2d");const W=c.width=c.offsetWidth;const H=c.height=150;
+    const layers=[[0.15,0.2,0.35,0.5,0.65,0.8,0.95],[0.2,0.4,0.6,0.8],[0.3,0.5,0.7],[0.5]];
+    const nodes=layers.map((layer,li)=>layer.map(ny=>({x:(li/(layers.length-1))*W*0.9+W*0.05,y:ny*H,active:Math.random()>0.5,val:Math.random()})));
+    let t=0;let af;
+    function draw(){
+      t+=0.05;x.clearRect(0,0,W,H);
+      nodes.forEach((layer,li)=>{
+        if(li<nodes.length-1){
+          layer.forEach(n1=>{nodes[li+1].forEach(n2=>{
+            const strength=(Math.sin(t+n1.x+n2.y)*0.5+0.5);
+            x.beginPath();x.moveTo(n1.x,n1.y);x.lineTo(n2.x,n2.y);
+            x.strokeStyle=active?`rgba(0,220,255,${strength*0.4})`:`rgba(100,116,139,${strength*0.15})`;
+            x.lineWidth=strength*(active?1.5:0.5);x.stroke();
+          });});
+        }
+        layer.forEach(n=>{
+          const pulse=Math.sin(t*2+n.x*0.01)*0.3+0.7;
+          const size=(active?4:2.5)*pulse;
+          x.beginPath();x.arc(n.x,n.y,size,0,Math.PI*2);
+          x.fillStyle=active?`rgba(0,220,255,${pulse})`:`rgba(71,85,105,${pulse*0.6})`;
+          x.fill();
+          if(active){x.beginPath();x.arc(n.x,n.y,size*2.5,0,Math.PI*2);x.strokeStyle=`rgba(168,85,247,${pulse*0.3})`;x.lineWidth=0.5;x.stroke();}
+        });
+      });
+      af=requestAnimationFrame(draw);
+    }
+    draw();return()=>cancelAnimationFrame(af);
+  },[active]);
+  return <div style={{background:"rgba(0,0,0,0.4)",borderRadius:14,padding:"16px",border:"1px solid rgba(168,85,247,0.2)"}}>
+    <div style={{fontSize:10,color:"#a855f7",fontWeight:700,letterSpacing:".1em",marginBottom:10}}>🧠 NÖRAL AĞ SİMÜLASYONU — AI Nasıl Düşünür?</div>
+    <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10,flexWrap:"wrap"}}>
+      <input value={inputText} onChange={e=>setInputText(e.target.value)} placeholder="Bir şeyler yaz..." style={{flex:1,minWidth:120,background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:8,color:"#e2e8f0",padding:"6px 10px",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
+      <button onClick={()=>{setActive(true);Sound.levelUp();setTimeout(()=>setActive(false),3000);}} style={{padding:"6px 14px",borderRadius:8,border:"none",background:active?"linear-gradient(135deg,#a855f7,#00dcff)":"rgba(168,85,247,0.15)",color:active?"#fff":"#a855f7",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,transition:"all .3s"}}>
+        {active?"🔥 İşleniyor...":"⚡ İşle"}
+      </button>
+    </div>
+    <canvas ref={r} style={{width:"100%",height:150,display:"block"}}/>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:8,fontSize:9,color:"#334155"}}>
+      <span>Girdi Katmanı</span><span>Gizli Katmanlar</span><span>Çıktı</span>
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// TOKEN YAĞMURU
+// ══════════════════════════════════════════════════════════
+function TokenRain(){
+  const tokens=["GPT","AI","LLM","Claude","Token","Gemini","Prompt","RLHF","RAG","MCP","AGI","SWE","API","GPU","TPU","INT8","FP16","CUDA","PyTorch","TF","Llama","MoE","LoRA","PEFT","VLLM","Attn"];
+  const colors=["#00dcff","#a855f7","#34d399","#f472b6","#fb923c","#60a5fa"];
+  const[drops,setDrops]=useState(()=>Array.from({length:12},(_,i)=>({id:i,x:Math.random()*100,y:Math.random()*-100,speed:0.3+Math.random()*0.7,token:tokens[Math.floor(Math.random()*tokens.length)],color:colors[Math.floor(Math.random()*colors.length)],size:9+Math.random()*5,opacity:0.3+Math.random()*0.7})));
+  useEffect(()=>{const id=setInterval(()=>{setDrops(d=>d.map(drop=>{const ny=drop.y+drop.speed;return ny>110?{...drop,y:-10,x:Math.random()*100,token:tokens[Math.floor(Math.random()*tokens.length)],color:colors[Math.floor(Math.random()*colors.length)]}:{...drop,y:ny};}));},40);return()=>clearInterval(id);},[]);
+  return <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:1}}>
+    {drops.map(d=><div key={d.id} style={{position:"absolute",left:`${d.x}%`,top:`${d.y}%`,color:d.color,fontSize:d.size,fontWeight:700,opacity:d.opacity,fontFamily:"monospace",textShadow:`0 0 8px ${d.color}`,transition:"none",userSelect:"none"}}>{d.token}</div>)}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// NAV TOOLTIP
+// ══════════════════════════════════════════════════════════
+const NAV_TOOLTIPS={
+  home:{icon:"🏠",desc:"Ana sayfa — Tüm içeriklere hızlı erişim",count:""},
+  haberler:{icon:"📰",desc:"16 güncel AI haberi — GPT, Claude, Gemini son gelişmeler",count:"16"},
+  blog:{icon:"✍️",desc:"10 kapsamlı AI makalesi — Türkçe, ücretsiz",count:"10"},
+  claude:{icon:"🧠",desc:"Kodlamada #1 · SWE-bench %87.6 · 1M Token",count:"6 bölüm"},
+  chatgpt:{icon:"🤖",desc:"Dünyanın en popüler AI'ı · 900M kullanıcı",count:"5 bölüm"},
+  gemini:{icon:"🌟",desc:"Google'ın AI'ı · 2M Token dünya rekoru",count:"4 bölüm"},
+  ogrenme:{icon:"🎓",desc:"AI nedir, türleri, tarihçe, Türkiye istatistikleri",count:"5 sekme"},
+  prompt:{icon:"💡",desc:"75 prompt örneği · 13 kategori · Kopyalanabilir",count:"75+"},
+  karsilastirma:{icon:"🆚",desc:"5 kategoride AI araç karşılaştırması",count:"5"},
+  sozluk:{icon:"📖",desc:"69 AI terimi — Türkçe açıklamalar",count:"69"},
+  dizin:{icon:"🌐",desc:"40+ AI aracı · 8 kategori · Detaylı açıklamalar",count:"40+"},
+  iqtest:{icon:"🧠",desc:"AI IQ Testi — 10 soru, puan, paylaşılabilir kart",count:""},
+  puan:{icon:"💡",desc:"Promptunu yapıştır, Gemini puanlasın",count:""},
+  oneri:{icon:"🎯",desc:"Mesleğine özel AI araç paketi",count:"6 meslek"},
+  aistatus:{icon:"📡",desc:"Tüm AI araçlarının anlık durumu",count:""},
+  galeri:{icon:"🎨",desc:"12 AI görseli ve prompt şablonları",count:"12"},
+  quiz:{icon:"🧩",desc:"20 soruluk AI quiz — Puanlamalı",count:"20"},
+  oyun:{icon:"🎮",desc:"8 interaktif AI oyunu — Ses ve efektli",count:"8"},
+  topluluk:{icon:"💬",desc:"12 topluluk promptu — Paylaş ve keşfet",count:"12"},
+  kariyer:{icon:"🚀",desc:"8 AI mesleği — Maaşlar ve yol haritası",count:"8"},
+  para:{icon:"💰",desc:"AI ile gelir yolları — Adım adım rehber",count:"4 yol"},
+  pro:{icon:"⭐",desc:"Premium özellikler — Yakında",count:""},
+};
+
+function NavTooltip({id,children}){
+  const[show,setShow]=useState(false);const t=NAV_TOOLTIPS[id];
+  if(!t)return children;
+  return <div style={{position:"relative",display:"inline-block"}} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)}>
+    {children}
+    {show&&<div style={{position:"absolute",top:"calc(100% + 8px)",left:"50%",transform:"translateX(-50%)",zIndex:999,background:"rgba(8,12,28,0.98)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,padding:"10px 13px",minWidth:180,maxWidth:220,backdropFilter:"blur(20px)",boxShadow:"0 8px 32px rgba(0,0,0,0.6)",pointerEvents:"none",whiteSpace:"normal",animation:"fadeIn .15s ease"}}>
+      <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:5}}>
+        <span style={{fontSize:14}}>{t.icon}</span>
+        <span style={{fontSize:11,fontWeight:700,color:"#e2e8f0"}}>{NAV_TOOLTIPS[id]&&id.charAt(0).toUpperCase()+id.slice(1)}</span>
+        {t.count&&<span style={{fontSize:9,background:"rgba(0,220,255,0.15)",color:"#00dcff",padding:"1px 6px",borderRadius:4}}>{t.count}</span>}
+      </div>
+      <div style={{fontSize:10,color:"#64748b",lineHeight:1.5}}>{t.desc}</div>
+      <div style={{position:"absolute",top:-5,left:"50%",transform:"translateX(-50%)",width:8,height:8,background:"rgba(8,12,28,0.98)",border:"1px solid rgba(0,220,255,0.2)",borderTop:"none",borderRight:"none",transform:"translateX(-50%) rotate(135deg)"}}/>
+    </div>}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// YENİ OYUNLAR VERİSİ
+// ══════════════════════════════════════════════════════════
+
+// AI TRİVİA MARATHON — 50 soru
+const TRIVIA_Q=[
+  {q:"Transformer mimarisi kaç yılında yayınlandı?",o:["2015","2017","2019","2021"],a:1,c:"#00dcff",cat:"Tarih"},
+  {q:"GPT'nin açılımı nedir?",o:["General Purpose Transformer","Generative Pre-trained Transformer","Global Processing Technology","Graph Processing Tool"],a:1,c:"#a855f7",cat:"Terim"},
+  {q:"Anthropic'in kuruluş yılı nedir?",o:["2019","2020","2021","2022"],a:2,c:"#34d399",cat:"Şirket"},
+  {q:"İlk ChatGPT hangi model üzerine çalışıyordu?",o:["GPT-2","GPT-3","GPT-3.5","GPT-4"],a:2,c:"#fb923c",cat:"Model"},
+  {q:"'RLHF' ne anlama gelir?",o:["Rapid Learning Human Framework","Reinforcement Learning from Human Feedback","Recursive Language Human Filter","Real-time Learning Human Function"],a:1,c:"#f472b6",cat:"Teknik"},
+  {q:"Midjourney v1 ne zaman çıktı?",o:["2020","2021","2022","2023"],a:2,c:"#60a5fa",cat:"Tarih"},
+  {q:"Alan Turing testi kaç yılında önerildi?",o:["1945","1950","1956","1960"],a:1,c:"#00dcff",cat:"Tarih"},
+  {q:"'Attention is All You Need' makalesi kime aittir?",o:["OpenAI","Google Brain","Anthropic","Meta AI"],a:1,c:"#a855f7",cat:"Araştırma"},
+  {q:"Stable Diffusion hangi tür modele aittir?",o:["LLM","Diffusion","GAN","VAE"],a:1,c:"#34d399",cat:"Model Türü"},
+  {q:"GPT-4'ün çıkış tarihi nedir?",o:["Kasım 2022","Mart 2023","Haziran 2023","Eylül 2023"],a:1,c:"#fb923c",cat:"Tarih"},
+  {q:"Claude'u geliştiren şirket nedir?",o:["OpenAI","Google","Anthropic","Microsoft"],a:2,c:"#a855f7",cat:"Şirket"},
+  {q:"'Hallüsinasyon' kavramı AI'da neyi ifade eder?",o:["Görsel üretim","Uydurma bilgi sunmak","Hafıza kaybı","Hız düşüşü"],a:1,c:"#f472b6",cat:"Kavram"},
+  {q:"DALL-E'yi kim geliştirdi?",o:["Google","Meta","OpenAI","Stability AI"],a:2,c:"#60a5fa",cat:"Şirket"},
+  {q:"Llama modeli kimin ürünüdür?",o:["OpenAI","Google","Meta","Apple"],a:2,c:"#00dcff",cat:"Şirket"},
+  {q:"ElevenLabs ne tür bir AI aracıdır?",o:["Görsel üretim","Ses/TTS","Kod asistanı","Video üretim"],a:1,c:"#34d399",cat:"Araç"},
+  {q:"'Context window' ne anlama gelir?",o:["Ekran boyutu","Modelin işleyebildiği max metin","Bellek hızı","Yanıt süresi"],a:1,c:"#fb923c",cat:"Teknik"},
+  {q:"Perplexity AI neyi farklı yapıyor?",o:["Görsel üretir","Kaynaklı cevap verir","Kod yazar","Ses üretir"],a:1,c:"#f472b6",cat:"Araç"},
+  {q:"'Fine-tuning' nedir?",o:["Model küçültme","Modeli özel veriyle yeniden eğitme","Model hızlandırma","Veri temizleme"],a:1,c:"#60a5fa",cat:"Teknik"},
+  {q:"Sora'yı kim geliştirdi?",o:["Google","Runway","OpenAI","Pika"],a:2,c:"#00dcff",cat:"Şirket"},
+  {q:"'RAG' ne anlama gelir?",o:["Random AI Generator","Retrieval-Augmented Generation","Rapid API Gateway","Real AI Graph"],a:1,c:"#a855f7",cat:"Teknik"},
+  {q:"Cursor hangi şirket tarafından geliştirilmiştir?",o:["OpenAI","Anysphere","Microsoft","Google"],a:1,c:"#34d399",cat:"Şirket"},
+  {q:"'MCP' protokolü kim tarafından geliştirildi?",o:["OpenAI","Google","Anthropic","Microsoft"],a:2,c:"#fb923c",cat:"Protokol"},
+  {q:"Imagen, Google'ın hangi tür modeli?",o:["LLM","Ses","Görsel","Video"],a:2,c:"#f472b6",cat:"Model"},
+  {q:"SWE-bench neyi ölçer?",o:["Yazma hızı","Yazılım mühendisliği performansı","Görsel kalite","Ses kalitesi"],a:1,c:"#60a5fa",cat:"Benchmark"},
+  {q:"'Vibe coding' 2026'da neyi ifade eder?",o:["Müzikle kodlama","Söyleyerek kodlama","Görsel kodlama","Ses ile kodlama"],a:1,c:"#00dcff",cat:"Trend"},
+  {q:"DeepSeek hangi ülkenin ürünüdür?",o:["ABD","Japonya","Çin","Güney Kore"],a:2,c:"#a855f7",cat:"Şirket"},
+  {q:"'Temperature' parametresi ne kontrol eder?",o:["Yanıt hızı","Yaratıcılık seviyesi","Bellek kullanımı","Token sayısı"],a:1,c:"#34d399",cat:"Parametre"},
+  {q:"HeyGen ne tür bir AI aracıdır?",o:["Görsel","Ses","Avatar video","Kod"],a:2,c:"#fb923c",cat:"Araç"},
+  {q:"'Few-shot' prompting ne demektir?",o:["Az sorgu","2-5 örnek vererek yaptırma","Hızlı yanıt","Kısa prompt"],a:1,c:"#f472b6",cat:"Prompt"},
+  {q:"OpenAI'ın değeri 2025'te kaçtır?",o:["$50M","$157B","$300B","$1T"],a:1,c:"#60a5fa",cat:"İş"},
+  {q:"Constitutional AI hangi şirketin yaklaşımı?",o:["OpenAI","Google","Anthropic","Meta"],a:2,c:"#00dcff",cat:"Güvenlik"},
+  {q:"Gemini 3.1 Ultra'nın context window'u kaçtır?",o:["128K","500K","1M","2M"],a:3,c:"#a855f7",cat:"Model"},
+  {q:"Claude Opus 4.7'nin SWE-bench skoru?",o:["%72.3","%80.8","%87.6","%95.2"],a:2,c:"#34d399",cat:"Benchmark"},
+  {q:"'Multimodal' AI ne anlama gelir?",o:["Çok dilli","Metin+görsel+ses işleyebilen","Hızlı","Güçlü"],a:1,c:"#fb923c",cat:"Kavram"},
+  {q:"Türkiye AI trafiğinde kaçıncı sıradadır?",o:["3.","5.","2.","1."],a:3,c:"#f472b6",cat:"Türkiye"},
+  {q:"Suno ne tür içerik üretir?",o:["Görsel","Müzik","Video","Kod"],a:1,c:"#60a5fa",cat:"Araç"},
+  {q:"'Embedding' ne anlama gelir?",o:["Gömme/vektör dönüşümü","Şifreleme","Sıkıştırma","Hızlandırma"],a:0,c:"#00dcff",cat:"Teknik"},
+  {q:"GitHub Copilot hangi şirketin ürünü?",o:["Google","GitHub/Microsoft","OpenAI","Meta"],a:1,c:"#a855f7",cat:"Araç"},
+  {q:"'AGI' ne demektir?",o:["Advanced GPU Integration","Artificial General Intelligence","Automated Graph Intelligence","All GPU Included"],a:1,c:"#34d399",cat:"Kavram"},
+  {q:"Phi modelleri kim tarafından geliştirildi?",o:["Google","OpenAI","Microsoft","Apple"],a:2,c:"#fb923c",cat:"Şirket"},
+  {q:"'Zero-shot' prompting ne demektir?",o:["Hızlı prompt","Örnek vermeden yaptırma","Çok kısa prompt","Boş prompt"],a:1,c:"#f472b6",cat:"Prompt"},
+  {q:"Runway ML ne tür içerik üretir?",o:["Müzik","Görsel","Video","Ses"],a:2,c:"#60a5fa",cat:"Araç"},
+  {q:"'Quantization' ne yapar?",o:["Model küçültür, verimli hale getirir","Model büyütür","Model kopyalar","Model siler"],a:0,c:"#00dcff",cat:"Teknik"},
+  {q:"ChatGPT'nin kaç ülkede kullanıcısı var?",o:["50+","100+","175+","200+"],a:2,c:"#a855f7",cat:"İstatistik"},
+  {q:"'Agentic AI' ne demektir?",o:["Görsel AI","Otonom görev yapan AI","Sesli AI","Hızlı AI"],a:1,c:"#34d399",cat:"Kavram"},
+  {q:"v0.dev ne tür bir AI aracıdır?",o:["Blog yazma","UI/React bileşen üretimi","Ses üretimi","Video üretimi"],a:1,c:"#fb923c",cat:"Araç"},
+  {q:"'LoRA' tekniği ne için kullanılır?",o:["Görsel üretim","Verimli fine-tuning","Hızlı inference","Veri temizleme"],a:1,c:"#f472b6",cat:"Teknik"},
+  {q:"Gamma hangi tür içerik üretir?",o:["Kod","Sunum/Prezantasyon","Görsel","Ses"],a:1,c:"#60a5fa",cat:"Araç"},
+  {q:"'Task Budget' özelliği kimin ürünü?",o:["OpenAI","Google","Anthropic","Meta"],a:2,c:"#00dcff",cat:"Özellik"},
+  {q:"MCP'nin kaç kurulumu var?",o:["10M+","50M+","97M+","200M+"],a:2,c:"#a855f7",cat:"İstatistik"},
+];
+
+// PROMPT ROULETTE — 40 görev
+const ROULETTE_TASKS=[
+  {task:"LinkedIn için viral açılış cümlesi yaz",kat:"İçerik",renk:"#00dcff",sure:30,ipucu:"Şok edici istatistikle başla"},
+  {task:"Prompt mühendisliği nedir? 3 cümlede açıkla",kat:"Eğitim",renk:"#a855f7",sure:25,ipucu:"Temel tanım, neden önemli, örnek"},
+  {task:"'AI ile iş bulma' için 5 anahtar kelime say",kat:"Kariyer",renk:"#34d399",sure:20,ipucu:"SEO odaklı düşün"},
+  {task:"ChatGPT'ye nasıl daha iyi soru sorulur? 3 ipucu",kat:"Prompt",renk:"#fb923c",sure:30,ipucu:"Rol, bağlam, format"},
+  {task:"Yapay zeka korkutucu mu? 2 cümleyle savun",kat:"Tartışma",renk:"#f472b6",sure:25,ipucu:"Araç olduğunu vurgula"},
+  {task:"Midjourney ile hangi 3 şeyi üretirdin?",kat:"Yaratıcı",renk:"#60a5fa",sure:20,ipucu:"Pratik ve yaratıcı ol"},
+  {task:"AI ile para kazanmanın en hızlı 3 yolu",kat:"Gelir",renk:"#fbbf24",sure:30,ipucu:"Gerçekçi, uygulanabilir"},
+  {task:"Claude'un en büyük avantajı nedir?",kat:"Model",renk:"#a855f7",sure:20,ipucu:"1M token veya SWE-bench"},
+  {task:"'Hallüsinasyon' nasıl önlenir? 2 yöntem",kat:"Güvenlik",renk:"#f472b6",sure:25,ipucu:"RAG, doğrulama"},
+  {task:"2026'da AI'ın en çok hangi sektörü değiştirdiği?",kat:"Analiz",renk:"#34d399",sure:25,ipucu:"Sağlık, eğitim veya hukuk"},
+  {task:"Mükemmel prompt için 3 kural yaz",kat:"Prompt",renk:"#00dcff",sure:30,ipucu:"Rol, bağlam, format"},
+  {task:"ElevenLabs ile ne yapılabilir?",kat:"Araç",renk:"#60a5fa",sure:20,ipucu:"Ses klonlama, TTS, müzik"},
+  {task:"AI öğrenmek için ücretsiz 3 kaynak öner",kat:"Eğitim",renk:"#fb923c",sure:30,ipucu:"Coursera, fast.ai, YouTube"},
+  {task:"Türkiye'de AI fırsatı var mı? Neden?",kat:"Türkiye",renk:"#f472b6",sure:25,ipucu:"%94 trafik, içerik boşluğu"},
+  {task:"Cursor ile geliştirme nasıl değişti?",kat:"Kod",renk:"#a855f7",sure:25,ipucu:"Vibe coding, Background Agents"},
+  {task:"AI IQ testini kaçta geçerdin? Neden?",kat:"Kişisel",renk:"#34d399",sure:20,ipucu:"Dürüst ve eğlenceli ol"},
+  {task:"ChatGPT Plus $20'a değer mi? 2 cümle",kat:"Fiyat",renk:"#00dcff",sure:25,ipucu:"Günlük kullanıma göre değerlendir"},
+  {task:"Gemini'nin Google Drive entegrasyonu neden önemli?",kat:"Araç",renk:"#34d399",sure:25,ipucu:"Workflow, verimlilik"},
+  {task:"AI ile bir blog yazısı 20 dakikada nasıl hazırlanır?",kat:"İçerik",renk:"#fb923c",sure:30,ipucu:"Outline, Claude, düzenleme"},
+  {task:"'Constitutional AI' nedir? Basit anlat",kat:"Güvenlik",renk:"#f472b6",sure:25,ipucu:"AI kendi kendini denetler"},
+  {task:"Dijital pazarlamada hangi 2 AI aracı şart?",kat:"Pazarlama",renk:"#60a5fa",sure:20,ipucu:"ChatGPT + Canva/Midjourney"},
+  {task:"AI'ın hallüsinasyon yaptığını nasıl anlarsın?",kat:"Güvenlik",renk:"#a855f7",sure:25,ipucu:"Kaynaksız iddia, aşırı özgüven"},
+  {task:"Perplexity vs ChatGPT — ne zaman Perplexity?",kat:"Karşılaştırma",renk:"#00dcff",sure:25,ipucu:"Araştırma, güncel bilgi"},
+  {task:"AI ile CV nasıl güçlendirilir? 3 adım",kat:"Kariyer",renk:"#34d399",sure:30,ipucu:"Claude, ATS, sayısal başarılar"},
+  {task:"Token nedir? Simit analojisiyle anlat",kat:"Eğitim",renk:"#fb923c",sure:25,ipucu:"Yaratıcı ve anlaşılır ol"},
+  {task:"2027'de AI nasıl olacak? 2 tahmin",kat:"Gelecek",renk:"#f472b6",sure:25,ipucu:"AGI, ajanlar, robotik"},
+  {task:"Midjourney v7 için en iyi 3 prompt ipucu",kat:"Görsel",renk:"#60a5fa",sure:30,ipucu:"--ar, --v 7, stil tanımı"},
+  {task:"AI asistanı en çok hangi görevde kullanıyorsun?",kat:"Kişisel",renk:"#a855f7",sure:20,ipucu:"Gerçek ve özgün cevap"},
+  {task:"LLM'leri birbirinden ne ayırır?",kat:"Teknik",renk:"#00dcff",sure:25,ipucu:"Eğitim verisi, RLHF, context"},
+  {task:"AI ile müzik üretmek etik mi?",kat:"Etik",renk:"#34d399",sure:25,ipucu:"Sanatçı hakları, telif"},
+  {task:"Sora ile gerçek filmden farkı var mı?",kat:"Araç",renk:"#fb923c",sure:20,ipucu:"Tutarsızlıklar, detaylar"},
+  {task:"AI öğretmeni geçer mi? Tartış",kat:"Eğitim",renk:"#f472b6",sure:25,ipucu:"Kişiselleşme vs empati"},
+  {task:"Prompt mühendisi olmak için ne gerekir?",kat:"Kariyer",renk:"#60a5fa",sure:30,ipucu:"Deney, model bilgisi, yazma"},
+  {task:"RAG sistemi neden halüsinasyonu azaltır?",kat:"Teknik",renk:"#a855f7",sure:25,ipucu:"Gerçek kaynak, doğrulama"},
+  {task:"AI ile sanat üretmek gerçek sanat mı?",kat:"Felsefe",renk:"#00dcff",sure:25,ipucu:"Yaratıcılık tanımı"},
+  {task:"GPT-5.5'in en büyük yeniliği nedir?",kat:"Model",renk:"#34d399",sure:20,ipucu:"Süper uygulama, Codex entegrasyonu"},
+  {task:"Türkiye'de AI startup için hangi alan en karlı?",kat:"Girişim",renk:"#fb923c",sure:30,ipucu:"Eğitim, sağlık, hukuk"},
+  {task:"'Agentic AI' 2026'da hayatı nasıl değiştiriyor?",kat:"Gelecek",renk:"#f472b6",sure:25,ipucu:"Otonom görev, Background Agents"},
+  {task:"Ücretsiz AI araçlarıyla aylık ne kadar kazanılabilir?",kat:"Gelir",renk:"#60a5fa",sure:25,ipucu:"Freelance, danışmanlık, içerik"},
+  {task:"Claude ve ChatGPT'yi aynı anda kullanmalı mı?",kat:"Strateji",renk:"#a855f7",sure:25,ipucu:"Claude kod, ChatGPT genel"},
+];
+
+// EMOJİ TAHMİN — 50 emoji seti
+const EMOJI_SETS=[
+  {emoji:"🧠⚡💻",cevap:"AI Yazılım Geliştirme",ipucu:"Zeka + hız + kod"},
+  {emoji:"📝🤖✨",cevap:"AI İçerik Üretimi",ipucu:"Metin + robot + büyü"},
+  {emoji:"🎨🖼️✨",cevap:"Görsel AI / Midjourney",ipucu:"Sanat + görsel + sihir"},
+  {emoji:"🔊🎙️🤖",cevap:"ElevenLabs / Ses AI",ipucu:"Ses + mikrofon + robot"},
+  {emoji:"🧬🔬💊",cevap:"AI Sağlık Uygulamaları",ipucu:"Gen + araştırma + ilaç"},
+  {emoji:"📊📈🤖",cevap:"AI Finans Analizi",ipucu:"Grafik + artış + robot"},
+  {emoji:"🎬🎥✨",cevap:"AI Video Üretimi",ipucu:"Film + kamera + sihir"},
+  {emoji:"🏠🔑🤖",cevap:"AI Gayrimenkul",ipucu:"Ev + anahtar + robot"},
+  {emoji:"📚🧠🎓",cevap:"AI Eğitim Platformu",ipucu:"Kitap + beyin + mezuniyet"},
+  {emoji:"🚗⚡🤖",cevap:"Otonom Araç AI",ipucu:"Araba + elektrik + robot"},
+  {emoji:"🌍💬🤖",cevap:"AI Çeviri",ipucu:"Dünya + konuşma + robot"},
+  {emoji:"🎵🎸🤖",cevap:"AI Müzik / Suno",ipucu:"Müzik + gitar + robot"},
+  {emoji:"💊🩺🤖",cevap:"AI Doktor Asistanı",ipucu:"İlaç + stetoskop + robot"},
+  {emoji:"📧✍️⚡",cevap:"AI E-posta Yazımı",ipucu:"Mail + yazma + hız"},
+  {emoji:"🔍📖🤖",cevap:"Perplexity AI",ipucu:"Arama + okuma + robot"},
+  {emoji:"💻⌨️🧠",cevap:"Cursor / Kod AI",ipucu:"Ekran + klavye + beyin"},
+  {emoji:"🎯📊🤖",cevap:"AI Pazarlama",ipucu:"Hedef + grafik + robot"},
+  {emoji:"🏋️💪🤖",cevap:"AI Fitness Koçu",ipucu:"Spor + güç + robot"},
+  {emoji:"👨‍🍳🍳🤖",cevap:"AI Yemek Tarifi",ipucu:"Aşçı + pişirme + robot"},
+  {emoji:"🌱🌿🤖",cevap:"AI Tarım",ipucu:"Bitki + doğa + robot"},
+  {emoji:"⚖️📜🤖",cevap:"AI Hukuk Asistanı",ipucu:"Terazi + belge + robot"},
+  {emoji:"🔐🛡️🤖",cevap:"AI Siber Güvenlik",ipucu:"Kilit + kalkan + robot"},
+  {emoji:"✈️🌍🤖",cevap:"AI Seyahat Planlaması",ipucu:"Uçak + dünya + robot"},
+  {emoji:"🧹🏠⚡",cevap:"AI Ev Otomasyonu",ipucu:"Temizlik + ev + hız"},
+  {emoji:"👗🎨🤖",cevap:"AI Moda Tasarımı",ipucu:"Kıyafet + sanat + robot"},
+  {emoji:"🎮🕹️🧠",cevap:"AI Oyun Geliştirme",ipucu:"Oyun + joystick + beyin"},
+  {emoji:"🛒💳🤖",cevap:"AI E-ticaret",ipucu:"Alışveriş + kart + robot"},
+  {emoji:"🌡️💉🤖",cevap:"AI Tanı Sistemi",ipucu:"Ateş + iğne + robot"},
+  {emoji:"📰✍️⚡",cevap:"AI Gazetecilik",ipucu:"Haber + yazma + hız"},
+  {emoji:"🏛️📚🤖",cevap:"AI Kütüphane Sistemi",ipucu:"Müze + kitap + robot"},
+  {emoji:"🔭🌌🤖",cevap:"AI Astronomi",ipucu:"Teleskop + uzay + robot"},
+  {emoji:"🎓📝🤖",cevap:"AI Sınav Hazırlığı",ipucu:"Mezuniyet + test + robot"},
+  {emoji:"💬🌐🤖",cevap:"AI Sohbet Botu",ipucu:"Konuşma + web + robot"},
+  {emoji:"🧩🎮⚡",cevap:"AI Bulmaca Çözücü",ipucu:"Bulmaca + oyun + hız"},
+  {emoji:"📱📲🤖",cevap:"AI Mobil Uygulama",ipucu:"Telefon + bağlantı + robot"},
+  {emoji:"🖥️💡🧠",cevap:"AGI / Genel AI",ipucu:"Ekran + fikir + beyin"},
+  {emoji:"🐕🐱🤖",cevap:"AI Evcil Hayvan Bakımı",ipucu:"Köpek + kedi + robot"},
+  {emoji:"🌊⚡🤖",cevap:"AI Enerji Yönetimi",ipucu:"Dalga + elektrik + robot"},
+  {emoji:"🚀🛸🤖",cevap:"AI Uzay Araştırması",ipucu:"Roket + UFO + robot"},
+  {emoji:"🎭🎪🤖",cevap:"AI Sanat & Eğlence",ipucu:"Tiyatro + sirk + robot"},
+  {emoji:"🧪⚗️🤖",cevap:"AI İlaç Keşfi",ipucu:"Deney + kimya + robot"},
+  {emoji:"📡🌐🤖",cevap:"AI İletişim Ağı",ipucu:"Anten + web + robot"},
+  {emoji:"🏦💰🤖",cevap:"AI Bankacılık",ipucu:"Banka + para + robot"},
+  {emoji:"🎯🏹🤖",cevap:"AI Hedefleme Sistemi",ipucu:"Hedef + ok + robot"},
+  {emoji:"🌸🌺🤖",cevap:"AI Çevre Koruma",ipucu:"Çiçek + doğa + robot"},
+  {emoji:"🏗️🔧🤖",cevap:"AI İnşaat Planlama",ipucu:"Bina + alet + robot"},
+  {emoji:"🔬🧫🤖",cevap:"AI Biyoteknoloji",ipucu:"Mikroskop + kültür + robot"},
+  {emoji:"🎼🎹🤖",cevap:"AI Beste Yapma",ipucu:"Müzik notası + piyano + robot"},
+  {emoji:"🌍🗺️🤖",cevap:"AI Harita & Navigasyon",ipucu:"Dünya + harita + robot"},
+  {emoji:"💡🔋🤖",cevap:"AI Enerji Tasarrufu",ipucu:"Fikir + batarya + robot"},
+];
+
+// KARİYER SİMÜLASYONU — 30 senaryo
+const KARIYER_SCENARIOS=[
+  {id:1,text:"2026 yılı. AI konusunda hiçbir bilgin yok. Ne yaparsın?",opts:[{t:"ChatGPT kullanmaya başla, 1 saat/gün",s:2,sonuc:"İyi başlangıç! Pratik en iyi öğretmen."},{t:"Önce teori öğren, kitap oku",s:1,sonuc:"Yavaş ilerleyeceksin. Dene-yanıl daha etkili."},{t:"Bekle, AI geçici bir trend",s:-1,sonuc:"Yanlış! AI kalıcı. Geç kaldın."}],c:"#00dcff"},
+  {id:2,text:"İş hayatında Claude veya ChatGPT kullanmayı öğrendin. Bir sonraki adım?",opts:[{t:"Prompt tekniklerini derinleştir",s:2,sonuc:"Harika! Prompt kalitesi = çıktı kalitesi."},{t:"Aynı şeyleri yapmaya devam et",s:0,sonuc:"Duraksama. Sürekli öğrenmelisin."},{t:"Meslektaşlarına öğret, danışman ol",s:3,sonuc:"Mükemmel! En hızlı kariyer hamlesi."}],c:"#a855f7"},
+  {id:3,text:"Şirketin AI araçlarından korkuyor. Pozisyonun tehlikede mi?",opts:[{t:"AI araçlarında uzmanlaş, değer yarat",s:3,sonuc:"Doğru! 'AI kullanan biri seni geçer.'"},{t:"Sessizce çalışmaya devam et",s:-1,sonuc:"Risk var. AI bilen birini alabilirler."},{t:"AI bölümüne geç, yeni beceriler öğren",s:2,sonuc:"İyi hamle! Şirkette dönüşümün öncüsü ol."}],c:"#34d399"},
+  {id:4,text:"Freelancer olarak çalışmak istiyorsun. AI ile başlamak için?",opts:[{t:"Prompt mühendisliği hizmeti sun",s:2,sonuc:"Türkiye'de talep var, arz yok. Harika!"},{t:"AI ile içerik üretimi",s:3,sonuc:"En hızlı gelir yolu! Başla hemen."},{t:"AI danışmanlığı, şirketlere satış",s:2,sonuc:"İyi yol ama daha fazla deneyim gerek."}],c:"#fb923c"},
+  {id:5,text:"Müşterinden büyük bir proje teklifi geldi. AI ile halleder misin?",opts:[{t:"Kabul et, Claude ile yap",s:3,sonuc:"Doğru cesaret! Claude Opus 4.7 güçlü."},{t:"Reddet, çok büyük",s:-1,sonuc:"Kaçırılmış fırsat. AI'la yapabilirdin."},{t:"Yarısını kabul et, test et",s:1,sonuc:"Makul ama agresif ol. Tam fiyat iste."}],c:"#f472b6"},
+  {id:6,text:"AI aracını hallüsinasyon yaptı, yanlış bilgi verdi. Ne yaparsın?",opts:[{t:"Çapraz kontrol yap, her zaman doğrula",s:3,sonuc:"Mükemmel! Kritik bilgileri mutlaka doğrula."},{t:"Direkt müşteriye gönder",s:-2,sonuc:"Tehlikeli! Güven kaybedersin."},{t:"Claude'a sor, doğrulama iste",s:2,sonuc:"İyi! Farklı model çapraz doğrulama yapar."}],c:"#60a5fa"},
+  {id:7,text:"AI sektöründe iş ilanı gördün. Gerekli beceriler eksik. Ne yaparsın?",opts:[{t:"Başvur, eksikleri öğrenirken tamamla",s:2,sonuc:"Doğru! İş başında öğrenme çok değerli."},{t:"Başvurma, hazır değilsin",s:-1,sonuc:"Yanlış! Hazır olmak beklersen hiç başvuramazsın."},{t:"1 ay yoğun öğren, sonra başvur",s:3,sonuc:"Harika! Hızlı öğrenme + motivasyon göster."}],c:"#fbbf24"},
+  {id:8,text:"Birisi sana 'AI her şeyi yapacak, insana gerek kalmayacak' dedi.",opts:[{t:"Kısmen katılmıyorum, insan denetimi şart",s:3,sonuc:"Doğru! AI araç, insan karar verici."},{t:"Haklı, gelecek korkutucu",s:-1,sonuc:"Bu kaygı seni durdurmasın. Adapte ol."},{t:"AI gelişirse insanlar yeni işler bulur",s:2,sonuc:"İyi bakış açısı! Tarih böyle söylüyor."}],c:"#a855f7"},
+];
+
+// ══════════════════════════════════════════════════════════
+// YENİ OYUN SAYFASI
+// ══════════════════════════════════════════════════════════
+function OyunlarPage({setPage}){
+  const games=[
+    {id:"dedektif",icon:"🕵️",title:"AI mi İnsan mı?",desc:"Metni gör, kim yazdı tahmin et",color:"#00dcff",tag:"Klasik",difficulty:"Kolay"},
+    {id:"trivia",icon:"🏆",title:"AI Trivia Marathon",desc:"50 soruluk bilgi maratonu, streak sistemi",color:"#a855f7",tag:"Marathon",difficulty:"Orta"},
+    {id:"roulette",icon:"🎰",title:"Prompt Roulette",desc:"30sn'de görev tamamla, puan topla",color:"#34d399",tag:"Hızlı",difficulty:"Orta"},
+    {id:"emoji",icon:"😀",title:"AI Emoji Tahmin",desc:"Emojilerden AI kavramını bul",color:"#fb923c",tag:"Eğlenceli",difficulty:"Kolay"},
+    {id:"kariyer",icon:"💼",title:"AI Kariyer Simülasyonu",desc:"Seçimlerle AI kariyerini şekillendir",color:"#f472b6",tag:"Simülasyon",difficulty:"Kolay"},
+    {id:"quiz",icon:"🧩",title:"AI Quiz",desc:"20 soruluk klasik quiz",color:"#60a5fa",tag:"Quiz",difficulty:"Orta"},
+    {id:"iqtest",icon:"🧠",title:"AI IQ Testi",desc:"10 soruda AI IQ'nu ölç",color:"#fbbf24",tag:"Test",difficulty:"Zor"},
+    {id:"puan",icon:"💡",title:"Prompt Puanlayıcı",desc:"Promptunu Gemini ile analiz et",color:"#f472b6",tag:"AI",difficulty:"Kolay"},
+  ];
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{textAlign:"center",marginBottom:32}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:6}}>İNTERAKTİF</div>
+      <div style={{fontSize:28,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>🎮 Oyunlar & İnteraktif</div>
+      <div style={{fontSize:13,color:"#64748b",maxWidth:480,margin:"0 auto"}}>AI'ı öğrenmenin en eğlenceli yolu — Ses efektleri, animasyonlar, puan sistemi</div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}}>
+      {games.map(g=>(
+        <div key={g.id} onClick={()=>setPage(g.id)} style={{background:`linear-gradient(135deg,${g.color}10,rgba(0,0,0,0))`,border:`1px solid ${g.color}30`,borderRadius:18,padding:"22px",cursor:"pointer",transition:"all .25s",position:"relative",overflow:"hidden"}} className="card-hover"
+          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow=`0 12px 40px ${g.color}30`;Sound.click();}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
+          <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:.06}}>{g.icon}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+            <div style={{fontSize:36}}>{g.icon}</div>
+            <div style={{display:"flex",gap:6,flexDirection:"column",alignItems:"flex-end"}}>
+              <span style={{fontSize:9,background:`${g.color}20`,color:g.color,padding:"2px 8px",borderRadius:5,fontWeight:700}}>{g.tag}</span>
+              <span style={{fontSize:9,color:"#334155"}}>{g.difficulty}</span>
+            </div>
+          </div>
+          <div style={{fontSize:15,fontWeight:800,color:"#e2e8f0",marginBottom:6,fontFamily:"'Space Grotesk',sans-serif"}}>{g.title}</div>
+          <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:14}}>{g.desc}</div>
+          <div style={{display:"flex",justifyContent:"flex-end"}}>
+            <div style={{fontSize:11,color:g.color,fontWeight:700}}>Oyna →</div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div style={{marginTop:32,background:"rgba(0,220,255,0.05)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:14,padding:"18px",textAlign:"center"}}>
+      <div style={{fontSize:12,color:"#64748b"}}>🔔 Yakında daha fazla oyun • AI Kelime Zinciri • Token Sayma • Model Yarışması</div>
+    </div>
+  </div>;
+}
+
+function TriviaMarathon(){
+  const[phase,setPhase]=useState("intro");const[qi,setQi]=useState(0);const[score,setScore]=useState(0);const[streak,setStreak]=useState(0);const[maxStreak,setMaxStreak]=useState(0);const[sel,setSel]=useState(null);const[shown,setShown]=useState(false);const[confetti,setConfetti]=useState(false);const[particles,setParticles]=useState(null);const[timer,setTimer]=useState(20);
+  const q=TRIVIA_Q[qi];
+  useEffect(()=>{if(phase!=="test"||shown)return;const id=setInterval(()=>{setTimer(t=>{if(t<=1){clearInterval(id);handleTimeout();return 0;}Sound.tick();return t-1;});},1000);return()=>clearInterval(id);},[phase,qi,shown]);
+  function handleTimeout(){setSel(-1);setShown(true);setStreak(0);}
+  function answer(i,e){
+    if(shown)return;Sound.click();setSel(i);setShown(true);
+    const correct=i===q.a;
+    if(correct){
+      const pts=10+(streak*5)+Math.max(0,timer*2);setScore(s=>s+pts);
+      const ns=streak+1;setStreak(ns);setMaxStreak(m=>Math.max(m,ns));
+      Sound.correct();
+      if(ns>=3)Sound.levelUp();
+      const rect=e?.currentTarget?.getBoundingClientRect();
+      setParticles({x:rect?.left||200,y:rect?.top||300,color:q.c});
+    }else{Sound.wrong();setStreak(0);}
+  }
+  function next(){
+    if(qi<TRIVIA_Q.length-1){setQi(i=>i+1);setSel(null);setShown(false);setTimer(20);}
+    else{setPhase("result");Sound.victory();setConfetti(true);}
+  }
+  return <div style={{padding:"28px 20px",maxWidth:700,margin:"0 auto"}}>
+    {confetti&&<Confetti onDone={()=>setConfetti(false)}/>}
+    {particles&&<Particles x={particles.x} y={particles.y} color={particles.color} onDone={()=>setParticles(null)}/>}
+    {phase==="intro"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏆</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Trivia Marathon</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>50 soruluk AI bilgi maratonu. Streak sistemi ile bonus puan. Ne kadar uzun tutabilirsin?</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,maxWidth:360,margin:"0 auto 28px"}}>
+        {[["🔥","Streak","Bonus puan"],["⏱️","20sn","Her soru"],["🏅","50","Soru sayısı"]].map(([e,t,d])=>(
+          <div key={t} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:12,padding:"14px"}}>
+            <div style={{fontSize:22,marginBottom:5}}>{e}</div><div style={{fontSize:12,fontWeight:700,color:"#a855f7"}}>{t}</div><div style={{fontSize:10,color:"#475569"}}>{d}</div>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>setPhase("test")} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Maratonu Başlat 🚀</button>
+    </div>}
+    {phase==="test"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{fontSize:11,color:"#64748b"}}>Soru {qi+1}/50</div>
+          <Tag text={q.cat} color={q.c} size={9}/>
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          {streak>=2&&<div style={{fontSize:11,color:"#fb923c",fontWeight:700,animation:"pulse 1s infinite"}}>🔥 {streak} Streak!</div>}
+          <div style={{fontSize:12,fontWeight:700,color:"#34d399"}}>⭐ {score}</div>
+          <div style={{fontSize:12,fontWeight:700,color:timer<=5?"#f472b6":timer<=10?"#fb923c":"#94a3b8",transition:"color .3s"}}>⏱️ {timer}s</div>
+        </div>
+      </div>
+      <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:3,marginBottom:4}}>
+        <div style={{width:`${(qi/50)*100}%`,height:"100%",background:`linear-gradient(90deg,${q.c},#a855f7)`,borderRadius:3,transition:"width .4s"}}/>
+      </div>
+      <div style={{height:3,background:"rgba(255,255,255,0.04)",borderRadius:2,marginBottom:20}}>
+        <div style={{width:`${(timer/20)*100}%`,height:"100%",background:timer<=5?"#f472b6":timer<=10?"#fb923c":"#00dcff",borderRadius:2,transition:"width 1s linear"}}/>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${q.c}30`,borderRadius:16,padding:"20px",marginBottom:16}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.6,fontFamily:"'Space Grotesk',sans-serif"}}>{q.q}</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+        {q.o.map((o,i)=>{
+          let bg="rgba(255,255,255,0.03)",bc=`${q.c}20`,color="#94a3b8";
+          if(shown){if(i===q.a){bg="rgba(52,211,153,0.12)";bc="rgba(52,211,153,0.5)";color="#34d399";}
+          else if(i===sel&&i!==q.a){bg="rgba(244,114,182,0.12)";bc="rgba(244,114,182,0.5)";color="#f472b6";}}
+          else if(sel===i){bg=`${q.c}15`;bc=`${q.c}50`;color=q.c;}
+          return <button key={i} onClick={(e)=>answer(i,e)} style={{padding:"13px 16px",borderRadius:11,border:`1px solid ${bc}`,background:bg,color,fontSize:13,textAlign:"left",cursor:shown?"default":"pointer",fontFamily:"inherit",transition:"all .2s",transform:shown&&i===q.a?"scale(1.01)":"scale(1)"}}>{["A","B","C","D"][i]}. {o}</button>;
+        })}
+      </div>
+      {shown&&<div>
+        <div style={{background:`${q.c}08`,border:`1px solid ${q.c}25`,borderRadius:11,padding:"12px",fontSize:12,color:"#94a3b8",marginBottom:12,lineHeight:1.7}}>{sel===q.a?`🎯 Doğru! +${10+(streak*5)} puan`:"❌ Yanlış — "} {TRIVIA_Q[qi].q}</div>
+        <button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>{qi<49?"Sonraki →":"Sonucu Gör 🏆"}</button>
+      </div>}
+    </div>}
+    {phase==="result"&&<div style={{textAlign:"center"}}>
+      <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.1),rgba(0,220,255,0.08))",border:"1px solid rgba(0,220,255,0.3)",borderRadius:20,padding:"32px",marginBottom:20}}>
+        <div style={{fontSize:56,marginBottom:10}}>🏆</div>
+        <div style={{fontSize:20,fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:"#e2e8f0",marginBottom:6}}>Marathon Tamamlandı!</div>
+        <div style={{fontSize:40,fontWeight:900,color:"#00dcff",marginBottom:4}}>⭐ {score}</div>
+        <div style={{fontSize:13,color:"#64748b",marginBottom:20}}>Max Streak: 🔥{maxStreak} · 50/50 soru tamamlandı</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+          <button onClick={()=>navigator.clipboard?.writeText(`IMDATAI AI Trivia Marathon'da ${score} puan aldım! 🏆 Max streak: ${maxStreak}\nSen kaç alırsın? imdatai.com`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.1)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+          <button onClick={()=>{setPhase("intro");setQi(0);setScore(0);setStreak(0);setSel(null);setShown(false);setTimer(20);}} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+function PromptRoulette(){
+  const[phase,setPhase]=useState("intro");const[score,setScore]=useState(0);const[taskIdx,setTaskIdx]=useState(null);const[timer,setTimer]=useState(30);const[inp,setInp]=useState("");const[done,setDone]=useState(false);const[round,setRound]=useState(0);const[history,setHistory]=useState([]);const[particles,setParticles]=useState(null);
+  const task=taskIdx!==null?ROULETTE_TASKS[taskIdx]:null;
+  useEffect(()=>{if(phase!=="game"||done)return;const id=setInterval(()=>{setTimer(t=>{if(t<=1){clearInterval(id);timeout();return 0;}Sound.tick();return t-1;});},1000);return()=>clearInterval(id);},[phase,taskIdx,done]);
+  function spinRoulette(){const idx=Math.floor(Math.random()*ROULETTE_TASKS.length);setTaskIdx(idx);setTimer(ROULETTE_TASKS[idx].sure);setInp("");setDone(false);setPhase("game");Sound.click();}
+  function timeout(){setDone(true);Sound.wrong();}
+  function submit(e){
+    if(!inp.trim()||done)return;
+    const pts=Math.round(10+timer*2+(inp.length>50?5:0));setScore(s=>s+pts);setDone(true);setRound(r=>r+1);
+    setHistory(h=>[...h,{task:task.task,cevap:inp,puan:pts}]);Sound.correct();
+    setParticles({x:e.currentTarget.getBoundingClientRect().left,y:e.currentTarget.getBoundingClientRect().top,color:task.renk});
+  }
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {particles&&<Particles x={particles.x} y={particles.y} color={particles.color} onDone={()=>setParticles(null)}/>}
+    {phase==="intro"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🎰</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>Prompt Roulette</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>Rastgele görev gelir. 30 saniyede cevap yaz. Ne kadar çok puan alabilirsin?</div>
+      <button onClick={spinRoulette} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>🎰 Çevir!</button>
+    </div>}
+    {phase==="game"&&task&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <Tag text={task.kat} color={task.renk}/>
+          <div style={{fontSize:11,color:"#64748b"}}>Tur {round+1}</div>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#34d399"}}>⭐ {score}</div>
+          <div style={{fontSize:14,fontWeight:900,color:timer<=5?"#f472b6":timer<=10?"#fb923c":"#94a3b8"}}>{timer}s</div>
+        </div>
+      </div>
+      <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:20}}>
+        <div style={{width:`${(timer/task.sure)*100}%`,height:"100%",background:timer<=5?"#f472b6":timer<=10?"#fb923c":task.renk,transition:"width 1s linear",borderRadius:2}}/>
+      </div>
+      <div style={{background:`${task.renk}08`,border:`1px solid ${task.renk}30`,borderRadius:16,padding:"22px",marginBottom:16,textAlign:"center"}}>
+        <div style={{fontSize:9,color:task.renk,letterSpacing:".1em",marginBottom:8}}>GÖREV</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:10}}>{task.task}</div>
+        <div style={{fontSize:11,color:"#64748b",fontStyle:"italic"}}>💡 İpucu: {task.ipucu}</div>
+      </div>
+      {!done?<div>
+        <textarea value={inp} onChange={e=>setInp(e.target.value)} rows={3} style={{width:"100%",background:"rgba(255,255,255,0.03)",border:`1px solid ${task.renk}30`,borderRadius:12,color:"#e2e8f0",padding:"14px",fontSize:13,fontFamily:"inherit",outline:"none",resize:"none",boxSizing:"border-box",marginBottom:12}} placeholder="Cevabını yaz..."/>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={submit} disabled={!inp.trim()} className="btn-primary" style={{flex:1,padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit",opacity:inp.trim()?1:0.5}}>✅ Gönder</button>
+          <button onClick={spinRoulette} style={{padding:"12px 18px",borderRadius:12,border:"1px solid rgba(255,255,255,0.1)",background:"transparent",color:"#475569",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>Geç</button>
+        </div>
+      </div>:<div>
+        <div style={{background:inp.trim()?"rgba(52,211,153,0.08)":"rgba(244,114,182,0.08)",border:`1px solid ${inp.trim()?"rgba(52,211,153,0.3)":"rgba(244,114,182,0.3)"}`,borderRadius:12,padding:"14px",marginBottom:14,fontSize:12,color:"#94a3b8",lineHeight:1.7}}>
+          {inp.trim()?`✅ Harika! +${Math.round(10+timer*2+(inp.length>50?5:0))} puan kazandın!`:"⏰ Süre bitti!"}
+        </div>
+        <button onClick={spinRoulette} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>🎰 Yeni Görev!</button>
+      </div>}
+    </div>}
+  </div>;
+}
+
+function EmojiTahmin(){
+  const[phase,setPhase]=useState("intro");const[idx,setIdx]=useState(0);const[inp,setInp]=useState("");const[shown,setShown]=useState(false);const[score,setScore]=useState(0);const[particles,setParticles]=useState(null);
+  const q=EMOJI_SETS[idx];
+  function check(){
+    if(!inp.trim())return;setShown(true);
+    const normalized=inp.toLowerCase().replace(/\s+/g," ").trim();
+    const correct=q.cevap.toLowerCase();
+    if(correct.includes(normalized)||normalized.includes(correct.split(" ")[0].toLowerCase())){setScore(s=>s+10);Sound.correct();setParticles({x:200,y:300,color:"#fb923c"});}
+    else Sound.wrong();
+  }
+  function next(){setIdx(i=>(i+1)%EMOJI_SETS.length);setInp("");setShown(false);Sound.click();}
+  return <div style={{padding:"28px 20px",maxWidth:580,margin:"0 auto",textAlign:"center"}}>
+    {particles&&<Particles x={particles.x} y={particles.y} color={particles.color} count={30} onDone={()=>setParticles(null)}/>}
+    {phase==="intro"&&<div>
+      <div style={{fontSize:64,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>😀</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Emoji Tahmin</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24}}>Emojileri gör, AI kavramını tahmin et. 50 farklı konu!</div>
+      <button onClick={()=>setPhase("game")} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Oyna! 🎮</button>
+    </div>}
+    {phase==="game"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <div style={{fontSize:11,color:"#64748b"}}>{idx+1}/{EMOJI_SETS.length}</div>
+        <div style={{fontSize:14,fontWeight:800,color:"#fb923c"}}>⭐ {score}</div>
+      </div>
+      <div style={{background:"linear-gradient(135deg,rgba(251,146,60,0.1),rgba(0,0,0,0))",border:"1px solid rgba(251,146,60,0.3)",borderRadius:20,padding:"32px",marginBottom:20}}>
+        <div style={{fontSize:72,marginBottom:8,letterSpacing:8,filter:shown?"none":"blur(0)"}}>{q.emoji}</div>
+        <div style={{fontSize:11,color:"#475569"}}>💡 İpucu: {q.ipucu}</div>
+      </div>
+      {!shown?<div>
+        <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&check()} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(251,146,60,0.2)",borderRadius:12,color:"#e2e8f0",padding:"14px 16px",fontSize:14,fontFamily:"inherit",outline:"none",textAlign:"center",marginBottom:12,boxSizing:"border-box"}} placeholder="Ne olduğunu tahmin et..."/>
+        <button onClick={check} disabled={!inp.trim()} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>Tahmin Et!</button>
+      </div>:<div>
+        <div style={{background:q.cevap.toLowerCase().includes(inp.toLowerCase().split(" ")[0])?"rgba(52,211,153,0.1)":"rgba(244,114,182,0.1)",border:`1px solid ${q.cevap.toLowerCase().includes(inp.toLowerCase().split(" ")[0])?"rgba(52,211,153,0.4)":"rgba(244,114,182,0.4)"}`,borderRadius:12,padding:"16px",marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:4}}>{q.cevap}</div>
+          <div style={{fontSize:11,color:"#64748b"}}>{q.ipucu}</div>
+        </div>
+        <button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>Sonraki →</button>
+      </div>}
+    </div>}
+  </div>;
+}
+
+// Aliases for routing compatibility
+const EmojiGuess = EmojiTahmin;
+const KariyerSimPage = KariyerSim;
+
+// ══ MODEL DEDEKTİF ══
+const DEDEKTIF_Q=[
+  {text:"Yapay zekanın geleceği konusunda hem heyecanlı hem de endişeliyim. İş piyasasındaki etkileri beni düşündürüyor.",model:"İnsan",ipucu:"Karma duygu + belirsizlik insani özellik"},
+  {text:"2026 yılı itibarıyla ChatGPT, GPT-5.5 modeli ile süper uygulama dönemini başlatmıştır. Kod, tarayıcı ve ses tek platformda birleşmiştir.",model:"ChatGPT",ipucu:"Ansiklopedik dil, kesin tarih, teknik özet GPT tarzı"},
+  {text:"İlginç bir soru. Bu konuyu birden fazla açıdan değerlendirmek gerekiyor: hem etik boyutu hem de pratik sonuçları açısından.",model:"Claude",ipucu:"Nüanslı yaklaşım, etik vurgu, yapılandırılmış düşünme Claude'a özgü"},
+  {text:"Merhaba! Bugün çok güzel bir gün. Balkonuma oturdum, kahvemi içiyorum. Siz ne yapıyorsunuz?",model:"İnsan",ipucu:"Kişisel anı, gündelik dil, soru sona ekleme insan özelliği"},
+  {text:"Google'ın Gemini modeli, 2 milyon token context window kapasitesiyle tüm rakiplerini geride bırakmaktadır.",model:"Gemini",ipucu:"Google ürününü öne çıkarma, teknik terimler, Gemini tarzı"},
+  {text:"Kod yazarken fark ettim: bazen en basit çözüm en iyisidir. 3 gün uğraştım, sonunda 2 satırla hallettim.",model:"İnsan",ipucu:"Kişisel deneyim, zaman belirtimi, duygusal sonuç insan yazısı"},
+  {text:"Bu soruyu yanıtlamak için öncelikle terminolojiyi netleştirmem gerekiyor. 'Yapay zeka' çok geniş bir kavramsal alanı kapsar.",model:"Claude",ipucu:"Tanım netleştirme, akademik ton, geniş perspektif Claude'a özgü"},
+  {text:"Haha ya bu çok komik oldu. Arkadaşım tam o anda geldi ve her şeyi mahvetti lol. Neyse olsun.",model:"İnsan",ipucu:"Günlük konuşma, 'lol', kısaltmalar insan yazısı"},
+  {text:"ChatGPT vs Claude karşılaştırmasında şu faktörler incelenmeli: context window uzunluğu, kod performansı ve hallüsinasyon oranları.",model:"ChatGPT",ipucu:"Maddeli yapı, profesyonel ton, karşılaştırmalı analiz GPT tarzı"},
+  {text:"Türkiye'de AI kullanımının bu kadar yüksek olması gerçekten şaşırtıcı. Sanırım Türk insanının teknolojiye açıklığı etkili.",model:"İnsan",ipucu:"Kişisel yorum, 'sanırım', tahmin insan yazısı"},
+  {text:"İstanbul'u ziyaret edecekseniz, Kapalıçarşı ve Boğaz turu mutlaka yapılması gereken aktiviteler arasında yer alır.",model:"Gemini",ipucu:"Turizm dili, tavsiye üslubu, Gemini bu tarzı çok kullanır"},
+  {text:"Bu konuda kesin bir cevap vermek doğru olmaz. Ancak mevcut kanıtlar pek çok faktörün etkili olduğunu gösteriyor.",model:"Claude",ipucu:"Belirsizliği kabul, kanıt odaklı, dikkatli ifade Claude'a özgü"},
+];
+
+function ModelDedektifPage(){
+  const[phase,setPhase]=useState("menu");const[qi,setQi]=useState(0);const[sel,setSel]=useState(null);const[shown,setShown]=useState(false);const[score,setScore]=useState(0);
+  const q=DEDEKTIF_Q[qi%DEDEKTIF_Q.length];
+  const opts=["İnsan","ChatGPT","Claude","Gemini"];
+  function guess(o){if(shown)return;setSel(o);setShown(true);if(o===q.model){setScore(s=>s+15);playSound("correct");}else playSound("wrong");}
+  function next(){if(qi>=DEDEKTIF_Q.length-1)setPhase("end");else{setQi(i=>i+1);setSel(null);setShown(false);}}
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {phase==="menu"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:16,animation:"float 2s ease-in-out infinite"}}>🔍</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#00dcff",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>Model Dedektif</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24}}>Bu metni kim yazdı? İnsan mı, ChatGPT mi, Claude mu, Gemini mi?<br/>{DEDEKTIF_Q.length} farklı metin örneği!</div>
+      <button onClick={()=>{setPhase("play");setQi(0);setSel(null);setShown(false);setScore(0);}} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Dedektif Ol 🔍</button>
+    </div>}
+    {phase==="play"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+        <div style={{fontSize:12,color:"#475569"}}>{qi+1}/{DEDEKTIF_Q.length}</div>
+        <div style={{fontSize:12,color:"#00dcff",fontWeight:700}}>💎 {score} puan</div>
+      </div>
+      <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:18}}>
+        <div style={{width:`${((qi+1)/DEDEKTIF_Q.length)*100}%`,height:"100%",background:"linear-gradient(90deg,#00dcff,#a855f7)",borderRadius:2}}/>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:16,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:9,color:"#334155",marginBottom:8}}>BU METNİ KİM YAZDI?</div>
+        <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.8,fontStyle:"italic"}}>"{q.text}"</div>
+        {shown&&<div style={{marginTop:12,fontSize:11,color:"#64748b",background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"8px 12px"}}>💡 {q.ipucu}</div>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+        {opts.map(o=>{
+          const oc={İnsan:"#34d399",ChatGPT:"#00dcff",Claude:"#a855f7",Gemini:"#fb923c"}[o]||"#475569";
+          let bg=`${oc}06`,bord=`${oc}18`,tc="#94a3b8";
+          if(shown){if(o===q.model){bg=`${oc}12`;bord=`${oc}40`;tc=oc;}else if(o===sel){bg="rgba(244,114,182,0.12)";bord="rgba(244,114,182,0.4)";tc="#f472b6";}}
+          else if(sel===o){bg=`${oc}10`;bord=`${oc}30`;tc=oc;}
+          return <button key={o} onClick={()=>guess(o)} style={{padding:"14px",borderRadius:12,border:`1px solid ${bord}`,background:bg,color:tc,fontSize:12,cursor:shown?"default":"pointer",fontFamily:"inherit",fontWeight:600}}>
+            {{İnsan:"👤",ChatGPT:"🤖",Claude:"🧠",Gemini:"🌟"}[o]} {o}
+          </button>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",borderRadius:12,fontSize:14,fontFamily:"inherit"}}>{qi<DEDEKTIF_Q.length-1?"Sonraki →":"Sonuç 🏆"}</button>}
+    </div>}
+    {phase==="end"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:52,marginBottom:12}}>🔍</div>
+      <div style={{fontSize:22,fontWeight:900,color:"#00dcff",fontFamily:"'Space Grotesk',sans-serif",marginBottom:16}}>{score}/{DEDEKTIF_Q.length*15} Puan!</div>
+      <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+        <button onClick={()=>navigator.clipboard?.writeText(`Model Dedektif'te ${score} puan aldım! 🔍 imdatai.com #IMDATAI`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.08)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+        <button onClick={()=>{setPhase("play");setQi(0);setSel(null);setShown(false);setScore(0);}} className="btn-primary" style={{padding:"10px 24px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+      </div>
+    </div>}
+  </div>;
+}
+
+function KariyerSim(){
+  const[phase,setPhase]=useState("intro");const[si,setSi]=useState(0);const[score,setScore]=useState(0);const[sonuclar,setSonuclar]=useState([]);const[shown,setShown]=useState(false);const[sel,setSel]=useState(null);const[confetti,setConfetti]=useState(false);
+  const s=KARIYER_SCENARIOS[si];
+  function choose(opt,i){if(shown)return;setSel(i);setShown(true);setScore(sc=>sc+Math.max(0,opt.s));setSonuclar(r=>[...r,{senaryo:s.text,secim:opt.t,sonuc:opt.sonuc,puan:opt.s}]);if(opt.s>=2)Sound.correct();else if(opt.s<0)Sound.wrong();else Sound.click();}
+  function next(){if(si<KARIYER_SCENARIOS.length-1){setSi(i=>i+1);setShown(false);setSel(null);}else{setPhase("result");Sound.victory();setConfetti(true);}}
+  const maxPuan=KARIYER_SCENARIOS.reduce((s,sc)=>s+Math.max(...sc.opts.map(o=>o.s)),0);
+  return <div style={{padding:"28px 20px",maxWidth:680,margin:"0 auto"}}>
+    {confetti&&<Confetti onDone={()=>setConfetti(false)}/>}
+    {phase==="intro"&&<div style={{textAlign:"center"}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>💼</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>AI Kariyer Simülasyonu</div>
+      <div style={{fontSize:13,color:"#64748b",marginBottom:24,lineHeight:1.7}}>8 gerçek hayat senaryosu. Seçimlerinle AI kariyerini şekillendir. Doğru kararlar seni zirveye taşır!</div>
+      <button onClick={()=>setPhase("game")} className="btn-primary" style={{padding:"14px 40px",fontSize:15,borderRadius:12,fontFamily:"inherit"}}>Kariyere Başla 🚀</button>
+    </div>}
+    {phase==="game"&&s&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
+        <div style={{fontSize:11,color:"#64748b"}}>Senaryo {si+1}/{KARIYER_SCENARIOS.length}</div>
+        <div style={{fontSize:12,fontWeight:700,color:"#34d399"}}>⭐ Puan: {score}</div>
+      </div>
+      <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:20}}>
+        <div style={{width:`${((si)/KARIYER_SCENARIOS.length)*100}%`,height:"100%",background:`linear-gradient(90deg,${s.c},#a855f7)`,borderRadius:2,transition:"width .5s"}}/>
+      </div>
+      <div style={{background:`${s.c}08`,border:`1px solid ${s.c}25`,borderRadius:16,padding:"22px",marginBottom:16}}>
+        <div style={{fontSize:9,color:s.c,letterSpacing:".1em",marginBottom:8}}>SENARYO</div>
+        <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.7,fontFamily:"'Space Grotesk',sans-serif"}}>{s.text}</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
+        {s.opts.map((o,i)=>{
+          let bg="rgba(255,255,255,0.03)",bc="rgba(255,255,255,0.08)",color="#94a3b8";
+          if(shown&&sel===i){
+            if(o.s>=2){bg="rgba(52,211,153,0.1)";bc="rgba(52,211,153,0.4)";color="#34d399";}
+            else if(o.s<0){bg="rgba(244,114,182,0.1)";bc="rgba(244,114,182,0.4)";color="#f472b6";}
+            else{bg="rgba(251,146,60,0.1)";bc="rgba(251,146,60,0.4)";color="#fb923c";}
+          }
+          return <button key={i} onClick={()=>choose(o,i)} style={{padding:"14px 16px",borderRadius:12,border:`1px solid ${bc}`,background:bg,color,fontSize:12,textAlign:"left",cursor:shown?"default":"pointer",fontFamily:"inherit",lineHeight:1.5,transition:"all .2s"}}>{o.t}{shown&&sel===i&&<div style={{fontSize:10,marginTop:6,fontStyle:"italic",color:"#64748b"}}>💬 {o.sonuc}</div>}</button>;
+        })}
+      </div>
+      {shown&&<button onClick={next} className="btn-primary" style={{width:"100%",padding:"12px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>{si<KARIYER_SCENARIOS.length-1?"Sonraki Senaryo →":"Sonucu Gör 🎯"}</button>}
+    </div>}
+    {phase==="result"&&<div style={{textAlign:"center"}}>
+      <div style={{background:"linear-gradient(135deg,rgba(251,146,60,0.1),rgba(168,85,247,0.08))",border:"1px solid rgba(251,146,60,0.3)",borderRadius:20,padding:"32px",marginBottom:20}}>
+        <div style={{fontSize:56,marginBottom:10}}>{score>=14?"🚀":score>=8?"📈":"🌱"}</div>
+        <div style={{fontSize:18,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>Kariyer Profili</div>
+        <div style={{fontSize:32,fontWeight:900,color:"#fb923c",marginBottom:4}}>{score>=14?"AI Lideri":score>=8?"AI Uzmanı":"AI Başlangıcı"}</div>
+        <div style={{fontSize:13,color:"#64748b",marginBottom:8}}>{score}/{maxPuan} puan</div>
+        <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,marginBottom:20,maxWidth:400,margin:"0 auto 20px"}}>{score>=14?"Mükemmel kararlar! AI kariyer yolculuğunda lidersin.":score>=8?"İyi ilerliyorsun! Birkaç alanda gelişim var.":"Başlangıç aşamadasın. Öğren sayfamızı ziyaret et!"}</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+          <button onClick={()=>navigator.clipboard?.writeText(`IMDATAI AI Kariyer Simülasyonunda '${score>=14?"AI Lideri":score>=8?"AI Uzmanı":"AI Başlangıcı"}' profili aldım! 💼\nimdatai.com`)} style={{padding:"10px 20px",borderRadius:10,border:"1px solid rgba(251,146,60,0.3)",background:"rgba(251,146,60,0.1)",color:"#fb923c",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Paylaş</button>
+          <button onClick={()=>{setPhase("intro");setSi(0);setScore(0);setSonuclar([]);setSel(null);setShown(false);}} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>🔄 Tekrar</button>
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
 // SAYFALAR
 // ══════════════════════════════════════════════════════════
 
 // 1. ANA SAYFA
 function HomePage({setPage,user,setUser}){
   const[typed,setTyped]=useState("");
-  const words=["İçerik Üretimi","Kod Yazımı","Görsel Tasarım","Para Kazanma","CV Analizi","Araştırma"];
+  const words=["İçerik Üretimi","Kod Yazımı","Görsel Tasarım","Para Kazanma","CV Analizi","Araştırma","Proje Yönetimi","Veri Analizi"];
   const wi=useRef(0),ci=useRef(0),del=useRef(false);
-  useEffect(()=>{const t=setInterval(()=>{const w=words[wi.current];if(!del.current){if(ci.current<=w.length){setTyped(w.slice(0,ci.current));ci.current++;}else setTimeout(()=>{del.current=true;},1400);}else{if(ci.current>0){ci.current--;setTyped(w.slice(0,ci.current));}else{del.current=false;wi.current=(wi.current+1)%words.length;}}},80);return()=>clearInterval(t);},[]);
-  const[vidIdx,setVidIdx]=useState(null);
-  const videos=[{id:"jGKE4w_VTWY",title:"ChatGPT vs Claude vs Gemini 2026",ch:"AI Explained"},{id:"8UXPZ1ZeEZA",title:"En İyi Ücretsiz AI Araçları",ch:"Matt Wolfe"},{id:"hfIUstzHs9A",title:"Prompt Engineering Rehberi",ch:"Fireship"}];
-  const tiktoks=[{emoji:"🤖",title:"Claude ile 30sn'de blog yaz",views:""},{emoji:"💰",title:"AI ile ayda 10K TL kazan",views:""},{emoji:"⚡",title:"ChatGPT hileleri",views:""}];
+  useEffect(()=>{const t=setInterval(()=>{const w=words[wi.current];if(!del.current){if(ci.current<=w.length){setTyped(w.slice(0,ci.current));ci.current++;}else setTimeout(()=>{del.current=true;},1400);}else{if(ci.current>0){ci.current--;setTyped(w.slice(0,ci.current));}else{del.current=false;wi.current=(wi.current+1)%words.length;}}},70);return()=>clearInterval(t);},[]);
   const[email,setEmail]=useState("");const[sent,setSent]=useState(false);
-  const[gameIdx,setGameIdx]=useState(0);const[gameAns,setGameAns]=useState(null);const[gScore,setGScore]=useState({d:0,w:0});
-  const GAME=[
-    {text:"Güneş batarken denizin mavisi gökyüzünün turuncusuyla dans ederken sahilde yürüyen iki sevgili ellerini tutmuş uzaklara bakıyordu.",isAI:true,reveal:"ChatGPT (GPT-5.5) yazdı",hint:"Mükemmel akış, klişe metafor ve duygusal ton AI izlenimi veriyor"},
-    {text:"Bugün patronumla kötü bir gün geçirdim toplantıda fikirlerim alınmadı eve gelince çantamı köşeye fırlattım.",isAI:false,reveal:"Gerçek Twitter kullanıcısı yazdı",hint:"Düzensiz anlatım ve duygusal patlama insan yazısı"},
-    {text:"Kuantum mekaniği parçacıkların aynı anda birden fazla durumda bulunabildiği fikrini içerir. Schrödinger kedisi bu ilkeyi simgeler.",isAI:true,reveal:"Claude Opus 4.7 yazdı",hint:"Ansiklopedik netlik ve doğru referans AI izlenimi"},
-    {text:"Arkadaşım 3 yıldır borçlu. 500 lira için bozuşmak olmaz ama bu ilk kez değil. Ne yapayım bilmiyorum.",isAI:false,reveal:"Gerçek Ekşi Sözlük entry'si",hint:"Spesifik rakam ve sosyal dilema tipik insan yazısı"},
-    {text:"Yapay zeka, insan zekasını taklit eden ve öğrenme, problem çözme gibi bilişsel işlevleri gerçekleştirebilen bilgisayar sistemleridir.",isAI:true,reveal:"Gemini 2.5 Pro yazdı",hint:"Akademik tanım formatı ve eksiksiz cümle yapısı"},
-    {text:"Bu sabah kahvemi içerken düşündüm de neden hep böyle olur ki? Bir şeyler yoluna girince başka bir şey çıkar.",isAI:false,reveal:"Gerçek bir WhatsApp mesajı",hint:"Belirsiz şikayet ve kesik düşünce akışı insan yazısı"},
-  ];
-  const g=GAME[gameIdx%GAME.length];
-  function guess(isAI){const c=isAI===g.isAI;if(c)setGScore(s=>({...s,d:s.d+1}));else setGScore(s=>({...s,w:s.w+1}));setGameAns({correct:c});}
+  const[level,setLevel]=useState(null);
+  const levelPages={beginner:["ogrenme","sozluk","haberler"],mid:["prompt","karsilastirma","claude"],expert:["dizin","kariyer","para"]};
 
   return <div>
-    {/* HERO */}
-    <section style={{position:"relative",minHeight:"84vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"50px 20px",overflow:"hidden",textAlign:"center"}}>
-      <PBg/>
-      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 65% 55% at 50% 50%,rgba(0,220,255,0.05),transparent 70%)"}}/>
-      <div style={{position:"relative",zIndex:1,maxWidth:680}}>
-        {/* Özellikler */}
-        <div style={{display:"flex",gap:10,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
-          {[["🇹🇷","AI Trafiğinde #1","#fb923c"],["📰","Günlük Güncelleme","#34d399"],["🆓","Tamamen Ücretsiz","#00dcff"]].map(([e,t,c])=>(
-            <div key={t} style={{fontSize:10,color:c,background:`${c}15`,padding:"4px 10px",borderRadius:12,border:`1px solid ${c}30`}}>{e} {t}</div>
+    {/* ═══ HERO — MATRIX RAIN + TAM DOLU ═══ */}
+    <section style={{position:"relative",minHeight:"96vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 20px 40px",overflow:"hidden",textAlign:"center"}}>
+      {/* Matrix Rain Canvas */}
+      <MatrixRain/>
+      {/* Radial glow */}
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 70% 60% at 50% 50%,rgba(0,220,255,0.07) 0%,rgba(168,85,247,0.04) 40%,transparent 70%)",pointerEvents:"none"}}/>
+      {/* Animated grid lines */}
+      <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(0,220,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,220,255,0.03) 1px,transparent 1px)",backgroundSize:"60px 60px",pointerEvents:"none"}}/>
+      <div style={{position:"relative",zIndex:2,maxWidth:760}}>
+        {/* Badges */}
+        <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:18,flexWrap:"wrap"}}>
+          {[["🇹🇷","AI Trafiğinde #1","#fb923c"],["📡","Canlı Güncelleme","#34d399"],["🆓","Tamamen Ücretsiz","#00dcff"],["🤖","Gemini AI","#a855f7"]].map(([e,t,c])=>(
+            <div key={t} style={{fontSize:10,color:c,background:`${c}12`,padding:"5px 12px",borderRadius:14,border:`1px solid ${c}25`,fontWeight:600,backdropFilter:"blur(8px)"}}>{e} {t}</div>
           ))}
         </div>
-        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(0,220,255,0.08)",border:"1px solid rgba(0,220,255,0.22)",borderRadius:24,padding:"6px 18px",marginBottom:20,fontSize:10,color:"#00dcff",letterSpacing:".15em"}}>
-          <span style={{width:6,height:6,background:"#00dcff",borderRadius:"50%",animation:"blink 1.5s infinite"}}/> TÜRKİYE AI TRAFİĞİNDE DÜNYA #1 — %94.49
+        {/* Live badge */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(0,220,255,0.08)",border:"1px solid rgba(0,220,255,0.25)",borderRadius:24,padding:"7px 20px",marginBottom:24,fontSize:11,color:"#00dcff",letterSpacing:".12em",backdropFilter:"blur(10px)"}}>
+          <span style={{width:7,height:7,background:"#00dcff",borderRadius:"50%",animation:"blink 1.2s infinite",boxShadow:"0 0 8px #00dcff"}}/> TÜRKİYE AI TRAFİĞİNDE DÜNYA #1 — %94.49
         </div>
-        <h1 style={{fontSize:"clamp(26px,6.5vw,56px)",fontWeight:900,lineHeight:1.05,margin:"0 0 14px",letterSpacing:"-.02em"}}>
-          <span style={{background:"linear-gradient(135deg,#fff,#cbd5e1)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>AI ile </span>
-          <span style={{background:"linear-gradient(135deg,#00dcff,#a855f7,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{typed}<span style={{animation:"blink 1s infinite",opacity:.8}}>|</span></span>
-          <br/><span style={{background:"linear-gradient(135deg,#94a3b8,#475569)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontSize:"60%"}}>saniyeler içinde, tamamen Türkçe.</span>
+        {/* Main title */}
+        <h1 style={{fontSize:"clamp(32px,7vw,68px)",fontWeight:900,lineHeight:1.02,margin:"0 0 16px",letterSpacing:"-.03em",fontFamily:"'Space Grotesk',sans-serif"}}>
+          <span style={{background:"linear-gradient(135deg,#fff,#e2e8f0)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>AI ile </span>
+          <span style={{background:"linear-gradient(135deg,#00dcff,#a855f7,#f472b6)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradient 3s linear infinite"}}>{typed}<span style={{animation:"blink 0.9s infinite",WebkitTextFillColor:"rgba(0,220,255,0.8)"}}>|</span></span>
+          <br/><span style={{fontSize:"48%",background:"linear-gradient(135deg,#64748b,#475569)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontWeight:500,letterSpacing:"-.01em"}}>saniyeler içinde, tamamen Türkçe.</span>
         </h1>
-        <p style={{fontSize:14,color:"#64748b",margin:"0 auto 28px",maxWidth:500,lineHeight:1.8}}>AI haberleri · Araç karşılaştırmaları · Prompt rehberleri · Blog · Galeri · Topluluk · Haftalık Challenge</p>
-        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-          {[["📰 Haberler","haberler","#00dcff"],["🎮 Oyun","oyun","#f472b6"],["💰 Para Kazan","para","#34d399"],["📖 Blog","blog","#a855f7"]].map(([l,p,c])=>(
-            <button key={p} onClick={()=>setPage(p)} style={{padding:"11px 20px",borderRadius:9,border:`1px solid ${c}40`,background:`${c}0d`,color:c,fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>{l}</button>
+        <p style={{fontSize:15,color:"#475569",margin:"0 auto 32px",maxWidth:520,lineHeight:1.9}}>AI haberleri · Araç rehberleri · Prompt kütüphanesi · İnteraktif oyunlar · Dünya haritası simülasyonu · Topluluk</p>
+        {/* CTA Buttons */}
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:40}}>
+          <button onClick={()=>setPage("haberler")} className="btn-primary" style={{padding:"14px 28px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>📰 Haberleri Gör</button>
+          <button onClick={()=>setPage("iqtest")} style={{padding:"14px 24px",fontSize:14,borderRadius:12,border:"1px solid rgba(168,85,247,0.4)",background:"rgba(168,85,247,0.08)",color:"#a855f7",cursor:"pointer",fontFamily:"inherit",fontWeight:700,backdropFilter:"blur(8px)"}}>🧠 AI IQ Testi</button>
+          <button onClick={()=>setPage("trivia")} style={{padding:"14px 24px",fontSize:14,borderRadius:12,border:"1px solid rgba(52,211,153,0.4)",background:"rgba(52,211,153,0.08)",color:"#34d399",cursor:"pointer",fontFamily:"inherit",fontWeight:700,backdropFilter:"blur(8px)"}}>🎮 Oyun Oyna</button>
+          <button onClick={()=>setPage("puan")} style={{padding:"14px 24px",fontSize:14,borderRadius:12,border:"1px solid rgba(251,146,60,0.4)",background:"rgba(251,146,60,0.08)",color:"#fb923c",cursor:"pointer",fontFamily:"inherit",fontWeight:700,backdropFilter:"blur(8px)"}}>💡 Prompt Puanla</button>
+        </div>
+        {/* Floating stats */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,maxWidth:540,margin:"0 auto"}}>
+          {[["20+","Sayfa","#00dcff"],["75+","Prompt","#a855f7"],["10","Oyun","#34d399"],["69","AI Terimi","#fb923c"]].map(([n,l,c])=>(
+            <div key={l} style={{background:`${c}08`,border:`1px solid ${c}18`,borderRadius:12,padding:"12px 8px",backdropFilter:"blur(8px)"}}>
+              <div style={{fontSize:20,fontWeight:900,color:c}}>{n}</div>
+              <div style={{fontSize:9,color:"#475569",marginTop:2}}>{l}</div>
+            </div>
           ))}
         </div>
       </div>
+      {/* Scroll hint */}
+      <div style={{position:"absolute",bottom:24,left:"50%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",alignItems:"center",gap:4,animation:"float 2s ease-in-out infinite"}}>
+        <div style={{fontSize:9,color:"#334155",letterSpacing:".1em"}}>KAYDIR</div>
+        <div style={{width:1,height:24,background:"linear-gradient(rgba(0,220,255,0.5),transparent)"}}/>
+      </div>
     </section>
 
-    {/* GERÇEK SITE STATS */}
-    <div style={{background:"rgba(255,255,255,0.02)",borderTop:"1px solid rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",maxWidth:800,margin:"0 auto"}}>
-        {[["20+","Sayfa & Bölüm","#00dcff"],["60+","AI Terimi","#a855f7"],["30+","Prompt Örneği","#34d399"],["40+","AI Aracı","#fb923c"]].map(([n,l,c],i)=>(
-          <div key={l} style={{padding:"18px 10px",textAlign:"center",borderRight:i<3?"1px solid rgba(255,255,255,0.04)":"none"}}>
-            <div style={{fontSize:"clamp(16px,2.5vw,24px)",fontWeight:900,color:c}}>{n}</div>
-            <div style={{fontSize:9,color:"#475569",marginTop:2}}>{l}</div>
+    {/* ═══ HIZLI BAŞLANGIÇ ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.04))",border:"1px solid rgba(0,220,255,0.15)",borderRadius:20,padding:"28px",textAlign:"center"}}>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#00dcff",marginBottom:8}}>KİŞİSELLEŞTİRİLMİŞ BAŞLANGIÇ</div>
+          <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>🚀 Seviyeni Seç, Yolculuğuna Başla</div>
+          <div style={{fontSize:12,color:"#64748b",marginBottom:20}}>Seviyene göre sana özel içerikler ve araçlar sunalım</div>
+          <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:level?16:0}}>
+            {[["🟢","Yeni Başladım","AI'ı hiç kullanmadım","beginner","#34d399"],["🟡","Biraz Biliyorum","Temel seviyedeyim","mid","#fb923c"],["🔴","Uzman Olmak İstiyorum","Derinlemesine öğrenmek istiyorum","expert","#f472b6"]].map(([e,t,d,key,c])=>(
+              <button key={key} onClick={()=>setLevel(level===key?null:key)} style={{padding:"14px 20px",borderRadius:14,border:`2px solid ${level===key?c:c+"30"}`,background:level===key?`${c}12`:"rgba(255,255,255,0.02)",color:level===key?c:"#64748b",cursor:"pointer",fontFamily:"inherit",transition:"all .2s",minWidth:180}}>
+                <div style={{fontSize:22,marginBottom:6}}>{e}</div>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:3}}>{t}</div>
+                <div style={{fontSize:10,opacity:.7}}>{d}</div>
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-    </div>
-
-    {/* TRENDING */}
-    <section style={{padding:"32px 20px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>BU HAFTA</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>🔥 Trending AI Konuları</div></div>
-          <Tag text="Canlı" color="#00dcff"/>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-          {TRENDING.map(t=>(
-            <Card key={t.rank} color="#00dcff" style={{padding:"13px 15px",display:"flex",gap:12,alignItems:"center"}}>
-              <div style={{width:34,height:34,borderRadius:9,background:"rgba(0,220,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{t.icon}</div>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
-                  <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{t.topic}</div>
-                  <Tag text={t.tag} color={t.heat>94?"#f472b6":t.heat>88?"#fb923c":"#60a5fa"} size={8}/>
-                </div>
-                <div style={{fontSize:10,color:"#475569",marginBottom:4}}>{t.desc}</div>
-                <Bar val={t.heat} color={`hsl(${t.heat*1.8},70%,60%)`}/>
-              </div>
-            </Card>
-          ))}
+          {level&&<div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",animation:"fadeIn .3s ease"}}>
+            {levelPages[level].map(p=>{const n=p==="ogrenme"?"🎓 AI Öğren":p==="sozluk"?"📖 Sözlük":p==="haberler"?"📰 Haberler":p==="prompt"?"💡 Prompt":p==="karsilastirma"?"🆚 Karşılaştır":p==="claude"?"🧠 Claude":p==="dizin"?"🛠️ Araç Dizini":p==="kariyer"?"🚀 Kariyer":"💰 Para";return <button key={p} onClick={()=>setPage(p)} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>{n}</button>;})}
+          </div>}
         </div>
       </div>
     </section>
 
-    {/* CLAUDE ÖNE ÇIKAR — Ana Sayfa */}
-    <section style={{padding:"0 20px 32px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.1),rgba(0,220,255,0.05))",border:"1px solid rgba(168,85,247,0.3)",borderRadius:18,padding:"24px",position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:-20,right:-20,fontSize:120,opacity:.05}}>🧠</div>
+    {/* ═══ DÜNYA HARİTASI + CANLI GÖSTERGELERr ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <div style={{marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:4}}>CANLI SİMÜLASYON</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🌍 Dünya Genelinde AI Kullanımı</div></div>
+          <Tag text="● Canlı" color="#34d399"/>
+        </div>
+        <WorldMapSim/>
+      </div>
+    </section>
+
+    {/* ═══ NÖRAL AĞ SİMÜLASYONU ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.15)"}}>
+      <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
+        <div style={{marginBottom:16,textAlign:"center"}}>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:4}}>ETKİLEŞİMLİ</div>
+          <div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🧠 Nöral Ağ Simülasyonu</div>
+          <div style={{fontSize:11,color:"#64748b",marginTop:4}}>Mouse ile etkileşime gir — AI nasıl "düşünür" gör</div>
+        </div>
+        <NeuralNetSim/>
+      </div>
+    </section>
+
+    {/* ═══ GÜNLÜK AI İPUCU ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{background:`linear-gradient(135deg,${todayTip.renk}08,transparent)`,border:`1px solid ${todayTip.renk}22`,borderRadius:18,padding:"22px",display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
+          <div style={{width:48,height:48,borderRadius:12,background:`${todayTip.renk}18`,border:`1px solid ${todayTip.renk}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>💡</div>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:8,flexWrap:"wrap"}}>
+              <div style={{fontSize:9,letterSpacing:".2em",color:todayTip.renk}}>BUGÜNÜN İPUCU</div>
+              <Tag text={todayTip.araç} color={todayTip.renk}/>
+              <Tag text="Her gün güncellenir" color="#475569" size={8}/>
+            </div>
+            <div style={{fontSize:14,color:"#e2e8f0",lineHeight:1.7,marginBottom:10,fontWeight:500}}>{todayTip.tip}</div>
+            <button onClick={()=>navigator.clipboard?.writeText(todayTip.tip)} style={{fontSize:11,color:todayTip.renk,background:`${todayTip.renk}12`,border:`1px solid ${todayTip.renk}25`,borderRadius:8,padding:"6px 14px",cursor:"pointer",fontFamily:"inherit"}}>Kopyala 📋</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ═══ CLAUDE ÖNE ÇIKAR ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}>
+      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
+        <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.1),rgba(0,220,255,0.05))",border:"1px solid rgba(168,85,247,0.3)",borderRadius:18,padding:"28px",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-30,right:-30,fontSize:140,opacity:.04}}>🧠</div>
           <div style={{position:"relative",zIndex:1}}>
             <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
-              <span style={{fontSize:36}}>🧠</span>
+              <span style={{fontSize:38}}>🧠</span>
               <div>
                 <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:3}}>ÖZEL BÖLÜM</div>
-                <div style={{fontSize:20,fontWeight:900,color:"#e2e8f0"}}>Claude — Neden Herkesin Konuştuğu AI?</div>
+                <div style={{fontSize:21,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>Claude — Neden Herkesin Konuştuğu AI?</div>
               </div>
             </div>
-            <div style={{fontSize:13,color:"#64748b",lineHeight:1.8,marginBottom:20}}>
-              Anthropic'in geliştirdiği Claude, 2026'da kodlama testlerinde dünya birincisi oldu. <strong style={{color:"#a855f7"}}>SWE-bench %87.6</strong> — bu rakam Claude'un gerçek yazılım problemlerini insanlardan daha iyi çözebileceği anlamına geliyor. <strong style={{color:"#a855f7"}}>1 milyon token</strong> ile kitap boyutu belgeleri analiz edebilir. Ve <strong style={{color:"#a855f7"}}>Constitutional AI</strong> sayesinde en az hallüsinasyon yapan model.
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10,marginBottom:20}}>
-              {[["🏆","Kodlamada #1","SWE-bench %87.6 dünya rekoru","claude"],["📚","1M Token","750.000 kelime, kitap boyutu analiz","claude"],["🔒","En Güvenli","Constitutional AI, en az hallüsinasyon","claude"],["🤖","Agentic AI","Task Budget ile otonom görev kontrolü","claude"]].map(([e,t,d,p])=>(
-                <div key={t} onClick={()=>setPage(p)} style={{background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:10,padding:"12px",cursor:"pointer",transition:"all .15s"}} onMouseEnter={ev=>ev.currentTarget.style.background="rgba(168,85,247,0.15)"} onMouseLeave={ev=>ev.currentTarget.style.background="rgba(168,85,247,0.08)"}>
-                  <div style={{fontSize:20,marginBottom:6}}>{e}</div>
-                  <div style={{fontSize:12,fontWeight:700,color:"#a855f7",marginBottom:3}}>{t}</div>
-                  <div style={{fontSize:10,color:"#64748b"}}>{d}</div>
+            <div style={{fontSize:13,color:"#64748b",lineHeight:1.9,marginBottom:20}}>Anthropic'in geliştirdiği Claude, 2026'da kodlama testlerinde dünya birincisi oldu. <strong style={{color:"#a855f7"}}>SWE-bench %87.6</strong> ile gerçek yazılım problemlerini insanlardan daha iyi çözüyor. <strong style={{color:"#a855f7"}}>1 milyon token</strong> ile kitap boyutu belgeler. <strong style={{color:"#a855f7"}}>Constitutional AI</strong> ile en az hallüsinasyon.</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:10,marginBottom:20}}>
+              {[["🏆","Kodlamada #1","SWE-bench %87.6","#a855f7"],["📚","1M Token","750.000 kelime","#00dcff"],["🔒","En Güvenli","Constitutional AI","#34d399"],["🤖","Agentic","Task Budget","#fb923c"]].map(([e,t,d,c])=>(
+                <div key={t} onClick={()=>setPage("claude")} style={{background:`${c}08`,border:`1px solid ${c}18`,borderRadius:11,padding:"13px",cursor:"pointer"}} className="card-hover">
+                  <div style={{fontSize:20,marginBottom:5}}>{e}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:2}}>{t}</div>
+                  <div style={{fontSize:10,color:"#475569"}}>{d}</div>
                 </div>
               ))}
             </div>
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-              <button onClick={()=>setPage("claude")} style={{padding:"11px 24px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#a855f7,#7c3aed)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🧠 Claude Tam Rehber →</button>
-              <button onClick={()=>setPage("chatgpt")} style={{padding:"11px 20px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.06)",color:"#00dcff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🤖 ChatGPT Rehberi</button>
-              <button onClick={()=>setPage("gemini")} style={{padding:"11px 20px",borderRadius:10,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.06)",color:"#34d399",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🌟 Gemini Rehberi</button>
+              <button onClick={()=>setPage("claude")} className="btn-primary" style={{padding:"12px 24px",fontSize:13,borderRadius:11,fontFamily:"inherit"}}>🧠 Claude Tam Rehber →</button>
+              <button onClick={()=>setPage("chatgpt")} style={{padding:"12px 20px",borderRadius:11,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.06)",color:"#00dcff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>🤖 ChatGPT</button>
+              <button onClick={()=>setPage("gemini")} style={{padding:"12px 20px",borderRadius:11,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.06)",color:"#34d399",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>🌟 Gemini</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    {/* HABERLER */}
-    <section style={{padding:"0 20px 32px",background:"rgba(0,0,0,0.1)"}}>
-      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
+    {/* ═══ HABERLER ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>SON DAKİKA</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>📰 AI Haberleri</div></div>
-          <button onClick={()=>setPage("haberler")} style={{fontSize:11,color:"#00dcff",background:"none",border:"1px solid rgba(0,220,255,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>SON DAKİKA</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>📰 AI Haberleri</div></div>
+          <button onClick={()=>setPage("haberler")} style={{fontSize:11,color:"#00dcff",background:"none",border:"1px solid rgba(0,220,255,0.2)",borderRadius:8,padding:"5px 14px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:11}}>
-          {NEWS.map((n,i)=>(
-            <Card key={i} color={n.color} style={{padding:"16px"}} onClick={()=>setPage("haberler")}>
+          {NEWS.slice(0,6).map((n,i)=>(
+            <Card key={i} color={n.color} style={{padding:"16px"}} onClick={()=>setPage("haberler")} className="card-hover">
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:9}}>
-                <Tag text={n.tag} color={n.color}/>
-                <div style={{display:"flex",gap:6,alignItems:"center"}}>{n.hot&&<Tag text="🔥" color="#ff6b6b" size={8}/>}<span style={{fontSize:9,color:"#334155"}}>{n.time}</span></div>
+                <Tag text={n.tag} color={n.color}/><div style={{display:"flex",gap:5,alignItems:"center"}}>{n.hot&&<Tag text="🔥" color="#ff6b6b" size={8}/>}<span style={{fontSize:9,color:"#334155"}}>{n.time}</span></div>
               </div>
-              <div style={{fontSize:20,marginBottom:7}}>{n.emoji}</div>
+              <div style={{fontSize:22,marginBottom:8}}>{n.emoji}</div>
               <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:5,lineHeight:1.4}}>{n.title}</div>
               <div style={{fontSize:11,color:"#475569",lineHeight:1.6,marginBottom:8}}>{n.desc}</div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#334155"}}><span>📰 {n.src}</span><span>📖 {n.read}</span></div>
@@ -817,204 +1610,85 @@ function HomePage({setPage,user,setUser}){
       </div>
     </section>
 
-    {/* BEFORE/AFTER */}
-    <section style={{padding:"0 20px 32px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{marginBottom:14}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>ETKİ ANALİZİ</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>⚡ AI Olmadan vs AI ile</div><div style={{fontSize:12,color:"#64748b",marginTop:2}}>Gerçek zaman tasarrufu karşılaştırmaları</div></div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
-          {BEFORE_AFTER.map(ba=>(
-            <div key={ba.title} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,overflow:"hidden"}}>
-              <div style={{background:"rgba(0,0,0,0.3)",padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:18}}>{ba.icon}</span><span style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{ba.title}</span></div>
-                <div style={{fontSize:11,fontWeight:800,color:"#34d399"}}>{ba.time}</div>
-              </div>
-              <div style={{padding:"14px 16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <div style={{background:"rgba(244,114,182,0.06)",border:"1px solid rgba(244,114,182,0.15)",borderRadius:9,padding:"10px"}}>
-                  <div style={{fontSize:9,color:"#f472b6",fontWeight:700,marginBottom:5}}>❌ Öncesi</div>
-                  <div style={{fontSize:11,color:"#64748b",lineHeight:1.5}}>{ba.before}</div>
-                </div>
-                <div style={{background:"rgba(52,211,153,0.06)",border:"1px solid rgba(52,211,153,0.15)",borderRadius:9,padding:"10px"}}>
-                  <div style={{fontSize:9,color:"#34d399",fontWeight:700,marginBottom:5}}>✅ AI ile</div>
-                  <div style={{fontSize:11,color:"#64748b",lineHeight:1.5}}>{ba.after}</div>
-                </div>
-              </div>
-              <div style={{padding:"0 16px 12px",display:"flex",gap:5,flexWrap:"wrap"}}>
-                {ba.tools.map(t=><Tag key={t} text={t} color="#a855f7" size={9}/>)}
-              </div>
+    {/* ═══ OYUNLAR SPOTLIGHT ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}>
+      <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:3}}>İNTERAKTİF</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🎮 Oyunlar & İnteraktif Araçlar</div></div>
+          <button onClick={()=>setPage("oyunlar")} style={{fontSize:11,color:"#f472b6",background:"none",border:"1px solid rgba(244,114,182,0.3)",borderRadius:8,padding:"5px 14px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
+          {[{id:"trivia",e:"🏆",t:"AI Trivia Marathon",d:"100+ soru, streak sistemi, sesli",c:"#fb923c",badge:"Popüler"},{id:"roulette",e:"🎡",t:"Prompt Roulette",d:"30 saniyelik görev yarışı",c:"#a855f7",badge:"Viral"},{id:"dedektif",e:"🔍",t:"Model Dedektif",d:"GPT mi Claude mi Gemini mi?",c:"#00dcff",badge:"Zor"},{id:"emoji",e:"😄",t:"AI Emoji Tahmin",d:"Emoji → AI kavramı bul",c:"#34d399",badge:"Eğlenceli"},{id:"kariyer_sim",e:"🎭",t:"Kariyer Simülasyonu",d:"AI çağında meslek seç",c:"#f472b6",badge:"Yeni"},{id:"puan",e:"💡",t:"Prompt Puanla",d:"Promptunu Gemini analiz eder",c:"#60a5fa",badge:"Araç"}].map(g=>(
+            <div key={g.id} onClick={()=>setPage(g.id)} className="card-hover" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:14,padding:"18px",cursor:"pointer",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:8,right:8}}><Tag text={g.badge} color={g.c} size={8}/></div>
+              <div style={{fontSize:32,marginBottom:10}}>{g.e}</div>
+              <div style={{fontSize:13,fontWeight:700,color:g.c,marginBottom:4}}>{g.t}</div>
+              <div style={{fontSize:11,color:"#475569",lineHeight:1.5}}>{g.d}</div>
+              <div style={{marginTop:12,fontSize:11,color:g.c,fontWeight:600}}>Oyna →</div>
             </div>
           ))}
         </div>
       </div>
     </section>
 
-    {/* HAFTALık CHALLENGE */}
-    <section style={{padding:"0 20px 32px",background:"rgba(168,85,247,0.03)"}}>
-      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
-        <div style={{background:`${WEEKLY_CHALLENGE.color}08`,border:`1px solid ${WEEKLY_CHALLENGE.color}25`,borderRadius:16,padding:"22px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,marginBottom:16}}>
-            <div>
-              <div style={{fontSize:9,letterSpacing:".2em",color:WEEKLY_CHALLENGE.color,marginBottom:4}}>🏆 HAFTALIK CHALLENGE — {WEEKLY_CHALLENGE.week}</div>
-              <div style={{fontSize:17,fontWeight:800,color:"#e2e8f0"}}>{WEEKLY_CHALLENGE.title}</div>
-              <div style={{fontSize:11,color:"#64748b",marginTop:4}}>Son: {WEEKLY_CHALLENGE.deadline}</div>
-            </div>
-            <div style={{textAlign:"right"}}>
-              <div style={{fontSize:11,color:"#fb923c",fontWeight:700,marginBottom:4}}>🎁 {WEEKLY_CHALLENGE.prize}</div>
-              <Tag text="Aktif" color="#34d399"/>
-            </div>
-          </div>
-          <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,marginBottom:14}}>{WEEKLY_CHALLENGE.desc}</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
-            {WEEKLY_CHALLENGE.steps.map((s,i)=>(
-              <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-                <div style={{width:18,height:18,borderRadius:"50%",background:`${WEEKLY_CHALLENGE.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:WEEKLY_CHALLENGE.color,flexShrink:0,fontWeight:700}}>{i+1}</div>
-                <span style={{fontSize:11,color:"#64748b",lineHeight:1.5}}>{s}</span>
-              </div>
-            ))}
-          </div>
-          <button style={{marginTop:14,padding:"10px 22px",borderRadius:9,border:"none",background:`linear-gradient(135deg,${WEEKLY_CHALLENGE.color},#7c3aed)`,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Katıl →</button>
-        </div>
-      </div>
-    </section>
-
-    {/* AI GÖRSEL GALERİ */}
-    <section style={{padding:"0 20px 32px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>AI GÖRSEL</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>🎨 AI Görsel Galerisi</div><div style={{fontSize:12,color:"#64748b",marginTop:2}}>Gerçek AI çıktıları — prompt'larıyla birlikte</div></div>
-          <button onClick={()=>setPage("galeri")} style={{fontSize:11,color:"#f472b6",background:"none",border:"1px solid rgba(244,114,182,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Galeride Gör →</button>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
-          {GALLERY.slice(0,6).map((g,i)=>(
-            <Card key={i} color={g.color} style={{overflow:"hidden"}} onClick={()=>setPage("galeri")}>
-              <div style={{background:`linear-gradient(135deg,${g.color}20,rgba(0,0,0,0.5))`,paddingTop:"80%",position:"relative"}}>
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}}>{g.emoji}</div>
-                <div style={{position:"absolute",top:8,left:8}}><Tag text={g.cat} color={g.color} size={8}/></div>
-                <div style={{position:"absolute",bottom:8,right:8}}><Tag text={g.tool} color="#475569" size={8}/></div>
-              </div>
-              <div style={{padding:"10px 12px"}}>
-                <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:3}}>{g.title}</div>
-                <div style={{fontSize:10,color:"#475569",lineHeight:1.4}}>{g.desc}</div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* BLOG ÖNİZLEME */}
-    <section style={{padding:"0 20px 32px",background:"rgba(0,0,0,0.1)"}}>
-      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>BLOG</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>✍️ Kapsamlı AI Rehberleri</div></div>
-          <button onClick={()=>setPage("blog")} style={{fontSize:11,color:"#a855f7",background:"none",border:"1px solid rgba(168,85,247,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tüm Yazılar →</button>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))",gap:12}}>
-          {BLOG_POSTS.slice(0,4).map(p=>(
-            <Card key={p.id} color={p.color} style={{padding:"16px"}} onClick={()=>setPage(`blog-${p.id}`)}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
-                <Tag text={p.tag} color={p.color}/>
-                <span style={{fontSize:9,color:"#334155"}}>{p.readTime}</span>
-              </div>
-              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6,lineHeight:1.4}}>{p.title}</div>
-              <div style={{fontSize:11,color:"#475569",lineHeight:1.6,marginBottom:10}}>{p.summary}</div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#334155"}}>
-                <span>{p.date}</span>
-                
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* TOPLULUK PROMPTS ÖNİZLEME */}
-    <section style={{padding:"0 20px 32px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>TOPLULUK</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>💬 Topluluktan Popüler Promptlar</div></div>
-          <button onClick={()=>setPage("topluluk")} style={{fontSize:11,color:"#34d399",background:"none",border:"1px solid rgba(52,211,153,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10}}>
-          {COMMUNITY_PROMPTS.slice(0,4).map((p,i)=>(
-            <Card key={i} color="#34d399" style={{padding:"14px"}}>
+    {/* ═══ TÜRKİYE LEADERBOARD ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{marginBottom:14}}><div style={{fontSize:9,letterSpacing:".2em",color:"#fb923c",marginBottom:3}}>🇹🇷 CANLI</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>Türkiye AI Kullanım Sıralaması</div></div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10}}>
+          {[{s:"İstanbul",p:100,c:"#00dcff",r:1,n:"2.1M"},{s:"Ankara",p:68,c:"#a855f7",r:2,n:"890K"},{s:"İzmir",p:52,c:"#34d399",r:3,n:"620K"},{s:"Bursa",p:38,c:"#fb923c",r:4,n:"410K"},{s:"Antalya",p:31,c:"#f472b6",r:5,n:"340K"},{s:"Adana",p:22,c:"#60a5fa",r:6,n:"230K"}].map(s=>(
+            <div key={s.s} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${s.c}18`,borderRadius:12,padding:"13px"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-                <div style={{display:"flex",gap:7,alignItems:"center"}}><span style={{fontSize:16}}>{p.avatar}</span><div><div style={{fontSize:11,fontWeight:700,color:"#e2e8f0"}}>{p.title}</div><div style={{fontSize:9,color:"#475569"}}>{p.user}</div></div></div>
-                <Tag text={p.cat} color="#34d399" size={8}/>
-              </div>
-              <div style={{background:"rgba(0,0,0,0.3)",borderRadius:8,padding:"9px 10px",fontSize:11,color:"#94a3b8",lineHeight:1.5,marginBottom:9,fontStyle:"italic"}}>"{p.prompt.slice(0,100)}..."</div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#475569"}}>
-                <span>{p.date}</span><span style={{color:"#34d399"}}>Kopyala →</span>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* YOUTUBE */}
-    <section style={{padding:"0 20px 32px",background:"rgba(0,0,0,0.1)"}}>
-      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,alignItems:"center"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}><YT/><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>YouTube Rehberleri</div></div>
-          <a href="https://youtube.com/@imdatai" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#FF0000",textDecoration:"none",border:"1px solid rgba(255,0,0,0.2)",borderRadius:8,padding:"5px 12px",display:"flex",alignItems:"center",gap:5}}><YT/> Kanal</a>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:12}}>
-          {videos.map((v,i)=>(
-            <div key={i} style={{borderRadius:13,overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)"}}>
-              {vidIdx===i?<div style={{position:"relative",paddingTop:"56.25%"}}><iframe style={{position:"absolute",inset:0,width:"100%",height:"100%"}} src={`https://www.youtube.com/embed/${v.id}?autoplay=1`} allow="autoplay;encrypted-media" allowFullScreen frameBorder="0"/></div>
-              :<div onClick={()=>setVidIdx(i)} style={{position:"relative",paddingTop:"56.25%",cursor:"pointer",background:"linear-gradient(135deg,rgba(0,0,0,0.7),rgba(168,85,247,0.15))"}}>
-                <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
-                  <div style={{width:52,height:52,borderRadius:"50%",background:"rgba(255,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>▶</div>
-                  <div style={{fontSize:11,color:"#94a3b8",textAlign:"center",padding:"0 14px",lineHeight:1.4}}>{v.title}</div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <div style={{width:22,height:22,borderRadius:"50%",background:`${s.c}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:s.c}}>{s.r}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{s.s}</div>
                 </div>
-              </div>}
-              <div style={{padding:"10px 13px",background:"rgba(0,0,0,0.4)"}}><div style={{fontSize:12,fontWeight:600,color:"#e2e8f0",marginBottom:2}}>{v.title}</div><div style={{fontSize:10,color:"#475569"}}>{v.ch}</div></div>
+                <div style={{fontSize:11,color:s.c,fontWeight:700}}>{s.n}</div>
+              </div>
+              <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:3}}><div style={{width:`${s.p}%`,height:"100%",background:s.c,borderRadius:3}}/></div>
             </div>
           ))}
         </div>
       </div>
     </section>
 
-    {/* TIKTOK */}
-    <section style={{padding:"0 20px 32px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,alignItems:"center"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}><TT/><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0"}}>TikTok AI İpuçları</div></div>
-          <a href="https://tiktok.com/@imdatai" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#e2e8f0",textDecoration:"none",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,padding:"5px 12px",display:"flex",alignItems:"center",gap:5}}><TT/> Takip</a>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-          {tiktoks.map((t,i)=>(
-            <a key={i} href="https://tiktok.com/@imdatai" target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
-              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:13,overflow:"hidden",transition:"all .15s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.25)";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";e.currentTarget.style.transform="translateY(0)";}}>
-                <div style={{background:"linear-gradient(160deg,#000,rgba(168,85,247,0.3))",paddingTop:"140%",position:"relative"}}>
-                  <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
-                    <div style={{fontSize:36}}>{t.emoji}</div>
-                    <div style={{width:40,height:40,borderRadius:"50%",background:"rgba(255,255,255,0.15)",border:"2px solid rgba(255,255,255,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>▶</div>
-                    <div style={{fontSize:10,color:"rgba(255,255,255,0.7)",textAlign:"center",padding:"0 12px",lineHeight:1.4}}>{t.title}</div>
-                  </div>
-                  <div style={{position:"absolute",top:8,right:8}}><TT/></div>
-                </div>
-                <div style={{padding:"10px 12px"}}><div style={{fontSize:11,fontWeight:600,color:"#e2e8f0",marginBottom:2,lineHeight:1.4}}>{t.title}</div><div style={{fontSize:9,color:"#64748b"}}>@imdatai · TikTok</div></div>
-              </div>
-            </a>
-          ))}
+    {/* ═══ AI ALARM ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}>
+      <div style={{maxWidth:680,margin:"0 auto",paddingTop:32}}>
+        <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.07),rgba(168,85,247,0.05))",border:"1px solid rgba(0,220,255,0.2)",borderRadius:18,padding:"24px",textAlign:"center"}}>
+          <div style={{fontSize:30,marginBottom:10}}>🔔</div>
+          <div style={{fontSize:16,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>AI Alarm — Değişiklikleri Kaçırma</div>
+          <div style={{fontSize:12,color:"#64748b",marginBottom:16,lineHeight:1.7}}>ChatGPT fiyatı değişince, yeni model çıkınca, Türkiye'yi etkileyen AI haberleri olunca hemen haber ver!</div>
+          {sent?<div style={{fontSize:13,color:"#34d399",fontWeight:700,padding:"12px"}}>✅ Kaydedildin! İlk uyarıda haberdar edeceğiz.</div>:<div style={{display:"flex",gap:8,maxWidth:420,margin:"0 auto",flexWrap:"wrap",justifyContent:"center"}}>
+            <input style={{flex:1,minWidth:200,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,color:"#e2e8f0",padding:"11px 14px",fontSize:13,fontFamily:"inherit",outline:"none"}} placeholder="E-posta adresin..." value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&email.includes("@")&&setSent(true)}/>
+            <button onClick={()=>{if(email.includes("@"))setSent(true);}} className="btn-primary" style={{padding:"11px 22px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔔 Alarm Kur</button>
+          </div>}
+          <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:12,flexWrap:"wrap"}}>
+            {["ChatGPT fiyat değişimi","Yeni Claude modeli","Türkiye AI haberleri","Midjourney güncellemesi"].map(t=><div key={t} style={{fontSize:10,color:"#334155",background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"4px 10px"}}>{t}</div>)}
+          </div>
         </div>
       </div>
     </section>
 
-    {/* NEWSLETTER */}
-    <section style={{padding:"0 20px 48px"}}>
-      <div style={{maxWidth:560,margin:"0 auto",background:"linear-gradient(135deg,rgba(0,220,255,0.07),rgba(168,85,247,0.07))",border:"1px solid rgba(0,220,255,0.2)",borderRadius:18,padding:"30px 24px",textAlign:"center"}}>
-        <div style={{fontSize:24}}>📬</div>
-        <div style={{fontSize:16,fontWeight:800,color:"#e2e8f0",margin:"8px 0 5px"}}>Haftalık AI Bülteni</div>
-        <div style={{fontSize:12,color:"#64748b",marginBottom:18,lineHeight:1.7}}>Her Pazartesi: Haberler, yeni araçlar, promptlar, para kazanma ipuçları. Ücretsiz.</div>
-        {sent?<div style={{fontSize:13,color:"#34d399",fontWeight:600}}>✅ Kaydedildi! İlk bülten Pazartesi.</div>:(
-          <><div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
-            <input style={{flex:1,minWidth:180,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#e2e8f0",padding:"9px 13px",fontSize:12,fontFamily:"inherit",outline:"none"}} placeholder="E-posta adresin..." value={email} onChange={e=>setEmail(e.target.value)}/>
-            <button onClick={()=>{if(email.includes("@"))setSent(true);}} style={{padding:"9px 18px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Abone Ol</button>
-          </div>
-          <div style={{marginTop:8,fontSize:10,color:"#334155"}}>✓ Spam yok ✓ İstediğin zaman çık</div></>
-        )}
+    {/* ═══ TRENDING ═══ */}
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>BU HAFTA</div><div style={{fontSize:19,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🔥 Trending AI Konuları</div></div>
+          <Tag text="Canlı" color="#00dcff"/>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
+          {TRENDING.map(t=>(
+            <Card key={t.rank} color="#00dcff" style={{padding:"13px 15px",display:"flex",gap:12,alignItems:"center"}} className="card-hover">
+              <div style={{width:34,height:34,borderRadius:9,background:"rgba(0,220,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{t.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{t.topic}</div><Tag text={t.tag} color="#00dcff" size={7}/></div>
+                <div style={{fontSize:10,color:"#475569",lineHeight:1.5,marginBottom:5}}>{t.desc}</div>
+                <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2}}><div style={{width:`${t.heat}%`,height:"100%",background:`linear-gradient(90deg,#00dcff,#a855f7)`,borderRadius:2}}/></div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
   </div>;
@@ -2342,8 +3016,7 @@ function KariyerPage(){
 }
 
 // ══════════════════════════════════════════════════════════
-// MATRIX RAIN + YENİ SAYFALAR
-// ══════════════════════════════════════════════════════════
+// ── NAVIGATION ─────────────────────────────────────────────
 
 function MatrixRain(){
   const r=useRef();
@@ -2705,38 +3378,372 @@ function KisiselOneriPage({setPage}){
 }
 
 // ── NAVIGATION ─────────────────────────────────────────────
-const NAV = [
-  {id:"home",label:"Ana Sayfa"},
-  {id:"haberler",label:"Haberler"},
-  {id:"blog",label:"Blog"},
-  {id:"claude",label:"🧠 Claude"},
-  {id:"chatgpt",label:"🤖 ChatGPT"},
-  {id:"gemini",label:"🌟 Gemini"},
-  {id:"ogrenme",label:"🎓 Öğren"},
-  {id:"prompt",label:"💡 Prompt"},
-  {id:"karsilastirma",label:"🆚 Karşılaştır"},
-  {id:"sozluk",label:"📖 Sözlük"},
-  {id:"dizin",label:"Araç Dizini"},
-  {id:"iqtest",label:"🧠 AI IQ"},
-  {id:"zaman",label:"⏱️ Hesapla"},
-  {id:"puan",label:"💡 Puan"},
-  {id:"oneri",label:"🎯 Öneri"},
-  {id:"aistatus",label:"📡 Durum"},
-  {id:"galeri",label:"🎨 Galeri"},
-  {id:"quiz",label:"Quiz"},
-  {id:"oyun",label:"🎮 Oyun"},
-  {id:"topluluk",label:"💬 Topluluk"},
-  {id:"kariyer",label:"🚀 Kariyer"},
-  {id:"para",label:"💰 Para"},
-  {id:"pro",label:"⭐ Pro"},
+// ══════════════════════════════════════════════════════════
+// DROPDOWN NAV GRUPLARI
+// ══════════════════════════════════════════════════════════
+const NAV_GROUPS = [
+  {id:"home",label:"Ana Sayfa",icon:"⬡"},
+  {id:"haberler",label:"Haberler",icon:"📰"},
+  {id:"blog",label:"Blog",icon:"✍️"},
+  {id:"tools",label:"🛠️ Tools",icon:"🛠️",sub:[
+    {id:"dizin",label:"Araç Dizini",icon:"🗂️",desc:"40+ AI aracı kategorili"},
+    {id:"karsilastirma",label:"Karşılaştır",icon:"🆚",desc:"5 kategoride karşılaştırma"},
+    {id:"aistatus",label:"AI Durumu",icon:"📡",desc:"Canlı AI araç durumu"},
+    {id:"galeri",label:"AI Galeri",icon:"🎨",desc:"12 görsel + promptlar"},
+  ]},
+  {id:"ai_models",label:"🤖 AI Modeller",icon:"🤖",sub:[
+    {id:"claude",label:"Claude",icon:"🧠",desc:"Kodlamada #1 · 1M token"},
+    {id:"chatgpt",label:"ChatGPT",icon:"🤖",desc:"900M kullanıcı · GPT-5.5"},
+    {id:"gemini",label:"Gemini",icon:"🌟",desc:"2M token · Google ekosistemi"},
+  ]},
+  {id:"egitim",label:"🎓 Eğitim",icon:"🎓",sub:[
+    {id:"ogrenme",label:"AI Öğren",icon:"🎓",desc:"Sıfırdan uzmanlığa"},
+    {id:"prompt",label:"Prompt Rehberi",icon:"💡",desc:"75 örnek · 13 kategori"},
+    {id:"sozluk",label:"AI Sözlük",icon:"📖",desc:"69 AI terimi"},
+    {id:"mitler",label:"AI Mitleri",icon:"🔍",desc:"Doğru/yanlış ayırt et"},
+    {id:"topluluk",label:"Topluluk",icon:"💬",desc:"Prompt paylaşım"},
+  ]},
+  {id:"oyun_menu",label:"🎮 Oyun Oyna",icon:"🎮",sub:[
+    {id:"oyunlar",label:"Tüm Oyunlar",icon:"🎮",desc:"10 farklı oyun"},
+    {id:"trivia",label:"AI Trivia",icon:"🏆",desc:"50+ soru · Streak"},
+    {id:"roulette",label:"Prompt Roulette",icon:"🎡",desc:"30sn yarışması"},
+    {id:"dedektif",label:"Model Dedektif",icon:"🔍",desc:"Kim yazdı?"},
+    {id:"emoji",label:"Emoji Tahmin",icon:"😄",desc:"AI kelime bul"},
+    {id:"kariyer_sim",label:"Kariyer Sim",icon:"🎭",desc:"Kariyer senaryoları"},
+    {id:"quiz",label:"AI Quiz",icon:"❓",desc:"20 soru"},
+    {id:"iqtest",label:"AI IQ Testi",icon:"🧠",desc:"Paylaşılabilir kart"},
+  ]},
+  {id:"interaktif",label:"⚡ İnteraktif",icon:"⚡",sub:[
+    {id:"puan",label:"Prompt Puanla",icon:"💡",desc:"Gemini AI analizi"},
+    {id:"zaman",label:"Zaman Hesapla",icon:"⏱️",desc:"AI tasarruf hesabı"},
+    {id:"oneri",label:"Kişisel Öneri",icon:"🎯",desc:"Sana özel AI paketi"},
+    {id:"karsilastirma",label:"Karşılaştır",icon:"🆚",desc:"Model karşılaştırma"},
+  ]},
+  {id:"para_menu",label:"💰 Kazan",icon:"💰",sub:[
+    {id:"para",label:"Para Kazan",icon:"💰",desc:"AI gelir rehberi"},
+    {id:"kariyer",label:"Kariyer",icon:"🚀",desc:"AI meslekleri · Maaşlar"},
+    {id:"pro",label:"Pro Araçlar",icon:"⭐",desc:"Yakında"},
+  ]},
+];
+const NAV_ITEMS = NAV_GROUPS;
+const NAV = NAV_GROUPS;
+
+// ══════════════════════════════════════════════════════════
+// CURSOR IŞIK İZİ
+// ══════════════════════════════════════════════════════════
+function CursorTrail(){
+  const r=useRef();const pts=useRef([]);
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    c.style.position="fixed";c.style.inset="0";c.style.zIndex="9998";c.style.pointerEvents="none";
+    c.width=window.innerWidth;c.height=window.innerHeight;
+    const ctx=c.getContext("2d");
+    const onMove=e=>{pts.current.push({x:e.clientX,y:e.clientY,t:Date.now(),size:Math.random()*3+2});if(pts.current.length>40)pts.current.shift();};
+    window.addEventListener("mousemove",onMove);
+    let af;
+    function draw(){
+      ctx.clearRect(0,0,c.width,c.height);
+      const now=Date.now();
+      pts.current=pts.current.filter(p=>now-p.t<600);
+      pts.current.forEach((p,i)=>{
+        const age=(now-p.t)/600;const alpha=1-age;
+        const hue=200+i*3;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.size*(1-age*0.5),0,Math.PI*2);
+        ctx.fillStyle=`hsla(${hue},100%,70%,${alpha*0.6})`;ctx.fill();
+        if(i>0){
+          const prev=pts.current[i-1];
+          ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);
+          ctx.strokeStyle=`hsla(${hue},100%,60%,${alpha*0.3})`;
+          ctx.lineWidth=p.size*(1-age);ctx.stroke();
+        }
+      });
+      af=requestAnimationFrame(draw);
+    }
+    draw();
+    const onResize=()=>{c.width=window.innerWidth;c.height=window.innerHeight;};
+    window.addEventListener("resize",onResize);
+    return()=>{cancelAnimationFrame(af);window.removeEventListener("mousemove",onMove);window.removeEventListener("resize",onResize);};
+  },[]);
+  return <canvas ref={r}/>;
+}
+
+// ══════════════════════════════════════════════════════════
+// JARVIS HUD HERO ARKA PLAN
+// ══════════════════════════════════════════════════════════
+function JarvisHUD(){
+  const r=useRef();
+  useEffect(()=>{
+    const c=r.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    let W=c.width=window.innerWidth;let H=c.height=window.innerHeight;
+    let t=0;let af;
+    const onResize=()=>{W=c.width=window.innerWidth;H=c.height=window.innerHeight;};
+    window.addEventListener("resize",onResize);
+    // Particles
+    const particles=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.5+.5,c:Math.random()>.5?"#00dcff":"#a855f7"}));
+    // Data nodes
+    const nodes=Array.from({length:8},(_,i)=>({x:W*.1+Math.random()*W*.8,y:H*.1+Math.random()*H*.8,label:["GPT-5.5","Claude","Gemini","MCP","RAG","LLM","AI","NLP"][i],val:Math.random()}));
+    function draw(){
+      t+=0.01;
+      ctx.fillStyle="rgba(6,10,20,0.08)";ctx.fillRect(0,0,W,H);
+      // Hexagonal grid
+      const hx=60;const hy=52;
+      for(let row=-1;row<H/hy+1;row++){for(let col=-1;col<W/hx+1;col++){
+        const ox=row%2===0?0:hx/2;const x=col*hx+ox;const y=row*hy;
+        const dist=Math.hypot(x-W/2,y-H/2);const alpha=Math.max(0,.025-dist/W*.02);
+        if(alpha<.001)continue;
+        ctx.beginPath();
+        for(let a=0;a<6;a++){const angle=a*Math.PI/3;ctx.lineTo(x+28*Math.cos(angle),y+28*Math.sin(angle));}
+        ctx.closePath();ctx.strokeStyle=`rgba(0,220,255,${alpha})`;ctx.lineWidth=0.5;ctx.stroke();
+      }}
+      // Rotating arcs (Jarvis style)
+      const cx=W/2,cy=H/2;
+      [[120,1.5,.3,"#00dcff"],[180,-.8,.2,"#a855f7"],[240,2.1,.15,"#34d399"],[300,-1.2,.1,"#fb923c"]].forEach(([r,spd,al,col])=>{
+        ctx.beginPath();
+        ctx.arc(cx,cy,r,t*spd,t*spd+Math.PI*1.5);
+        ctx.strokeStyle=col+Math.round(al*255).toString(16).padStart(2,"0");
+        ctx.lineWidth=1.5;ctx.stroke();
+        // Glow dot at arc end
+        const ex=cx+r*Math.cos(t*spd+Math.PI*1.5);const ey=cy+r*Math.sin(t*spd+Math.PI*1.5);
+        ctx.beginPath();ctx.arc(ex,ey,4,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+      });
+      // Center pulse ring
+      const pulse=Math.sin(t*2)*0.4+0.6;
+      ctx.beginPath();ctx.arc(cx,cy,50*pulse,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(0,220,255,${pulse*.4})`;ctx.lineWidth=2;ctx.stroke();
+      ctx.beginPath();ctx.arc(cx,cy,80,0,Math.PI*2);
+      ctx.strokeStyle="rgba(168,85,247,0.08)";ctx.lineWidth=1;ctx.stroke();
+      // Particles
+      particles.forEach(p=>{
+        p.x+=p.vx;p.y+=p.vy;
+        if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=p.c+"66";ctx.fill();
+        particles.forEach(p2=>{
+          const d=Math.hypot(p.x-p2.x,p.y-p2.y);
+          if(d<100&&d>0){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p2.x,p2.y);ctx.strokeStyle=`rgba(0,220,255,${(1-d/100)*.04})`;ctx.lineWidth=.3;ctx.stroke();}
+        });
+      });
+      // Data nodes floating
+      nodes.forEach((n,i)=>{
+        n.val=Math.sin(t+i)*0.5+0.5;
+        const nx=n.x+Math.sin(t*.5+i)*15;const ny=n.y+Math.cos(t*.3+i)*10;
+        ctx.beginPath();ctx.arc(nx,ny,4,0,Math.PI*2);ctx.fillStyle=`rgba(0,220,255,${.4+n.val*.4})`;ctx.fill();
+        ctx.fillStyle=`rgba(0,220,255,${.3+n.val*.3})`;ctx.font="9px Inter,monospace";ctx.textAlign="center";ctx.fillText(n.label,nx,ny-10);
+        // Connection to center
+        if(Math.hypot(nx-cx,ny-cy)<250){ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(cx,cy);ctx.strokeStyle=`rgba(0,220,255,${n.val*.06})`;ctx.lineWidth=.5;ctx.stroke();}
+      });
+      // Scanning line
+      const scanY=(Math.sin(t*.5)+1)/2*H;
+      const scanGrd=ctx.createLinearGradient(0,scanY-30,0,scanY+30);
+      scanGrd.addColorStop(0,"transparent");scanGrd.addColorStop(.5,`rgba(0,220,255,0.06)`);scanGrd.addColorStop(1,"transparent");
+      ctx.fillStyle=scanGrd;ctx.fillRect(0,scanY-30,W,60);
+      // Corner HUD decorations
+      [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(([x,y,sx,sy])=>{
+        ctx.strokeStyle="rgba(0,220,255,0.25)";ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(x+sx*5,y);ctx.lineTo(x+sx*40,y);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x,y+sy*5);ctx.lineTo(x,y+sy*40);ctx.stroke();
+      });
+      af=requestAnimationFrame(draw);
+    }
+    draw();
+    return()=>{cancelAnimationFrame(af);window.removeEventListener("resize",onResize);};
+  },[]);
+  return <canvas ref={r} style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none",opacity:.85}}/>;
+}
+
+// ══════════════════════════════════════════════════════════
+// BADGE SİSTEMİ
+// ══════════════════════════════════════════════════════════
+function useBadges(page){
+  useEffect(()=>{
+    try{
+      const visited=JSON.parse(localStorage.getItem("imdatai_visited")||"[]");
+      if(!visited.includes(page)){
+        const newV=[...visited,page];
+        localStorage.setItem("imdatai_visited",JSON.stringify(newV));
+        const badges=JSON.parse(localStorage.getItem("imdatai_badges")||"[]");
+        const newBadges=[...badges];
+        if(newV.length>=1&&!badges.includes("bronze"))newBadges.push("bronze");
+        if(newV.length>=5&&!badges.includes("silver"))newBadges.push("silver");
+        if(newV.length>=10&&!badges.includes("gold"))newBadges.push("gold");
+        localStorage.setItem("imdatai_badges",JSON.stringify(newBadges));
+      }
+    }catch(e){}
+  },[page]);
+}
+
+function BadgeDisplay(){
+  const[badges,setBadges]=useState([]);
+  const[show,setShow]=useState(false);
+  useEffect(()=>{
+    try{const b=JSON.parse(localStorage.getItem("imdatai_badges")||"[]");setBadges(b);}catch(e){}
+  },[]);
+  if(!badges.length)return null;
+  const defs={bronze:{e:"🥉",l:"Kaşif",d:"İlk sayfa"},silver:{e:"🥈",l:"Öğrenci",d:"5 sayfa"},gold:{e:"🥇",l:"Uzman",d:"10 sayfa"}};
+  return <div style={{position:"fixed",bottom:100,left:16,zIndex:490}}>
+    <button onClick={()=>setShow(s=>!s)} style={{background:"rgba(251,146,60,0.15)",border:"1px solid rgba(251,146,60,0.3)",borderRadius:10,padding:"6px 10px",cursor:"pointer",fontFamily:"inherit",color:"#fb923c",fontSize:11,fontWeight:700}}>
+      {defs[badges[badges.length-1]]?.e} {badges.length} Rozet
+    </button>
+    {show&&<div style={{position:"absolute",bottom:36,left:0,background:"rgba(8,12,24,0.98)",border:"1px solid rgba(251,146,60,0.2)",borderRadius:12,padding:"12px",minWidth:160,backdropFilter:"blur(10px)"}}>
+      {badges.map(b=><div key={b} style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
+        <span style={{fontSize:16}}>{defs[b]?.e}</span>
+        <div><div style={{fontSize:11,fontWeight:700,color:"#fb923c"}}>{defs[b]?.l}</div><div style={{fontSize:9,color:"#475569"}}>{defs[b]?.d}</div></div>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// TOOLS SAYFASI
+// ══════════════════════════════════════════════════════════
+const ALL_TOOLS=[
+  {cat:"💬 Sohbet AI",tools:[
+    {n:"ChatGPT",e:"🤖",d:"Dünyanın #1 AI asistanı. GPT-5.5 ile süper uygulama.",url:"https://chatgpt.com",free:true,tag:"En Popüler"},
+    {n:"Claude",e:"🧠",d:"Kodlamada #1. 1M token. Constitutional AI.",url:"https://claude.ai",free:true,tag:"Kodlama"},
+    {n:"Gemini",e:"🌟",d:"Google'ın AI. 2M token. Drive entegrasyonu.",url:"https://gemini.google.com",free:true,tag:"Araştırma"},
+    {n:"Perplexity",e:"🔍",d:"Kaynaklı araştırma asistanı. Her cevap referanslı.",url:"https://perplexity.ai",free:true,tag:"Araştırma"},
+    {n:"Grok",e:"⚡",d:"xAI'ın modeli. Gerçek zamanlı X/Twitter verisi.",url:"https://x.ai",free:false,tag:"Sosyal"},
+    {n:"Copilot",e:"🔷",d:"Microsoft'un AI. Office 365 entegre.",url:"https://copilot.microsoft.com",free:true,tag:"Office"},
+  ]},
+  {cat:"🖼️ Görsel AI",tools:[
+    {n:"Midjourney",e:"🎨",d:"Profesyonel görsel üretim. v7 ile fotorealizm.",url:"https://midjourney.com",free:false,tag:"En İyi"},
+    {n:"DALL-E 3",e:"🖌️",d:"OpenAI'nin görsel modeli. ChatGPT'ye entegre.",url:"https://chatgpt.com",free:true,tag:"Entegre"},
+    {n:"Adobe Firefly",e:"🔥",d:"Ticari kullanım güvenli görsel.",url:"https://firefly.adobe.com",free:true,tag:"Ticari"},
+    {n:"Stable Diffusion",e:"⚙️",d:"Açık kaynak. Sınırsız, ücretsiz.",url:"https://stability.ai",free:true,tag:"Açık"},
+    {n:"Ideogram",e:"💫",d:"Metin içeren görsellerde mükemmel.",url:"https://ideogram.ai",free:true,tag:"Metin"},
+    {n:"Leonardo AI",e:"🦁",d:"Oyun ve sanat odaklı görsel üretim.",url:"https://leonardo.ai",free:true,tag:"Sanat"},
+  ]},
+  {cat:"🎬 Video AI",tools:[
+    {n:"Sora",e:"🎬",d:"OpenAI'nin video modeli. 1080p, 60sn.",url:"https://sora.com",free:false,tag:"Premium"},
+    {n:"HeyGen",e:"👤",d:"AI avatar video. Türkçe dahil 40+ dil.",url:"https://heygen.com",free:true,tag:"Avatar"},
+    {n:"Runway",e:"🚀",d:"Profesyonel AI video düzenleme.",url:"https://runwayml.com",free:true,tag:"Düzenleme"},
+    {n:"Kling",e:"🎭",d:"Çin'in güçlü video AI modeli.",url:"https://klingai.com",free:true,tag:"Ücretsiz"},
+    {n:"Pika",e:"📹",d:"Görsellerden video oluşturma.",url:"https://pika.art",free:true,tag:"Fotodan Video"},
+  ]},
+  {cat:"🔊 Ses AI",tools:[
+    {n:"ElevenLabs",e:"🎙️",d:"En gerçekçi ses klonlama. 10K karakter ücretsiz.",url:"https://elevenlabs.io",free:true,tag:"En İyi"},
+    {n:"Suno",e:"🎵",d:"Metinden müzik üretim. v5 enstrüman sesi.",url:"https://suno.ai",free:true,tag:"Müzik"},
+    {n:"Udio",e:"🎸",d:"Profesyonel müzik üretimi. Geniş tür desteği.",url:"https://udio.com",free:true,tag:"Müzik"},
+    {n:"Murf AI",e:"📢",d:"İş sesi ve podcast için seslendirme.",url:"https://murf.ai",free:true,tag:"Podcast"},
+    {n:"Descript",e:"✂️",d:"Ses ve video transkripsiyon + düzenleme.",url:"https://descript.com",free:true,tag:"Düzenleme"},
+  ]},
+  {cat:"💻 Kod AI",tools:[
+    {n:"Cursor",e:"🖱️",d:"AI IDE. VS Code tabanlı. 4M+ geliştirici.",url:"https://cursor.sh",free:true,tag:"En Popüler"},
+    {n:"GitHub Copilot",e:"🐙",d:"Microsoft'un kod tamamlama AI.",url:"https://github.com/features/copilot",free:false,tag:"Entegre"},
+    {n:"Claude Code",e:"🧠",d:"Terminal tabanlı ajan kodlama.",url:"https://claude.ai",free:false,tag:"Ajan"},
+    {n:"v0.dev",e:"⚡",d:"Vercel'in UI üretim aracı. React bileşeni.",url:"https://v0.dev",free:true,tag:"UI"},
+    {n:"Replit",e:"🔄",d:"Tarayıcıda AI destekli kod yazmak.",url:"https://replit.com",free:true,tag:"Tarayıcı"},
+    {n:"Bolt",e:"⚡",d:"Tam stack uygulama AI ile saniyeler.",url:"https://bolt.new",free:true,tag:"Full Stack"},
+  ]},
+  {cat:"📊 Sunum & İçerik",tools:[
+    {n:"Gamma",e:"📊",d:"AI ile sunum oluşturma. 60sn'de profesyonel.",url:"https://gamma.app",free:true,tag:"Sunum"},
+    {n:"Canva AI",e:"🎨",d:"Magic Write ile grafik + metin AI.",url:"https://canva.com",free:true,tag:"Tasarım"},
+    {n:"Notion AI",e:"📝",d:"Not uygulaması içinde AI asistan.",url:"https://notion.so",free:true,tag:"Notlar"},
+    {n:"Copy.ai",e:"✍️",d:"Pazarlama içeriği + copy üretimi.",url:"https://copy.ai",free:true,tag:"Pazarlama"},
+    {n:"Jasper",e:"🤖",d:"Kurumsal içerik ve marka sesi.",url:"https://jasper.ai",free:false,tag:"Kurumsal"},
+  ]},
+  {cat:"🔍 Araştırma",tools:[
+    {n:"Perplexity",e:"🔍",d:"Kaynaklı AI araştırma. Akademik modda.",url:"https://perplexity.ai",free:true,tag:"Araştırma"},
+    {n:"Elicit",e:"📚",d:"Akademik makale analizi ve özet.",url:"https://elicit.org",free:true,tag:"Akademik"},
+    {n:"Consensus",e:"🤝",d:"Bilimsel araştırmalarda konsensüs bulma.",url:"https://consensus.app",free:true,tag:"Bilim"},
+    {n:"Scite",e:"📖",d:"Atıf analizi ve kaynak doğrulama.",url:"https://scite.ai",free:true,tag:"Atıf"},
+  ]},
+  {cat:"🛠️ Otomasyon",tools:[
+    {n:"n8n",e:"⚙️",d:"Açık kaynak iş akışı otomasyonu.",url:"https://n8n.io",free:true,tag:"Açık"},
+    {n:"Make",e:"🔗",d:"Görsel iş akışı oluşturma.",url:"https://make.com",free:true,tag:"Görsel"},
+    {n:"Zapier",e:"⚡",d:"Uygulama entegrasyon platformu.",url:"https://zapier.com",free:true,tag:"Popüler"},
+    {n:"Flowise",e:"🌊",d:"AI iş akışı oluşturma (no-code).",url:"https://flowiseai.com",free:true,tag:"No-code"},
+  ]},
 ];
 
-// ── APP ────────────────────────────────────────────────────
+function ToolsPage(){
+  const[cat,setCat]=useState("Tümü");const[s,setS]=useState("");
+  const cats=["Tümü",...ALL_TOOLS.map(c=>c.cat)];
+  const filtered=ALL_TOOLS.filter(c=>cat==="Tümü"||c.cat===cat).map(c=>({...c,tools:c.tools.filter(t=>!s||t.n.toLowerCase().includes(s.toLowerCase())||t.d.toLowerCase().includes(s.toLowerCase()))})).filter(c=>c.tools.length);
+  const catColors={"💬 Sohbet AI":"#00dcff","🖼️ Görsel AI":"#f472b6","🎬 Video AI":"#a855f7","🔊 Ses AI":"#34d399","💻 Kod AI":"#fb923c","📊 Sunum & İçerik":"#60a5fa","🔍 Araştırma":"#fbbf24","🛠️ Otomasyon":"#34d399"};
+  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>TÜM ARAÇLAR</div>
+      <div style={{fontSize:26,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>🛠️ AI Tools — Tam Rehber</div>
+      <div style={{fontSize:12,color:"#64748b"}}>{ALL_TOOLS.reduce((s,c)=>s+c.tools.length,0)}+ araç · 8 kategori · Ücretsiz/Ücretli · Açıklamalar</div>
+    </div>
+    <input style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:12,color:"#e2e8f0",padding:"12px 16px",fontSize:13,fontFamily:"inherit",outline:"none",marginBottom:16,boxSizing:"border-box"}} placeholder="🔍 Araç ara... (ChatGPT, video, müzik, kod...)" value={s} onChange={e=>setS(e.target.value)}/>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:24}}>
+      {cats.map(c=>{const col=catColors[c]||"#00dcff";return <button key={c} onClick={()=>setCat(c)} style={{padding:"6px 14px",borderRadius:8,border:`1px solid ${cat===c?col+"60":"rgba(255,255,255,0.08)"}`,background:cat===c?`${col}12`:"transparent",color:cat===c?col:"#475569",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:cat===c?700:400}}>
+        {c==="Tümü"?"Tümü":c}
+      </button>;})}
+    </div>
+    {filtered.map(c=>{const col=catColors[c.cat]||"#00dcff";return <div key={c.cat} style={{marginBottom:28}}>
+      <div style={{fontSize:14,fontWeight:800,color:col,marginBottom:12,fontFamily:"'Space Grotesk',sans-serif"}}>{c.cat}</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10}}>
+        {c.tools.map(t=><a key={t.n} href={t.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
+          <div className="card-hover" style={{background:`${col}06`,border:`1px solid ${col}15`,borderRadius:13,padding:"14px",display:"flex",gap:12,alignItems:"flex-start",cursor:"pointer"}}>
+            <div style={{fontSize:26,flexShrink:0}}>{t.e}</div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div style={{fontSize:13,fontWeight:700,color:col}}>{t.n}</div>
+                <div style={{display:"flex",gap:5}}>
+                  {t.free&&<span style={{fontSize:8,color:"#34d399",background:"rgba(52,211,153,0.12)",borderRadius:4,padding:"2px 6px"}}>Ücretsiz</span>}
+                  <span style={{fontSize:8,color:col,background:`${col}12`,borderRadius:4,padding:"2px 6px"}}>{t.tag}</span>
+                </div>
+              </div>
+              <div style={{fontSize:11,color:"#475569",lineHeight:1.6}}>{t.d}</div>
+            </div>
+          </div>
+        </a>)}
+      </div>
+    </div>;})}
+  </div>;
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────
 export default function App(){
   const[page,setPage]=useState("home");
   const[user,setUser]=useState(defaultUser);
   const[cookie,setCookie]=useState(true);
-  function nav(p){setPage(p);window.scrollTo(0,0);}
+  function nav(p){setPage(p);window.scrollTo({top:0,behavior:"smooth"});}
+
+  if(page.startsWith("blog-")){const id=page.replace("blog-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><BlogPostPage postId={id} setPage={nav}/></Wrapper>;}
+  if(page.startsWith("tool-")){const key=page.replace("tool-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ToolDetailPage toolKey={key} setPage={nav}/></Wrapper>;}
+  if(page==="claude"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ClaudePage setPage={nav}/></Wrapper>;}
+  if(page==="chatgpt"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ChatGPTPage setPage={nav}/></Wrapper>;}
+  if(page==="gemini"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><GeminiPage setPage={nav}/></Wrapper>;}
+
+  return <Wrapper nav={nav} page={page} user={user} setUser={setUser} cookie={cookie} setCookie={setCookie}>
+    {page==="home"          &&<HomePage setPage={nav} user={user} setUser={setUser}/>}
+    {page==="haberler"      &&<HaberlerPage setPage={nav}/>}
+    {page==="blog"          &&<BlogPage setPage={nav}/>}
+    {page==="ogrenme"       &&<OgrenmePage setPage={nav}/>}
+    {page==="prompt"        &&<PromptPage/>}
+    {page==="karsilastirma" &&<KarsilastirmaPage/>}
+    {page==="sozluk"        &&<SozlukPage/>}
+    {page==="dizin"         &&<DizinPage setPage={nav}/>}
+    {page==="tools"         &&<ToolsPage/>}
+    {page==="galeri"        &&<GaleriPage/>}
+    {page==="quiz"          &&<QuizPage/>}
+    {page==="oyun"          &&<OyunPage/>}
+    {page==="oyunlar"       &&<OyunlarPage setPage={nav}/>}
+    {page==="trivia"        &&<TriviaMarathon/>}
+    {page==="roulette"      &&<PromptRoulette/>}
+    {page==="emoji"         &&<EmojiGuess/>}
+    {page==="dedektif"      &&<ModelDedektifPage/>}
+    {page==="kariyer_sim"   &&<KariyerSimPage/>}
+    {page==="topluluk"      &&<ToplulukPage/>}
+    {page==="kariyer"       &&<KariyerPage/>}
+    {page==="mitler"        &&<MitlerPage/>}
+    {page==="zaman"         &&<ZamanHesapPage/>}
+    {page==="para"          &&<ParaPage/>}
+    {page==="iqtest"        &&<IQTestPage/>}
+    {page==="puan"          &&<PromptScorerPage/>}
+    {page==="oneri"         &&<KisiselOneriPage setPage={nav}/>}
+    {page==="aistatus"      &&<AIStatusPage/>}
+    {page==="hakkimizda"    &&<HakkimizdaPage/>}
+    {page==="iletisim"      &&<IletisimPage/>}
+    {page==="gizlilik"      &&<GizlilikPage/>}
+    {page==="pro"           &&<ProPage/>}
+  </Wrapper>;
+}
 
   if(page.startsWith("blog-")){const id=page.replace("blog-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><BlogPostPage postId={id} setPage={nav}/></Wrapper>;}
   if(page.startsWith("tool-")){const key=page.replace("tool-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ToolDetailPage toolKey={key} setPage={nav}/></Wrapper>;}
@@ -2756,13 +3763,18 @@ export default function App(){
     {page==="galeri"        &&<GaleriPage/>}
     {page==="quiz"          &&<QuizPage/>}
     {page==="oyun"          &&<OyunPage/>}
+    {page==="oyunlar"       &&<OyunlarPage setPage={nav}/>}
+    {page==="trivia"        &&<TriviaMarathon/>}
+    {page==="roulette"      &&<PromptRoulette/>}
+    {page==="emoji"         &&<EmojiGuess/>}
+    {page==="dedektif"      &&<ModelDedektifPage/>}
+    {page==="kariyer_sim"   &&<KariyerSimPage/>}
     {page==="topluluk"      &&<ToplulukPage/>}
     {page==="kariyer"       &&<KariyerPage/>}
     {page==="mitler"        &&<MitlerPage/>}
-    {page==="zaman"         &&<ZamanCizgisiPage/>}
+    {page==="zaman"         &&<ZamanHesapPage/>}
     {page==="para"          &&<ParaPage/>}
     {page==="iqtest"        &&<IQTestPage/>}
-    {page==="zaman"         &&<ZamanHesapPage/>}
     {page==="puan"          &&<PromptScorerPage/>}
     {page==="oneri"         &&<KisiselOneriPage setPage={nav}/>}
     {page==="aistatus"      &&<AIStatusPage/>}
@@ -3128,7 +4140,110 @@ function GeminiPage({setPage}){
 
 function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
   const[email,setEmail]=useState("");const[sent,setSent]=useState(false);
-  const[menuOpen,setMenuOpen]=useState(false);
+  const[openMenu,setOpenMenu]=useState(null);
+  useBadges(page);
+  return <div style={{minHeight:"100vh",background:"#060a14",color:"#e2e8f0",fontFamily:"'Inter',system-ui,sans-serif"}}>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+      @keyframes spin{to{transform:rotate(360deg)}}
+      @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+      @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+      @keyframes glow{0%,100%{box-shadow:0 0 12px rgba(0,220,255,0.4)}50%{box-shadow:0 0 32px rgba(0,220,255,0.8)}}
+      @keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 6px rgba(0,220,255,0.5))}50%{filter:drop-shadow(0 0 18px rgba(0,220,255,1))}}
+      @keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+      @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+      @keyframes shimmer{0%{opacity:.5}100%{opacity:1}}
+      @keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      *{box-sizing:border-box;margin:0;padding:0}
+      ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:linear-gradient(#00dcff,#a855f7);border-radius:3px}
+      button,a{transition:all .2s cubic-bezier(.4,0,.2,1)}
+      h1,h2,h3{font-family:'Space Grotesk',sans-serif}
+      .card-hover{transition:all .2s cubic-bezier(.4,0,.2,1)}
+      .card-hover:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 16px 48px rgba(0,0,0,0.5)}
+      .card-3d{transition:transform .2s;transform-style:preserve-3d}
+      .card-3d:hover{transform:perspective(800px) rotateX(-3deg) rotateY(5deg) scale(1.02)}
+      .gradient-text{background:linear-gradient(135deg,#00dcff,#a855f7,#f472b6);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradient 4s linear infinite}
+      .glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08)}
+      .btn-primary{background:linear-gradient(135deg,#00dcff,#a855f7);border:none;color:#fff;font-weight:700;cursor:pointer;border-radius:10px}
+      .btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,220,255,0.4)}
+      .neon-text{text-shadow:0 0 10px rgba(0,220,255,0.8),0 0 20px rgba(0,220,255,0.4)}
+      .dropdown-open .dropdown-menu{display:block!important}
+    `}</style>
+    <CursorTrail/>
+    {cookie&&<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:999,background:"rgba(6,10,20,0.95)",borderTop:"1px solid rgba(0,220,255,0.15)",padding:"10px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,backdropFilter:"blur(20px)"}}>
+      <div style={{fontSize:11,color:"#64748b"}}>🍪 Zorunlu çerezler kullanır. <span onClick={()=>nav("gizlilik")} style={{color:"#00dcff",cursor:"pointer"}}>Gizlilik</span></div>
+      <div style={{display:"flex",gap:8}}><button onClick={()=>setCookie(false)} className="btn-primary" style={{padding:"6px 16px",fontSize:11,borderRadius:8,fontFamily:"inherit"}}>Kabul Et</button><button onClick={()=>setCookie(false)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid rgba(255,255,255,0.1)",background:"transparent",color:"#475569",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reddet</button></div>
+    </div>}
+    <Ticker/>
+    {/* ═══ DROPDOWN NAVBAR ═══ */}
+    <nav style={{position:"sticky",top:0,zIndex:200,background:"rgba(6,10,20,0.8)",borderBottom:"1px solid rgba(0,220,255,0.1)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",boxShadow:"0 4px 32px rgba(0,0,0,0.4)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:4,padding:"8px 16px",overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+        {/* Logo */}
+        <div onClick={()=>{nav("home");setOpenMenu(null);}} style={{cursor:"pointer",display:"flex",alignItems:"center",gap:8,flexShrink:0,marginRight:8}}>
+          <div style={{animation:"logoPulse 3s ease-in-out infinite",width:32,height:32,borderRadius:8,overflow:"hidden",flexShrink:0}}>
+            <img src="/logo.png" alt="IMDATAI" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";e.target.parentElement.style.background="linear-gradient(135deg,#00dcff,#a855f7)";e.target.parentElement.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff">⬡</div>';}}/>
+          </div>
+          <div style={{flexShrink:0}}>
+            <div style={{fontSize:14,fontWeight:900,background:"linear-gradient(90deg,#00dcff,#a855f7)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:".08em",fontFamily:"'Space Grotesk',sans-serif"}}>IMDATAI</div>
+            <div style={{fontSize:7,color:"#334155",letterSpacing:".08em"}}>TÜRKİYE'NİN AI HUB'I</div>
+          </div>
+        </div>
+        {/* Nav items */}
+        {NAV_GROUPS.map(g=>{
+          if(!g.sub){return <button key={g.id} onClick={()=>{nav(g.id);setOpenMenu(null);}} style={{padding:"6px 10px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:7,background:page===g.id?"rgba(0,220,255,0.12)":"transparent",color:page===g.id?"#00dcff":"#475569",whiteSpace:"nowrap",flexShrink:0,fontWeight:page===g.id?700:400,borderBottom:page===g.id?"2px solid rgba(0,220,255,0.5)":"2px solid transparent"}}>{g.label}</button>;}
+          const isOpen=openMenu===g.id;
+          return <div key={g.id} style={{position:"relative",flexShrink:0}} onMouseEnter={()=>setOpenMenu(g.id)} onMouseLeave={()=>setOpenMenu(null)}>
+            <button style={{padding:"6px 10px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:7,background:isOpen?"rgba(0,220,255,0.08)":"transparent",color:isOpen?"#00dcff":"#64748b",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,fontWeight:isOpen?600:400}}>
+              {g.label}<span style={{fontSize:8,opacity:.6}}>{isOpen?"▲":"▼"}</span>
+            </button>
+            {isOpen&&<div style={{position:"absolute",top:"100%",left:0,background:"rgba(6,10,24,0.98)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:12,padding:"8px",minWidth:200,backdropFilter:"blur(20px)",boxShadow:"0 16px 48px rgba(0,0,0,0.8)",zIndex:300,animation:"fadeIn .15s ease"}}>
+              {g.sub.map(s=><div key={s.id} onClick={()=>{nav(s.id);setOpenMenu(null);}} style={{padding:"9px 12px",borderRadius:9,cursor:"pointer",display:"flex",gap:10,alignItems:"flex-start",transition:"background .15s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(0,220,255,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <span style={{fontSize:16,flexShrink:0}}>{s.icon}</span>
+                <div><div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{s.label}</div>{s.desc&&<div style={{fontSize:10,color:"#475569",marginTop:1}}>{s.desc}</div>}</div>
+              </div>)}
+            </div>}
+          </div>;
+        })}
+        {/* Sağ grup */}
+        <div style={{marginLeft:"auto",flexShrink:0,display:"flex",gap:4}}>
+          {[{id:"hakkimizda",l:"Hakkımızda"},{id:"iletisim",l:"İletişim"}].map(n=><button key={n.id} onClick={()=>nav(n.id)} style={{padding:"5px 8px",border:"none",cursor:"pointer",fontSize:9,fontFamily:"inherit",borderRadius:6,background:"transparent",color:"#334155",whiteSpace:"nowrap"}}>{n.l}</button>)}
+        </div>
+      </div>
+    </nav>
+    <div style={{animation:"fadeIn .3s ease"}} key={page}>{children}</div>
+    <BadgeDisplay/>
+    <footer style={{borderTop:"1px solid rgba(255,255,255,0.05)",padding:"40px 20px 32px",marginTop:40,background:"linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.3))"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:28,marginBottom:32}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <img src="/logo.png" alt="" style={{width:26,height:26,borderRadius:6,objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>
+              <span style={{fontSize:13,fontWeight:900,background:"linear-gradient(90deg,#00dcff,#a855f7)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontFamily:"'Space Grotesk',sans-serif"}}>IMDATAI</span>
+            </div>
+            <div style={{fontSize:10,color:"#334155",marginBottom:12,lineHeight:1.7}}>Türkiye'nin #1 AI Hub'ı<br/>Gemini AI ile güçlendirildi</div>
+            <div style={{display:"flex",gap:10}}><a href="https://youtube.com/@imdatai" target="_blank" rel="noopener noreferrer"><YT/></a><a href="https://tiktok.com/@imdatai" target="_blank" rel="noopener noreferrer"><TT/></a><a href="https://instagram.com/imdatai" target="_blank" rel="noopener noreferrer"><IG/></a></div>
+          </div>
+          {[["AI Modeller",["Claude","ChatGPT","Gemini","Karşılaştır"],["claude","chatgpt","gemini","karsilastirma"]],["Öğren",["AI Öğren","Prompt","Sözlük","Kariyer"],["ogrenme","prompt","sozluk","kariyer"]],["Oyunlar",["Trivia","Roulette","Dedektif","IQ Testi"],["trivia","roulette","dedektif","iqtest"]],["Kazan",["Para Kazan","Kariyer","Tools","Pro"],["para","kariyer","tools","pro"]]].map(([t,ls,ps])=>(
+            <div key={t}><div style={{fontSize:8,letterSpacing:".15em",color:"#475569",marginBottom:8,fontWeight:700}}>{t.toUpperCase()}</div>{ls.map((l,i)=><div key={l} onClick={()=>nav(ps[i])} style={{fontSize:11,color:"#334155",marginBottom:7,cursor:"pointer"}} onMouseEnter={e=>e.target.style.color="#94a3b8"} onMouseLeave={e=>e.target.style.color="#334155"}>{l}</div>)}</div>
+          ))}
+          <div>
+            <div style={{fontSize:8,letterSpacing:".15em",color:"#475569",marginBottom:8,fontWeight:700}}>BÜLTEN</div>
+            {sent?<div style={{fontSize:11,color:"#34d399",fontWeight:700}}>✅ Kaydedildin!</div>:<div style={{display:"flex",flexDirection:"column",gap:7}}>
+              <input style={{background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#e2e8f0",padding:"9px 12px",fontSize:12,fontFamily:"inherit",outline:"none"}} placeholder="E-posta..." value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&email.includes("@")&&setSent(true)}/>
+              <button onClick={()=>{if(email.includes("@"))setSent(true);}} className="btn-primary" style={{padding:"9px",fontSize:12,fontFamily:"inherit",borderRadius:8}}>Abone Ol →</button>
+            </div>}
+          </div>
+        </div>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.04)",paddingTop:16,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
+          <div style={{fontSize:10,color:"#1e293b"}}>© 2026 IMDATAI · Türkiye'nin #1 AI Platformu</div>
+          <div style={{fontSize:10,color:"#1e293b"}}>Gemini API ile güçlendirilmiştir 🌟</div>
+        </div>
+      </div>
+    </footer>
+    <Chatbot/>
+  </div>;
+}
   return <div style={{minHeight:"100vh",background:"#060a14",color:"#e2e8f0",fontFamily:"'Inter',system-ui,sans-serif"}}>
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
