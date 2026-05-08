@@ -3766,45 +3766,6 @@ export default function App(){
   </Wrapper>;
 }
 
-  if(page.startsWith("blog-")){const id=page.replace("blog-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><BlogPostPage postId={id} setPage={nav}/></Wrapper>;}
-  if(page.startsWith("tool-")){const key=page.replace("tool-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ToolDetailPage toolKey={key} setPage={nav}/></Wrapper>;}
-  if(page==="claude"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ClaudePage setPage={nav}/></Wrapper>;}
-  if(page==="chatgpt"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ChatGPTPage setPage={nav}/></Wrapper>;}
-  if(page==="gemini"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><GeminiPage setPage={nav}/></Wrapper>;}
-
-  return <Wrapper nav={nav} page={page} user={user} setUser={setUser} cookie={cookie} setCookie={setCookie}>
-    {page==="home"          &&<HomePage setPage={nav} user={user} setUser={setUser}/>}
-    {page==="haberler"      &&<HaberlerPage setPage={nav}/>}
-    {page==="blog"          &&<BlogPage setPage={nav}/>}
-    {page==="ogrenme"       &&<OgrenmePage setPage={nav}/>}
-    {page==="prompt"        &&<PromptPage/>}
-    {page==="karsilastirma" &&<KarsilastirmaPage/>}
-    {page==="sozluk"        &&<SozlukPage/>}
-    {page==="dizin"         &&<DizinPage setPage={nav}/>}
-    {page==="galeri"        &&<GaleriPage/>}
-    {page==="quiz"          &&<QuizPage/>}
-    {page==="oyun"          &&<OyunPage/>}
-    {page==="oyunlar"       &&<OyunlarPage setPage={nav}/>}
-    {page==="trivia"        &&<TriviaMarathon/>}
-    {page==="roulette"      &&<PromptRoulette/>}
-    {page==="emoji"         &&<EmojiGuess/>}
-    {page==="dedektif"      &&<ModelDedektifPage/>}
-    {page==="kariyer_sim"   &&<KariyerSimPage/>}
-    {page==="topluluk"      &&<ToplulukPage/>}
-    {page==="kariyer"       &&<KariyerPage/>}
-    {page==="mitler"        &&<MitlerPage/>}
-    {page==="zaman"         &&<ZamanHesapPage/>}
-    {page==="para"          &&<ParaPage/>}
-    {page==="iqtest"        &&<IQTestPage/>}
-    {page==="puan"          &&<PromptScorerPage/>}
-    {page==="oneri"         &&<KisiselOneriPage setPage={nav}/>}
-    {page==="aistatus"      &&<AIStatusPage/>}
-    {page==="hakkimizda"    &&<HakkimizdaPage/>}
-    {page==="iletisim"      &&<IletisimPage/>}
-    {page==="gizlilik"      &&<GizlilikPage/>}
-    {page==="pro"           &&<ProPage/>}
-  </Wrapper>;
-}
 
 // ══════════════════════════════════════════════════════════
 // CLAUDE KAPSAMLI SAYFA
