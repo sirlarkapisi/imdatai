@@ -3042,7 +3042,6 @@ function KariyerPage(){
 }
 
 // ══════════════════════════════════════════════════════════
-// ── NAVIGATION ─────────────────────────────────────────────
 
 function MatrixRain(){
   const r=useRef();
@@ -3403,7 +3402,6 @@ function KisiselOneriPage({setPage}){
   </div>;
 }
 
-// ── NAVIGATION ─────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════
 // PAYLAŞIM SİSTEMİ — IMDATAI Markalı
 // ══════════════════════════════════════════════════════════
@@ -4158,6 +4156,7 @@ function useSesliKarsilama(){
 }
 
 // ── NAVIGATION ─────────────────────────────────────────────
+const NAV_GROUPS=[
   {id:"home",label:"Ana Sayfa"},
   {id:"haberler",label:"Haberler"},
   {id:"blog",label:"Blog"},
@@ -4477,7 +4476,6 @@ function ToolsPage(){
   </div>;
 }
 
-// ── NAVIGATION ─────────────────────────────────────────────
 export default function App(){
   const[page,setPage]=useState("home");
   const[user,setUser]=useState(defaultUser);
@@ -4524,6 +4522,8 @@ export default function App(){
     {page==="flashcard"     &&<FlashcardPage/>}
     {page==="maliyet"       &&<MaliyetPage/>}
     {page==="gorev"         &&<div style={{padding:"28px 20px",textAlign:"center"}}><DailyMissionsWidget setPage={nav}/><div style={{fontSize:14,color:"#64748b",marginTop:60}}>Görev widget'ı sağ alt köşede! 📋</div></div>}
+    {page==="dashboard"     &&<DashboardPage setPage={nav}/>}
+    {page==="kisilik"       &&<KisilikPage setPage={nav}/>}
     {page==="topluluk"      &&<ToplulukPage/>}
     {page==="kariyer"       &&<KariyerPage/>}
     {page==="mitler"        &&<MitlerPage/>}
