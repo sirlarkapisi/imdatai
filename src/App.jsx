@@ -1444,6 +1444,31 @@ const AI_FACTS=[
   {e:"🎵",f:"Suno AI ile üretilen şarkı, Spotify'da 1 milyonu aştı. Hiç insan eli değmedi!"},
 ];
 
+// ══ AI FACTS ══
+const AI_FACTS=[
+  {e:"🤯",f:"ChatGPT, 5 günde 1 milyon kullanıcıya ulaştı. Netflix 3.5 yıl almıştı!"},
+  {e:"🇹🇷",f:"Türkiye, AI web trafiğinde dünya birincisi. %94.49 ile yakın rakibi bile yok!"},
+  {e:"💰",f:"2026'da AI pazarı 1.8 trilyon dolara ulaştı. Türkiye'nin yıllık GSYH'ye eşit!"},
+  {e:"🧠",f:"Claude 1 milyon token işleyebilir. Bu 750.000 kelime = 10 roman demek!"},
+  {e:"⚡",f:"Dünyada her saniye 100.000+ ChatGPT sorusu soruluyor. 8.6 milyar/gün!"},
+  {e:"🎨",f:"Midjourney, prestijli sanat yarışmalarını kazanıyor. Sanatçılar tartışıyor!"},
+  {e:"💻",f:"Claude Opus 4.7, gerçek GitHub bug'larını çözmede %87.6 başarı!"},
+  {e:"🌍",f:"Gemini 2 milyon token ile dünyanın en uzun context window'una sahip!"},
+  {e:"🔬",f:"AlphaFold ile 200 milyon proteinin yapısı keşfedildi. İnsanlık 50 yılda 170.000 bulmuştu!"},
+  {e:"🎵",f:"Suno AI ile üretilen şarkı Spotify'da 1 milyonu aştı. Hiç insan eli değmedi!"},
+];
+
+const AI_MODELS_LIST=[
+  {id:"claude",e:"🧠",t:"Claude",sub:"Anthropic",d:"Kodlamada #1 · SWE-bench %87.6 · 1M token",c:"#a855f7",badge:"🏆 Kodlama #1"},
+  {id:"chatgpt",e:"🤖",t:"ChatGPT",sub:"OpenAI",d:"900M kullanıcı · GPT-5.5 · DALL-E 3",c:"#00dcff",badge:"👑 En Popüler"},
+  {id:"gemini",e:"🌟",t:"Gemini",sub:"Google",d:"2M token rekoru · Google ekosistemi",c:"#34d399",badge:"📚 En Uzun"},
+  {id:"grok",e:"⚡",t:"Grok 3",sub:"xAI",d:"X/Twitter verisi · Gerçek zamanlı",c:"#fb923c",badge:"🔴 Canlı Veri"},
+  {id:"deepseek",e:"🔬",t:"DeepSeek",sub:"DeepSeek AI",d:"Açık kaynak · Matematik dünya #1",c:"#60a5fa",badge:"🆓 Açık Kaynak"},
+  {id:"mistral",e:"🇫🇷",t:"Mistral",sub:"Mistral AI",d:"Avrupa AI · GDPR uyumlu",c:"#f472b6",badge:"🇪🇺 Avrupa"},
+  {id:"llama",e:"🦙",t:"Llama 4",sub:"Meta",d:"Ücretsiz · Ticari kullanım açık",c:"#34d399",badge:"🆓 Ücretsiz"},
+  {id:"karsilastirma",e:"🆚",t:"Karşılaştır",sub:"Tüm Modeller",d:"Yan yana karşılaştırma tablosu",c:"#fbbf24",badge:"📊 Analiz"},
+];
+
 function HomePage({setPage,user,setUser}){
   const[typed,setTyped]=useState("");
   const words=["İçerik Üretimi","Kod Yazımı","Görsel Tasarım","Para Kazanma","Araştırma","Proje Yönetimi","Veri Analizi","Eğitim"];
@@ -1459,267 +1484,266 @@ function HomePage({setPage,user,setUser}){
   useEffect(()=>{const h=e=>{if(e.clientY<20&&!exitShown){setShowExit(true);setExitShown(true);}};document.addEventListener("mousemove",h);return()=>document.removeEventListener("mousemove",h);},[exitShown]);
 
   return <div>
-    {showExit&&<div style={{position:"fixed",inset:0,zIndex:800,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(8px)",animation:"fadeIn .3s ease"}} onClick={()=>setShowExit(false)}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"rgba(8,12,24,0.98)",border:"1px solid rgba(0,220,255,0.25)",borderRadius:20,padding:"32px",maxWidth:400,width:"90%",textAlign:"center",position:"relative",boxShadow:"0 24px 80px rgba(0,0,0,0.9)"}}>
+    {/* EXIT INTENT */}
+    {showExit&&<div style={{position:"fixed",inset:0,zIndex:800,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(8px)"}} onClick={()=>setShowExit(false)}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"rgba(8,12,24,0.98)",border:"1px solid rgba(0,220,255,0.25)",borderRadius:20,padding:"32px",maxWidth:400,width:"90%",textAlign:"center",position:"relative"}}>
         <button onClick={()=>setShowExit(false)} style={{position:"absolute",top:12,right:16,background:"none",border:"none",color:"#475569",fontSize:20,cursor:"pointer"}}>✕</button>
         <div style={{fontSize:40,marginBottom:12}}>🔔</div>
-        <div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",marginBottom:8,fontFamily:"'Space Grotesk',sans-serif"}}>Dur, bir saniye!</div>
-        <div style={{fontSize:13,color:"#64748b",marginBottom:20,lineHeight:1.7}}>ChatGPT çöktüğünde, yeni AI çıktığında hemen haber al!</div>
-        {sent?<div style={{color:"#34d399",fontWeight:700,padding:"12px"}}>✅ Kaydedildin!</div>:<div style={{display:"flex",flexDirection:"column",gap:8}}>
-          <input style={{background:"rgba(0,0,0,0.4)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,color:"#e2e8f0",padding:"11px 14px",fontSize:13,fontFamily:"inherit",outline:"none"}} placeholder="E-posta adresin..." value={email} onChange={e=>setEmail(e.target.value)}/>
-          <button onClick={()=>{if(email.includes("@")){setSent(true);setTimeout(()=>setShowExit(false),2000);}}} className="btn-primary" style={{padding:"12px",fontSize:14,borderRadius:10,fontFamily:"inherit"}}>🚀 AI Alarm Kur</button>
-          <button onClick={()=>setShowExit(false)} style={{fontSize:11,color:"#334155",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Hayır, kaçıracağım</button>
+        <div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",marginBottom:8,fontFamily:"Space Grotesk,sans-serif"}}>Dur!</div>
+        <div style={{fontSize:13,color:"#64748b",marginBottom:20}}>Yeni AI modeli çıktığında haber al!</div>
+        {sent?<div style={{color:"#34d399",fontWeight:700}}>✅ Kaydedildin!</div>:<div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <input style={{background:"rgba(0,0,0,0.4)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,color:"#e2e8f0",padding:"11px 14px",fontSize:13,fontFamily:"inherit",outline:"none"}} placeholder="E-posta..." value={email} onChange={e=>setEmail(e.target.value)}/>
+          <button onClick={()=>{if(email.includes("@")){setSent(true);setTimeout(()=>setShowExit(false),1500);}}} className="btn-primary" style={{padding:"12px",fontSize:14,borderRadius:10,fontFamily:"inherit"}}>🚀 Alarm Kur</button>
         </div>}
       </div>
     </div>}
 
-    {/* ═══ HERO JARVIS HUD ═══ */}
+    {/* ═══ HERO ═══ */}
     <section style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 20px 40px",overflow:"hidden",textAlign:"center"}}>
       <JarvisHUD/>
       <MatrixRain/>
-      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 80% 60% at 50% 40%,rgba(0,220,255,0.06),transparent 75%)",pointerEvents:"none"}}/>
-      <div style={{position:"relative",zIndex:3,maxWidth:800}}>
-        <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:20,flexWrap:"wrap"}}>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 80% 60% at 50% 40%,rgba(0,220,255,0.05),transparent 75%)",pointerEvents:"none"}}/>
+      <div style={{position:"relative",zIndex:3,maxWidth:800,width:"100%"}}>
+        <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:18,flexWrap:"wrap"}}>
           {[["🇹🇷","AI #1","#fb923c"],["📡","Canlı","#34d399"],["🆓","Ücretsiz","#00dcff"],["🤖","Gemini AI","#a855f7"]].map(([e,t,c])=>(
-            <div key={t} style={{fontSize:9,color:c,background:`${c}10`,padding:"4px 10px",borderRadius:12,border:`1px solid ${c}20`,fontWeight:700}}>{e} {t}</div>
+            <div key={t} style={{fontSize:9,color:c,background:`${c}12`,padding:"4px 10px",borderRadius:12,border:`1px solid ${c}25`,fontWeight:700}}>{e} {t}</div>
           ))}
         </div>
-        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(0,220,255,0.06)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:24,padding:"7px 22px",marginBottom:28,fontSize:10,color:"#00dcff",letterSpacing:".15em"}}>
-          <span style={{width:6,height:6,background:"#00dcff",borderRadius:"50%",animation:"blink 1.2s infinite",boxShadow:"0 0 10px #00dcff"}}/>
+        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(0,220,255,0.06)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:24,padding:"7px 18px",marginBottom:24,fontSize:10,color:"#00dcff",letterSpacing:".12em"}}>
+          <span style={{width:6,height:6,background:"#00dcff",borderRadius:"50%",animation:"blink 1.2s infinite",boxShadow:"0 0 8px #00dcff"}}/>
           TÜRKİYE AI TRAFİĞİNDE DÜNYA #1 — %94.49
         </div>
-        <h1 style={{fontSize:"clamp(36px,7vw,74px)",fontWeight:900,lineHeight:1,margin:"0 0 10px",letterSpacing:"-.03em",fontFamily:"'Space Grotesk',sans-serif"}}>
+        <h1 style={{fontSize:"clamp(32px,6vw,68px)",fontWeight:900,lineHeight:1.05,margin:"0 0 10px",letterSpacing:"-.03em",fontFamily:"Space Grotesk,sans-serif"}}>
           <span style={{background:"linear-gradient(135deg,#fff,#94a3b8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>AI ile </span>
           <span style={{background:"linear-gradient(90deg,#00dcff,#a855f7,#f472b6,#00dcff)",backgroundSize:"300% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradient 3s linear infinite"}}>{typed}<span style={{animation:"blink .8s infinite",WebkitTextFillColor:"rgba(0,220,255,.7)"}}>|</span></span>
         </h1>
-        <div style={{fontSize:"clamp(16px,3vw,22px)",color:"#334155",marginBottom:16,fontFamily:"'Space Grotesk',sans-serif"}}>
+        <div style={{fontSize:"clamp(14px,2.5vw,20px)",color:"#475569",marginBottom:16,fontFamily:"Space Grotesk,sans-serif"}}>
           saniyeler içinde, tamamen <span style={{color:"#00dcff",fontWeight:700}}>Türkçe.</span>
         </div>
-        <p style={{fontSize:13,color:"#334155",margin:"0 auto 32px",maxWidth:480,lineHeight:1.9}}>AI haberleri · 40+ araç · 75 prompt · 10 oyun · Simülasyonlar · Topluluk</p>
-        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginBottom:28}}>
-          <button onClick={()=>setPage("tools")} className="btn-primary" style={{padding:"13px 26px",fontSize:14,borderRadius:12,fontFamily:"inherit"}}>🛠️ Tools Keşfet</button>
-          <button onClick={()=>setPage("trivia")} style={{padding:"13px 20px",fontSize:14,borderRadius:12,border:"1px solid rgba(52,211,153,0.4)",background:"rgba(52,211,153,0.08)",color:"#34d399",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🎮 Oyun Oyna</button>
-          <button onClick={()=>setPage("claude")} style={{padding:"13px 20px",fontSize:14,borderRadius:12,border:"1px solid rgba(168,85,247,0.4)",background:"rgba(168,85,247,0.08)",color:"#a855f7",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🧠 Claude</button>
-          <button onClick={()=>setFact(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)])} style={{padding:"13px 20px",fontSize:14,borderRadius:12,border:"1px solid rgba(251,146,60,0.4)",background:"rgba(251,146,60,0.08)",color:"#fb923c",cursor:"pointer",fontFamily:"inherit",fontWeight:700,animation:"pulse 2s ease-in-out infinite"}}>🤯 Şaşırt!</button>
+        <p style={{fontSize:12,color:"#334155",margin:"0 auto 28px",maxWidth:440,lineHeight:1.8}}>AI haberleri · 40+ araç · 75 prompt · 10 oyun · 8 AI model · Simülasyonlar</p>
+        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginBottom:24}}>
+          <button onClick={()=>setPage("tools")} className="btn-primary" style={{padding:"12px 24px",fontSize:13,borderRadius:11,fontFamily:"inherit"}}>🛠️ Tools</button>
+          <button onClick={()=>setPage("trivia")} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(52,211,153,0.4)",background:"rgba(52,211,153,0.08)",color:"#34d399",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🎮 Oyun Oyna</button>
+          <button onClick={()=>setPage("claude")} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(168,85,247,0.4)",background:"rgba(168,85,247,0.08)",color:"#a855f7",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🧠 Claude</button>
+          <button onClick={()=>setFact(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)])} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(251,146,60,0.4)",background:"rgba(251,146,60,0.08)",color:"#fb923c",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🤯 Şaşırt!</button>
         </div>
-        {fact&&<div style={{background:"rgba(251,146,60,0.08)",border:"1px solid rgba(251,146,60,0.25)",borderRadius:14,padding:"16px 20px",maxWidth:540,margin:"0 auto 24px",animation:"fadeIn .3s ease"}}>
-          <div style={{fontSize:28,marginBottom:8}}>{fact.e}</div>
-          <div style={{fontSize:14,color:"#e2e8f0",lineHeight:1.7}}>{fact.f}</div>
-          <button onClick={()=>setFact(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)])} style={{marginTop:10,fontSize:11,color:"#fb923c",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Bir daha →</button>
+        {fact&&<div style={{background:"rgba(251,146,60,0.08)",border:"1px solid rgba(251,146,60,0.22)",borderRadius:14,padding:"14px 18px",maxWidth:520,margin:"0 auto 20px",animation:"fadeIn .3s ease"}}>
+          <div style={{fontSize:24,marginBottom:6}}>{fact.e}</div>
+          <div style={{fontSize:13,color:"#e2e8f0",lineHeight:1.7}}>{fact.f}</div>
+          <button onClick={()=>setFact(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)])} style={{marginTop:8,fontSize:10,color:"#fb923c",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Bir daha →</button>
         </div>}
-        <div ref={counterRef} style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,maxWidth:480,margin:"0 auto"}}>
+        <div ref={counterRef} style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,maxWidth:440,margin:"0 auto"}}>
           {[[counts.a+"%","TR #1","#00dcff"],[counts.b+"+","Prompt","#a855f7"],[counts.c,"Oyun","#34d399"],[counts.d,"AI Terimi","#fb923c"]].map(([n,l,c])=>(
-            <div key={l} style={{background:`${c}08`,border:`1px solid ${c}15`,borderRadius:12,padding:"12px 6px"}}>
-              <div style={{fontSize:20,fontWeight:900,color:c,fontFamily:"'Space Grotesk',sans-serif"}}>{n}</div>
-              <div style={{fontSize:9,color:"#475569",marginTop:2}}>{l}</div>
+            <div key={l} style={{background:`${c}08`,border:`1px solid ${c}15`,borderRadius:11,padding:"10px 6px"}}>
+              <div style={{fontSize:18,fontWeight:900,color:c,fontFamily:"Space Grotesk,sans-serif"}}>{n}</div>
+              <div style={{fontSize:8,color:"#475569",marginTop:2}}>{l}</div>
             </div>
           ))}
         </div>
       </div>
-      <div style={{position:"absolute",bottom:28,left:"50%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,animation:"float 2s ease-in-out infinite",zIndex:3}}>
-        <div style={{fontSize:9,color:"#1e293b",letterSpacing:".15em"}}>KAYDIR</div>
-        <div style={{width:1,height:28,background:"linear-gradient(rgba(0,220,255,0.4),transparent)"}}/>
+      <div style={{position:"absolute",bottom:24,left:"50%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",alignItems:"center",gap:4,animation:"float 2s ease-in-out infinite",zIndex:3}}>
+        <div style={{fontSize:8,color:"#1e293b",letterSpacing:".15em"}}>KAYDIR</div>
+        <div style={{width:1,height:24,background:"linear-gradient(rgba(0,220,255,0.4),transparent)"}}/>
       </div>
     </section>
 
     {/* ═══ SLİDESHOW ═══ */}
-    <div style={{padding:"24px 20px 0",maxWidth:960,margin:"0 auto"}}>
-      <Slideshow setPage={setPage}/>
-    </div>
+    <section style={{padding:"24px 20px"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <Slideshow setPage={setPage}/>
+      </div>
+    </section>
 
     {/* ═══ HIZLI ERİŞİM ═══ */}
     <section style={{padding:"0 20px 40px"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
-        <div style={{textAlign:"center",marginBottom:20}}>
-          <div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:6}}>HIZLI ERİŞİM</div>
-          <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>Ne Bulmak İstiyorsun?</div>
+        <div style={{textAlign:"center",marginBottom:18}}>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>HIZLI ERİŞİM</div>
+          <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>Ne Arıyorsun?</div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(175px,1fr))",gap:10}}>
-          {[{e:"📰",t:"AI Haberler",d:"Güncel AI haberleri",c:"#00dcff",p:"haberler",items:["GPT-5.5","Claude","Gemini","TR AI"]},
-            {e:"🛠️",t:"Tools",d:"40+ AI aracı",c:"#fb923c",p:"tools",items:["ChatGPT","Midjourney","Cursor","Suno"]},
-            {e:"🎮",t:"Oyun Oyna",d:"10 interaktif oyun",c:"#f472b6",p:"oyunlar",items:["Trivia","Roulette","Dedektif","IQ"]},
-            {e:"⚡",t:"İnteraktif",d:"Araçlar & hesaplama",c:"#a855f7",p:"puan",items:["Puanla","Hesapla","Öneri","Durum"]},
-            {e:"🎓",t:"Eğitim",d:"Sıfırdan uzmanlığa",c:"#34d399",p:"ogrenme",items:["Öğren","Prompt","Sözlük","Mitler"]},
-            {e:"💰",t:"Para Kazan",d:"AI ile gelir",c:"#fbbf24",p:"para",items:["Freelance","İçerik","Danışman","API"]},
-            {e:"🚀",t:"Kariyer",d:"AI çağında meslek",c:"#60a5fa",p:"kariyer",items:["Mühendis","Tasarımcı","Pazarlama","Promptçu"]},
-            {e:"🧠",t:"AI Modeller",d:"3 model rehberi",c:"#a855f7",p:"claude",items:["Claude","ChatGPT","Gemini","Karşılaştır"]},
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:10}}>
+          {[
+            {e:"📰",t:"Haberler",d:"Güncel AI haberleri",c:"#00dcff",p:"haberler"},
+            {e:"🛠️",t:"Tools",d:"40+ AI aracı",c:"#fb923c",p:"tools"},
+            {e:"🎮",t:"Oyunlar",d:"10 interaktif oyun",c:"#f472b6",p:"oyunlar"},
+            {e:"⚡",t:"İnteraktif",d:"Araçlar & hesaplama",c:"#a855f7",p:"puan"},
+            {e:"🎓",t:"Öğren",d:"AI eğitim rehberi",c:"#34d399",p:"ogrenme"},
+            {e:"💰",t:"Para Kazan",d:"AI gelir yolları",c:"#fbbf24",p:"para"},
+            {e:"🚀",t:"Kariyer",d:"AI meslekleri",c:"#60a5fa",p:"kariyer"},
+            {e:"🎰",t:"Şans Çarkı",d:"Rastgele içerik",c:"#fb923c",p:"cark"},
+            {e:"🎬",t:"Animasyon",d:"Fullscreen görsel",c:"#a855f7",p:"animasyon"},
+            {e:"📊",t:"Dashboard",d:"İstatistiklerin",c:"#34d399",p:"dashboard"},
           ].map(g=>(
-            <div key={g.t} onClick={()=>setPage(g.p)} className="card-3d" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:14,padding:"16px",cursor:"pointer",position:"relative",overflow:"hidden"}}>
+            <div key={g.t} onClick={()=>setPage(g.p)} className="card-3d" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:13,padding:"14px 12px",cursor:"pointer",position:"relative",overflow:"hidden",textAlign:"center"}}>
               <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${g.c},transparent)`}}/>
-              <div style={{fontSize:26,marginBottom:8}}>{g.e}</div>
-              <div style={{fontSize:13,fontWeight:700,color:g.c,marginBottom:3,fontFamily:"'Space Grotesk',sans-serif"}}>{g.t}</div>
-              <div style={{fontSize:10,color:"#475569",marginBottom:8}}>{g.d}</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:3}}>{g.items.map(i=><span key={i} style={{fontSize:7,color:g.c+"99",background:`${g.c}10`,borderRadius:4,padding:"2px 5px"}}>{i}</span>)}</div>
+              <div style={{fontSize:22,marginBottom:6}}>{g.e}</div>
+              <div style={{fontSize:12,fontWeight:700,color:g.c,marginBottom:3,fontFamily:"Space Grotesk,sans-serif"}}>{g.t}</div>
+              <div style={{fontSize:9,color:"#475569"}}>{g.d}</div>
             </div>
           ))}
         </div>
       </div>
     </section>
 
-    {/* ═══ HIZLI BAŞLANGIÇ ═══ */}
+    {/* ═══ AI MODELLERİ ═══ */}
     <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.12)"}}>
-      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
-        <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.04))",border:"1px solid rgba(0,220,255,0.15)",borderRadius:20,padding:"28px",textAlign:"center"}}>
-          <div style={{fontSize:9,letterSpacing:".2em",color:"#00dcff",marginBottom:8}}>KİŞİSELLEŞTİRİLMİŞ</div>
-          <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:16}}>🚀 Seviyeni Seç</div>
-          <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:level?16:0}}>
-            {[["🟢","Yeni Başladım","beginner","#34d399"],["🟡","Biraz Biliyorum","mid","#fb923c"],["🔴","Uzman Olmak","expert","#f472b6"]].map(([e,t,key,c])=>(
-              <button key={key} onClick={()=>setLevel(level===key?null:key)} style={{padding:"14px 18px",borderRadius:14,border:`2px solid ${level===key?c:c+"28"}`,background:level===key?`${c}12`:"rgba(255,255,255,0.02)",color:level===key?c:"#64748b",cursor:"pointer",fontFamily:"inherit",transition:"all .2s",minWidth:150}}>
-                <div style={{fontSize:20,marginBottom:4}}>{e}</div><div style={{fontSize:12,fontWeight:700}}>{t}</div>
-              </button>
-            ))}
-          </div>
-          {level&&<div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",animation:"fadeIn .3s ease"}}>
-            {levelPages[level].map(p=>{const nm={ogrenme:"🎓 AI Öğren",sozluk:"📖 Sözlük",haberler:"📰 Haberler",prompt:"💡 Prompt",karsilastirma:"🆚 Karşılaştır",claude:"🧠 Claude",dizin:"🛠️ Araçlar",kariyer:"🚀 Kariyer",para:"💰 Para"}[p]||p;return <button key={p} onClick={()=>setPage(p)} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>{nm}</button>;})}
-          </div>}
+      <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:5}}>8 MODEL</div>
+          <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>🤖 Tüm AI Modelleri</div>
+          <div style={{fontSize:11,color:"#64748b",marginTop:4}}>Claude · ChatGPT · Gemini · Grok · DeepSeek · Mistral · Llama · Karşılaştır</div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
+          {AI_MODELS_LIST.map(m=>(
+            <div key={m.id} onClick={()=>setPage(m.id)} className="card-hover" style={{background:`${m.c}06`,border:`1px solid ${m.c}18`,borderRadius:14,padding:"16px",cursor:"pointer",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${m.c},transparent)`}}/>
+              <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10}}>
+                <span style={{fontSize:28}}>{m.e}</span>
+                <div>
+                  <div style={{fontSize:13,fontWeight:800,color:m.c,fontFamily:"Space Grotesk,sans-serif"}}>{m.t}</div>
+                  <div style={{fontSize:9,color:"#475569"}}>{m.sub}</div>
+                </div>
+              </div>
+              <div style={{fontSize:10,color:"#64748b",lineHeight:1.5,marginBottom:8}}>{m.d}</div>
+              <div style={{fontSize:8,color:m.c,background:`${m.c}12`,borderRadius:5,padding:"2px 8px",display:"inline-block",fontWeight:700}}>{m.badge}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
 
     {/* ═══ SİMÜLASYONLAR ═══ */}
-    <section style={{padding:"0 20px 40px"}}><div style={{maxWidth:960,margin:"0 auto"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-        <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:4}}>CANLI</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🌍 Dünya AI Haritası</div></div>
-        <Tag text="● Canlı" color="#34d399"/>
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:10}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>CANLI</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>🌍 Dünya AI Haritası</div></div>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}><span style={{width:6,height:6,background:"#34d399",borderRadius:"50%",animation:"blink 1.2s infinite"}}/><span style={{fontSize:10,color:"#34d399"}}>Canlı</span></div>
+        </div>
+        <WorldMapSim/>
       </div>
-      <WorldMapSim/>
-    </div></section>
+    </section>
 
-    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.15)"}}><div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
-      <div style={{textAlign:"center",marginBottom:16}}>
-        <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:4}}>ETKİLEŞİMLİ</div>
-        <div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🧠 Nöral Ağ Simülasyonu</div>
-        <div style={{fontSize:10,color:"#64748b",marginTop:4}}>Mouse ile etkileşe geç — AI nasıl düşünür?</div>
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.12)"}}>
+      <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
+        <div style={{textAlign:"center",marginBottom:14}}>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:3}}>ETKİLEŞİMLİ</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>🧠 Nöral Ağ Simülasyonu</div>
+          <div style={{fontSize:10,color:"#64748b",marginTop:3}}>Mouse ile etkileşe geç</div>
+        </div>
+        <NeuralNetSim/>
       </div>
-      <NeuralNetSim/>
-    </div></section>
+    </section>
 
     {/* ═══ GÜNLÜK İPUCU ═══ */}
-    <section style={{padding:"0 20px 40px"}}><div style={{maxWidth:860,margin:"0 auto"}}>
-      <div style={{background:`${todayTip.renk}06`,border:`1px solid ${todayTip.renk}20`,borderRadius:18,padding:"22px",display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
-        <div style={{width:44,height:44,borderRadius:12,background:`${todayTip.renk}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>💡</div>
-        <div style={{flex:1}}>
-          <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:8,flexWrap:"wrap"}}><div style={{fontSize:9,letterSpacing:".2em",color:todayTip.renk}}>BUGÜNÜN İPUCU</div><Tag text={todayTip.araç} color={todayTip.renk}/></div>
-          <div style={{fontSize:13,color:"#e2e8f0",lineHeight:1.7,marginBottom:10}}>{todayTip.tip}</div>
-          <button onClick={()=>navigator.clipboard?.writeText(todayTip.tip)} style={{fontSize:11,color:todayTip.renk,background:`${todayTip.renk}10`,border:`1px solid ${todayTip.renk}22`,borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Kopyala 📋</button>
-        </div>
-      </div>
-    </div></section>
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{background:`${todayTip.renk}06`,border:`1px solid ${todayTip.renk}20`,borderRadius:16,padding:"20px",display:"flex",gap:14,alignItems:"flex-start",flexWrap:"wrap"}}>
+          <div style={{width:42,height:42,borderRadius:11,background:`${todayTip.renk}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>💡</div>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:7,flexWrap:"wrap"}}>
+              <div style={{fontSize:9,letterSpacing:".15em",color:todayTip.renk}}>BUGÜNÜN İPUCU</div>
+              <Tag text={todayTip.araç} color={todayTip.renk}/>
+            </div>
+            <div style={{fontSize:13,color:"#e2e8f0",lineHeight:1.7,marginBottom:8}}>{todayTip.tip}</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button onClick={()=>navigator.clipboard?.writeText(todayTip.tip)} style={{fontSize:10,color:todayTip.renk,background:`${todayTip.renk}10`,border:`1px solid ${todayTip.renk}22`,borderRadius:7,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Kopyala 📋</button>
+              <ShareButton title="Günlük AI İpucu" text={`💡 Günlük AI İpucu — ${todayTip.araç}:
 
-    {/* ═══ CLAUDE ═══ */}
-    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}><div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
-      <div style={{background:"linear-gradient(135deg,rgba(168,85,247,0.08),rgba(0,220,255,0.04))",border:"1px solid rgba(168,85,247,0.2)",borderRadius:18,padding:"24px",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:-20,right:-20,fontSize:100,opacity:.04}}>🧠</div>
-        <div style={{position:"relative"}}>
-          <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12,flexWrap:"wrap"}}>
-            <span style={{fontSize:30}}>🧠</span>
-            <div><div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:2}}>ÖZEL</div><div style={{fontSize:17,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>Claude — Kodlamada Dünya #1</div></div>
-          </div>
-          <div style={{fontSize:12,color:"#64748b",lineHeight:1.8,marginBottom:16}}><strong style={{color:"#a855f7"}}>SWE-bench %87.6</strong> · <strong style={{color:"#a855f7"}}>1M token</strong> · Constitutional AI · En az hallüsinasyon</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8,marginBottom:16}}>
-            {[["🏆","Kodlama #1","%87.6","#a855f7"],["📚","1M Token","750K kelime","#00dcff"],["🔒","Güvenli","Constitutional","#34d399"],["🤖","Agentic","Task Budget","#fb923c"]].map(([e,t,d,c])=>(
-              <div key={t} onClick={()=>setPage("claude")} className="card-hover" style={{background:`${c}08`,border:`1px solid ${c}18`,borderRadius:10,padding:"11px",cursor:"pointer",textAlign:"center"}}>
-                <div style={{fontSize:18,marginBottom:3}}>{e}</div>
-                <div style={{fontSize:11,fontWeight:700,color:c,marginBottom:1}}>{t}</div>
-                <div style={{fontSize:9,color:"#475569"}}>{d}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <button onClick={()=>setPage("claude")} className="btn-primary" style={{padding:"10px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit"}}>🧠 Claude Rehberi →</button>
-            <button onClick={()=>setPage("chatgpt")} style={{padding:"10px 14px",borderRadius:10,border:"1px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.06)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>🤖 ChatGPT</button>
-            <button onClick={()=>setPage("gemini")} style={{padding:"10px 14px",borderRadius:10,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.06)",color:"#34d399",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>🌟 Gemini</button>
+${todayTip.tip}`} size="small"/>
+            </div>
           </div>
         </div>
       </div>
-    </div></section>
+    </section>
 
     {/* ═══ HABERLER ═══ */}
-    <section style={{padding:"0 20px 40px"}}><div style={{maxWidth:900,margin:"0 auto"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>SON DAKİKA</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>📰 AI Haberleri</div></div>
-        <button onClick={()=>setPage("haberler")} style={{fontSize:11,color:"#00dcff",background:"none",border:"1px solid rgba(0,220,255,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.08)"}}>
+      <div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>SON DAKİKA</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>📰 AI Haberleri</div></div>
+          <button onClick={()=>setPage("haberler")} style={{fontSize:11,color:"#00dcff",background:"none",border:"1px solid rgba(0,220,255,0.2)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10}}>
+          {NEWS.slice(0,6).map((n,i)=>(
+            <Card key={i} color={n.color} style={{padding:"14px"}} onClick={()=>setPage("haberler")} className="card-hover">
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><Tag text={n.tag} color={n.color}/>{n.hot&&<Tag text="🔥" color="#ff6b6b" size={8}/>}</div>
+              <div style={{fontSize:19,marginBottom:7}}>{n.emoji}</div>
+              <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:4,lineHeight:1.4}}>{n.title}</div>
+              <div style={{fontSize:10,color:"#475569",lineHeight:1.6}}>{n.desc}</div>
+            </Card>
+          ))}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10}}>
-        {NEWS.slice(0,6).map((n,i)=>(
-          <Card key={i} color={n.color} style={{padding:"15px"}} onClick={()=>setPage("haberler")} className="card-hover">
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><Tag text={n.tag} color={n.color}/>{n.hot&&<Tag text="🔥" color="#ff6b6b" size={8}/>}</div>
-            <div style={{fontSize:20,marginBottom:7}}>{n.emoji}</div>
-            <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:5,lineHeight:1.4}}>{n.title}</div>
-            <div style={{fontSize:10,color:"#475569",lineHeight:1.6}}>{n.desc}</div>
-          </Card>
-        ))}
-      </div>
-    </div></section>
+    </section>
 
     {/* ═══ OYUNLAR ═══ */}
-    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.1)"}}><div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-        <div><div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:3}}>İNTERAKTİF</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🎮 Oyunlar & Araçlar</div></div>
-        <button onClick={()=>setPage("oyunlar")} style={{fontSize:11,color:"#f472b6",background:"none",border:"1px solid rgba(244,114,182,0.3)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+    <section style={{padding:"0 20px 40px"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:10}}>
+          <div><div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:3}}>İNTERAKTİF</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>🎮 Oyunlar & Araçlar</div></div>
+          <button onClick={()=>setPage("oyunlar")} style={{fontSize:11,color:"#f472b6",background:"none",border:"1px solid rgba(244,114,182,0.3)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
+          {[{id:"trivia",e:"🏆",t:"AI Trivia",d:"50+ soru",c:"#fb923c"},{id:"roulette",e:"🎡",t:"Roulette",d:"30sn yarış",c:"#a855f7"},{id:"dedektif",e:"🔍",t:"Dedektif",d:"Kim yazdı?",c:"#00dcff"},{id:"emoji",e:"😄",t:"Emoji",d:"AI bul",c:"#34d399"},{id:"cark",e:"🎰",t:"Şans Çarkı",d:"Çevir kazan",c:"#fbbf24"},{id:"iqtest",e:"🧠",t:"IQ Testi",d:"Paylaş",c:"#60a5fa"}].map(g=>(
+            <div key={g.id} onClick={()=>setPage(g.id)} className="card-3d" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:13,padding:"14px",cursor:"pointer",textAlign:"center"}}>
+              <div style={{fontSize:26,marginBottom:6}}>{g.e}</div>
+              <div style={{fontSize:12,fontWeight:700,color:g.c,marginBottom:3,fontFamily:"Space Grotesk,sans-serif"}}>{g.t}</div>
+              <div style={{fontSize:9,color:"#475569",marginBottom:8}}>{g.d}</div>
+              <div style={{fontSize:9,color:g.c}}>Başla →</div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))",gap:10}}>
-        {[{id:"trivia",e:"🏆",t:"AI Trivia",d:"50+ soru",c:"#fb923c"},{id:"roulette",e:"🎡",t:"Prompt Roulette",d:"30sn yarış",c:"#a855f7"},{id:"dedektif",e:"🔍",t:"Dedektif",d:"Kim yazdı?",c:"#00dcff"},{id:"emoji",e:"😄",t:"Emoji Tahmin",d:"AI bul",c:"#34d399"},{id:"iqtest",e:"🧠",t:"IQ Testi",d:"Paylaş",c:"#60a5fa"},{id:"puan",e:"💡",t:"Prompt Puanla",d:"Gemini AI",c:"#f472b6"}].map(g=>(
-          <div key={g.id} onClick={()=>setPage(g.id)} className="card-3d" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:14,padding:"16px",cursor:"pointer",position:"relative",overflow:"hidden"}}>
-            <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${g.c},transparent)`}}/>
-            <div style={{fontSize:28,marginBottom:6}}>{g.e}</div>
-            <div style={{fontSize:12,fontWeight:700,color:g.c,marginBottom:3,fontFamily:"'Space Grotesk',sans-serif"}}>{g.t}</div>
-            <div style={{fontSize:10,color:"#475569",marginBottom:10}}>{g.d}</div>
-            <div style={{fontSize:10,color:g.c,opacity:.7}}>Başla →</div>
-          </div>
-        ))}
-      </div>
-    </div></section>
+    </section>
 
-    {/* ═══ LEADERBOARD + ALARM ═══ */}
-    <section style={{padding:"0 20px 40px"}}><div style={{maxWidth:860,margin:"0 auto"}}>
-      <div style={{marginBottom:14}}><div style={{fontSize:9,letterSpacing:".2em",color:"#fb923c",marginBottom:3}}>🇹🇷</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>Türkiye AI Şehir Sıralaması</div></div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10,marginBottom:32}}>
-        {[{s:"İstanbul",p:100,c:"#00dcff",r:1,n:"2.1M"},{s:"Ankara",p:68,c:"#a855f7",r:2,n:"890K"},{s:"İzmir",p:52,c:"#34d399",r:3,n:"620K"},{s:"Bursa",p:38,c:"#fb923c",r:4,n:"410K"},{s:"Antalya",p:31,c:"#f472b6",r:5,n:"340K"},{s:"Adana",p:22,c:"#60a5fa",r:6,n:"230K"}].map(s=>(
-          <div key={s.s} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${s.c}15`,borderRadius:12,padding:"12px"}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-              <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                <div style={{width:22,height:22,borderRadius:"50%",background:`${s.c}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:s.c}}>{s.r}</div>
-                <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{s.s}</div>
+    {/* ═══ TÜRKİYE LEADERBOARD ═══ */}
+    <section style={{padding:"0 20px 40px",background:"rgba(0,0,0,0.08)"}}>
+      <div style={{maxWidth:860,margin:"0 auto",paddingTop:32}}>
+        <div style={{marginBottom:14}}><div style={{fontSize:9,letterSpacing:".2em",color:"#fb923c",marginBottom:3}}>🇹🇷</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>Türkiye AI Şehir Sıralaması</div></div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))",gap:9}}>
+          {[{s:"İstanbul",p:100,c:"#00dcff",r:1,n:"2.1M"},{s:"Ankara",p:68,c:"#a855f7",r:2,n:"890K"},{s:"İzmir",p:52,c:"#34d399",r:3,n:"620K"},{s:"Bursa",p:38,c:"#fb923c",r:4,n:"410K"},{s:"Antalya",p:31,c:"#f472b6",r:5,n:"340K"},{s:"Adana",p:22,c:"#60a5fa",r:6,n:"230K"}].map(s=>(
+            <div key={s.s} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${s.c}15`,borderRadius:11,padding:"12px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+                <div style={{display:"flex",gap:7,alignItems:"center"}}><div style={{width:20,height:20,borderRadius:"50%",background:`${s.c}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:s.c}}>{s.r}</div><div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{s.s}</div></div>
+                <div style={{fontSize:10,color:s.c,fontWeight:700}}>{s.n}</div>
               </div>
-              <div style={{fontSize:10,color:s.c,fontWeight:700}}>{s.n}</div>
+              <div style={{height:3,background:"rgba(255,255,255,0.05)",borderRadius:2}}><div style={{width:`${s.p}%`,height:"100%",background:s.c,borderRadius:2}}/></div>
             </div>
-            <div style={{height:3,background:"rgba(255,255,255,0.05)",borderRadius:2}}><div style={{width:`${s.p}%`,height:"100%",background:s.c,borderRadius:2}}/></div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-      <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.04))",border:"1px solid rgba(0,220,255,0.18)",borderRadius:18,padding:"24px",textAlign:"center"}}>
-        <div style={{fontSize:26,marginBottom:8}}>🔔</div>
-        <div style={{fontSize:15,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>AI Alarm</div>
-        <div style={{fontSize:12,color:"#64748b",marginBottom:16}}>Yeni model, fiyat değişimi — anında haber al!</div>
-        {sent?<div style={{fontSize:13,color:"#34d399",fontWeight:700}}>✅ Kaydedildin!</div>:<div style={{display:"flex",gap:8,maxWidth:380,margin:"0 auto",flexWrap:"wrap",justifyContent:"center"}}>
-          <input style={{flex:1,minWidth:180,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,color:"#e2e8f0",padding:"10px 14px",fontSize:13,fontFamily:"inherit",outline:"none"}} placeholder="E-posta..." value={email} onChange={e=>setEmail(e.target.value)}/>
-          <button onClick={()=>{if(email.includes("@"))setSent(true);}} className="btn-primary" style={{padding:"10px 20px",fontSize:13,borderRadius:10,fontFamily:"inherit"}}>🔔 Alarm</button>
-        </div>}
-      </div>
-    </div></section>
+    </section>
 
-    {/* ═══ TRENDING ═══ */}
-    <section style={{padding:"0 20px 48px",background:"rgba(0,0,0,0.08)"}}><div style={{maxWidth:900,margin:"0 auto",paddingTop:32}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <div><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>BU HAFTA</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🔥 Trending AI</div></div>
-        <Tag text="● Canlı" color="#00dcff"/>
+    {/* ═══ AI ALARM + TRENDING ═══ */}
+    <section style={{padding:"0 20px 48px"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.04))",border:"1px solid rgba(0,220,255,0.18)",borderRadius:16,padding:"22px",textAlign:"center",marginBottom:24}}>
+          <div style={{fontSize:24,marginBottom:8}}>🔔</div>
+          <div style={{fontSize:15,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginBottom:6}}>AI Alarm</div>
+          <div style={{fontSize:11,color:"#64748b",marginBottom:14}}>Yeni model, fiyat değişimi — anında haber al!</div>
+          {sent?<div style={{fontSize:13,color:"#34d399",fontWeight:700}}>✅ Kaydedildin!</div>:<div style={{display:"flex",gap:8,maxWidth:360,margin:"0 auto",flexWrap:"wrap",justifyContent:"center"}}>
+            <input style={{flex:1,minWidth:170,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:9,color:"#e2e8f0",padding:"9px 12px",fontSize:12,fontFamily:"inherit",outline:"none"}} placeholder="E-posta..." value={email} onChange={e=>setEmail(e.target.value)}/>
+            <button onClick={()=>{if(email.includes("@"))setSent(true);}} className="btn-primary" style={{padding:"9px 18px",fontSize:12,borderRadius:9,fontFamily:"inherit"}}>🔔 Alarm</button>
+          </div>}
+        </div>
+        <div style={{marginBottom:14}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:3}}>BU HAFTA</div><div style={{fontSize:18,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>🔥 Trending AI</div></div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:9}}>
+          {TRENDING.map(t=>(
+            <Card key={t.rank} color="#00dcff" style={{padding:"12px 14px",display:"flex",gap:10,alignItems:"center"}} className="card-hover">
+              <div style={{width:32,height:32,borderRadius:8,background:"rgba(0,220,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{t.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><div style={{fontSize:11,fontWeight:700,color:"#e2e8f0"}}>{t.topic}</div><Tag text={t.tag} color="#00dcff" size={7}/></div>
+                <div style={{fontSize:9,color:"#475569",lineHeight:1.5,marginBottom:4}}>{t.desc}</div>
+                <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2}}><div style={{width:`${t.heat}%`,height:"100%",background:"linear-gradient(90deg,#00dcff,#a855f7)",borderRadius:2}}/></div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-        {TRENDING.map(t=>(
-          <Card key={t.rank} color="#00dcff" style={{padding:"13px 15px",display:"flex",gap:12,alignItems:"center"}} className="card-hover">
-            <div style={{width:34,height:34,borderRadius:9,background:"rgba(0,220,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{t.icon}</div>
-            <div style={{flex:1}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{t.topic}</div><Tag text={t.tag} color="#00dcff" size={7}/></div>
-              <div style={{fontSize:10,color:"#475569",lineHeight:1.5,marginBottom:5}}>{t.desc}</div>
-              <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2}}><div style={{width:`${t.heat}%`,height:"100%",background:"linear-gradient(90deg,#00dcff,#a855f7)",borderRadius:2}}/></div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div></section>
+    </section>
   </div>;
 }
+
 
 function BlogPage({setPage}){
   return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
@@ -3461,18 +3485,21 @@ const ACTIVITY_DATA=[
   "Malatya'dan biri 3 rozet kazandı 🥇","Erzurum'dan biri AI Alarm kurdu 🔔",
 ];
 function ActivityFeed(){
-  const[items,setItems]=useState(ACTIVITY_DATA.slice(0,4));
-  const[idx,setIdx]=useState(4);
+  const[items,setItems]=useState(ACTIVITY_DATA.slice(0,1));
+  const[idx,setIdx]=useState(1);
+  const[visible,setVisible]=useState(true);
   useEffect(()=>{
     const id=setInterval(()=>{
-      setItems(prev=>{const next=ACTIVITY_DATA[idx%ACTIVITY_DATA.length];setIdx(i=>i+1);return[next,...prev.slice(0,3)];});
-    },3500);
+      setItems([ACTIVITY_DATA[idx%ACTIVITY_DATA.length]]);
+      setIdx(i=>i+1);
+    },4000);
     return()=>clearInterval(id);
   },[idx]);
-  return <div style={{position:"fixed",left:12,top:"50%",transform:"translateY(-50%)",zIndex:90,display:"flex",flexDirection:"column",gap:6,width:200,pointerEvents:"none"}}>
+  if(!visible)return null;
+  return <div style={{position:"fixed",bottom:180,right:16,zIndex:100,maxWidth:220,pointerEvents:"none"}}>
     {items.map((item,i)=>(
-      <div key={i} style={{background:"rgba(6,10,20,0.85)",border:"1px solid rgba(0,220,255,0.1)",borderRadius:8,padding:"6px 10px",fontSize:9,color:`rgba(148,163,184,${1-i*0.2})`,lineHeight:1.4,backdropFilter:"blur(8px)",animation:i===0?"fadeIn .4s ease":"none",transform:`scale(${1-i*0.02})`}}>
-        <span style={{color:"#00dcff"}}>●</span> {item}
+      <div key={i} style={{background:"rgba(6,10,20,0.92)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:10,padding:"8px 12px",fontSize:9,color:"rgba(148,163,184,0.9)",lineHeight:1.5,backdropFilter:"blur(8px)",animation:"fadeIn .4s ease",boxShadow:"0 4px 16px rgba(0,0,0,0.4)"}}>
+        <span style={{color:"#00dcff",marginRight:4}}>●</span>{item}
       </div>
     ))}
   </div>;
@@ -4495,6 +4522,12 @@ export default function App(){
   if(page==="deepseek"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><DeepSeekPage setPage={nav}/></Wrapper>;}
   if(page==="mistral"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><MistralPage setPage={nav}/></Wrapper>;}
   if(page==="llama"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><LlamaPage setPage={nav}/></Wrapper>;}
+  if(page==="dashboard"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><DashboardPage setPage={nav}/></Wrapper>;}
+  if(page==="kisilik"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><KisilikPage setPage={nav}/></Wrapper>;}
+  if(page==="grok"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><GrokPage setPage={nav}/></Wrapper>;}
+  if(page==="deepseek"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><DeepSeekPage setPage={nav}/></Wrapper>;}
+  if(page==="mistral"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><MistralPage setPage={nav}/></Wrapper>;}
+  if(page==="llama"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><LlamaPage setPage={nav}/></Wrapper>;}
 
   return <Wrapper nav={nav} page={page} user={user} setUser={setUser} cookie={cookie} setCookie={setCookie}>
     <ActivityFeed/>
@@ -4524,45 +4557,6 @@ export default function App(){
     {page==="gorev"         &&<div style={{padding:"28px 20px",textAlign:"center"}}><DailyMissionsWidget setPage={nav}/><div style={{fontSize:14,color:"#64748b",marginTop:60}}>Görev widget'ı sağ alt köşede! 📋</div></div>}
     {page==="dashboard"     &&<DashboardPage setPage={nav}/>}
     {page==="kisilik"       &&<KisilikPage setPage={nav}/>}
-    {page==="topluluk"      &&<ToplulukPage/>}
-    {page==="kariyer"       &&<KariyerPage/>}
-    {page==="mitler"        &&<MitlerPage/>}
-    {page==="zaman"         &&<ZamanHesapPage/>}
-    {page==="para"          &&<ParaPage/>}
-    {page==="iqtest"        &&<IQTestPage/>}
-    {page==="puan"          &&<PromptScorerPage/>}
-    {page==="oneri"         &&<KisiselOneriPage setPage={nav}/>}
-    {page==="aistatus"      &&<AIStatusPage/>}
-    {page==="hakkimizda"    &&<HakkimizdaPage/>}
-    {page==="iletisim"      &&<IletisimPage/>}
-    {page==="gizlilik"      &&<GizlilikPage/>}
-    {page==="pro"           &&<ProPage/>}
-  </Wrapper>;
-}const id=page.replace("blog-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><BlogPostPage postId={id} setPage={nav}/></Wrapper>;}
-  if(page.startsWith("tool-")){const key=page.replace("tool-","");return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ToolDetailPage toolKey={key} setPage={nav}/></Wrapper>;}
-  if(page==="claude"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ClaudePage setPage={nav}/></Wrapper>;}
-  if(page==="chatgpt"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><ChatGPTPage setPage={nav}/></Wrapper>;}
-  if(page==="gemini"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><GeminiPage setPage={nav}/></Wrapper>;}
-
-  return <Wrapper nav={nav} page={page} user={user} setUser={setUser} cookie={cookie} setCookie={setCookie}>
-    {page==="home"          &&<HomePage setPage={nav} user={user} setUser={setUser}/>}
-    {page==="haberler"      &&<HaberlerPage setPage={nav}/>}
-    {page==="blog"          &&<BlogPage setPage={nav}/>}
-    {page==="ogrenme"       &&<OgrenmePage setPage={nav}/>}
-    {page==="prompt"        &&<PromptPage/>}
-    {page==="karsilastirma" &&<KarsilastirmaPage/>}
-    {page==="sozluk"        &&<SozlukPage/>}
-    {page==="dizin"         &&<DizinPage setPage={nav}/>}
-    {page==="tools"         &&<ToolsPage/>}
-    {page==="galeri"        &&<GaleriPage/>}
-    {page==="quiz"          &&<QuizPage/>}
-    {page==="oyun"          &&<OyunPage/>}
-    {page==="oyunlar"       &&<OyunlarPage setPage={nav}/>}
-    {page==="trivia"        &&<TriviaMarathon/>}
-    {page==="roulette"      &&<PromptRoulette/>}
-    {page==="emoji"         &&<EmojiGuess/>}
-    {page==="dedektif"      &&<ModelDedektifPage/>}
-    {page==="kariyer_sim"   &&<KariyerSimPage/>}
     {page==="topluluk"      &&<ToplulukPage/>}
     {page==="kariyer"       &&<KariyerPage/>}
     {page==="mitler"        &&<MitlerPage/>}
@@ -4940,6 +4934,12 @@ function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
   useBadges(page);
   useParallax();
   useSesliKarsilama();
+  // Close dropdown when clicking outside
+  useEffect(()=>{
+    const h=e=>{if(!e.target.closest('[data-nav]'))setOpenMenu(null);};
+    document.addEventListener('click',h);
+    return()=>document.removeEventListener('click',h);
+  },[]);
   return <div style={{minHeight:"100vh",background:"#060a14",color:"#e2e8f0",fontFamily:"'Inter',system-ui,sans-serif"}}>
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
@@ -4976,7 +4976,7 @@ function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
     </div>}
     <Ticker/>
     {/* ═══ DROPDOWN NAVBAR ═══ */}
-    <nav style={{position:"sticky",top:0,zIndex:200,background:"rgba(6,10,20,0.8)",borderBottom:"1px solid rgba(0,220,255,0.1)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",boxShadow:"0 4px 32px rgba(0,0,0,0.4)"}}>
+    <nav style={{position:"sticky",top:0,zIndex:200,background:"rgba(6,10,20,0.8)",borderBottom:"1px solid rgba(0,220,255,0.1)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",boxShadow:"0 4px 32px rgba(0,0,0,0.4)"}} data-nav="true">
       <div style={{display:"flex",alignItems:"center",gap:4,padding:"8px 16px",overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
         {/* Logo */}
         <div onClick={()=>{nav("home");setOpenMenu(null);}} style={{cursor:"pointer",display:"flex",alignItems:"center",gap:8,flexShrink:0,marginRight:8}}>
@@ -4992,13 +4992,13 @@ function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
         {NAV_GROUPS.map(g=>{
           if(!g.sub){return <button key={g.id} onClick={()=>{nav(g.id);setOpenMenu(null);}} style={{padding:"6px 10px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:7,background:page===g.id?"rgba(0,220,255,0.12)":"transparent",color:page===g.id?"#00dcff":"#475569",whiteSpace:"nowrap",flexShrink:0,fontWeight:page===g.id?700:400,borderBottom:page===g.id?"2px solid rgba(0,220,255,0.5)":"2px solid transparent"}}>{g.label}</button>;}
           const isOpen=openMenu===g.id;
-          return <div key={g.id} style={{position:"relative",flexShrink:0}} onMouseEnter={()=>setOpenMenu(g.id)} onMouseLeave={()=>setOpenMenu(null)}>
-            <button style={{padding:"6px 10px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:7,background:isOpen?"rgba(0,220,255,0.08)":"transparent",color:isOpen?"#00dcff":"#64748b",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,fontWeight:isOpen?600:400}}>
-              {g.label}<span style={{fontSize:8,opacity:.6}}>{isOpen?"▲":"▼"}</span>
+          return <div key={g.id} style={{position:"relative",flexShrink:0}}>
+            <button onClick={()=>setOpenMenu(openMenu===g.id?null:g.id)} style={{padding:"6px 10px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:7,background:openMenu===g.id?"rgba(0,220,255,0.12)":"transparent",color:openMenu===g.id?"#00dcff":"#64748b",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,fontWeight:openMenu===g.id?600:400}}>
+              {g.label}<span style={{fontSize:8,opacity:.6}}>{openMenu===g.id?"▲":"▼"}</span>
             </button>
-            {isOpen&&<div style={{position:"absolute",top:"100%",left:0,background:"rgba(6,10,24,0.98)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:12,padding:"8px",minWidth:200,backdropFilter:"blur(20px)",boxShadow:"0 16px 48px rgba(0,0,0,0.8)",zIndex:300,animation:"fadeIn .15s ease"}}>
-              {g.sub.map(s=><div key={s.id} onClick={()=>{nav(s.id);setOpenMenu(null);}} style={{padding:"9px 12px",borderRadius:9,cursor:"pointer",display:"flex",gap:10,alignItems:"flex-start",transition:"background .15s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(0,220,255,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                <span style={{fontSize:16,flexShrink:0}}>{s.icon}</span>
+            {openMenu===g.id&&<div style={{position:"absolute",top:"100%",left:0,background:"rgba(6,10,24,0.99)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:14,padding:"8px",minWidth:220,backdropFilter:"blur(24px)",boxShadow:"0 20px 60px rgba(0,0,0,0.9)",zIndex:500,animation:"fadeIn .15s ease"}}>
+              {g.sub.map(s=><div key={s.id} onClick={()=>{nav(s.id);setOpenMenu(null);}} style={{padding:"10px 14px",borderRadius:10,cursor:"pointer",display:"flex",gap:12,alignItems:"flex-start",marginBottom:2}} onMouseEnter={e=>e.currentTarget.style.background="rgba(0,220,255,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <span style={{fontSize:18,flexShrink:0,width:24,textAlign:"center"}}>{s.icon}</span>
                 <div><div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{s.label}</div>{s.desc&&<div style={{fontSize:10,color:"#475569",marginTop:1}}>{s.desc}</div>}</div>
               </div>)}
             </div>}
