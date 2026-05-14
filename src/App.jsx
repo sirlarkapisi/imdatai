@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Component } from "react";
 
 // ── CHATBOT — Gemini API ──────────────────────────────────
 const WORKER_URL = "https://imdatai-gemini.imdatuysal.workers.dev"; // Worker kurulunca bu URL aktif olur
@@ -717,7 +717,7 @@ function PBg(){
 // ══════════════════════════════════════════════════════════
 const Sound = {
   ctx: null,
-  init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();},
+  init(){try{if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}},
   play(freq,dur=0.15,type="sine",vol=0.3){
     try{this.init();const o=this.ctx.createOscillator();const g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);o.frequency.value=freq;o.type=type;g.gain.setValueAtTime(vol,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+dur);o.start();o.stop(this.ctx.currentTime+dur);}catch(e){}
   },
@@ -3862,7 +3862,7 @@ const ANIMS=[
   {id:"clock",t:"🕐 Sanat Saati",d:"Canlı analog",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cx=c.width/2,cy=c.height/2,rad=Math.min(c.width,c.height)/2-20;const iv=setInterval(()=>{const now=new Date();ctx.fillStyle="#030609";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#00dcff";ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor="#00dcff";ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const x1=cx+(rad-8)*Math.cos(a-Math.PI/2),y1=cy+(rad-8)*Math.sin(a-Math.PI/2),x2=cx+(rad-18)*Math.cos(a-Math.PI/2),y2=cy+(rad-18)*Math.sin(a-Math.PI/2);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}[[now.getHours()%12/12,"#a855f7",rad*.5,4],[now.getMinutes()/60,"#00dcff",rad*.7,2],[now.getSeconds()/60,"#ff4466",rad*.85,1]].forEach(([frac,col,len,lw])=>{const a=frac*Math.PI*2-Math.PI/2;ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+len*Math.cos(a),cy+len*Math.sin(a));ctx.stroke();});},1000);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
 ];
 
-class ErrorBoundary extends React.Component{
+class ErrorBoundary extends Component{
   constructor(props){super(props);this.state={err:false};}
   static getDerivedStateFromError(){return{err:true};}
   componentDidCatch(){}
