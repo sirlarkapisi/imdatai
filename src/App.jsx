@@ -3,55 +3,6 @@ import { useState, useEffect, useRef } from "react";
 // ── CHATBOT — Gemini API ──────────────────────────────────
 const WORKER_URL = "https://imdatai-gemini.imdatuysal.workers.dev"; // Worker kurulunca bu URL aktif olur
 
-function SocialMediaSection(){
-  const vids=[
-    {label:"🎬 Shorts",src:"https://www.youtube.com/embed/5UgwO4rbfNM?mute=1&rel=0",href:"https://youtube.com/shorts/5UgwO4rbfNM",color:"#ff4444"},
-    {label:"🎵 TikTok",src:"https://www.tiktok.com/embed/v2/ZS9oTcvee",href:"https://vt.tiktok.com/ZS9oTcvee/",color:"#00f2ea"},
-    {label:"📸 Reel",src:"https://www.instagram.com/p/DX8i6_wtPxf/embed/",href:"https://www.instagram.com/reel/DX8i6_wtPxf/",color:"#e1306c"},
-  ];
-  return <section style={{padding:"0 20px 48px",background:"rgba(0,0,0,0.12)"}}>
-    <div style={{maxWidth:960,margin:"0 auto",paddingTop:36}}>
-      <div style={{textAlign:"center",marginBottom:22}}>
-        <div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:5}}>SOSYAL MEDYA</div>
-        <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginBottom:10}}>📱 IMDATAI'yı Takip Et</div>
-        <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
-          {[["🎬","YouTube","https://youtube.com/@imdatai","#ff4444","Abone Ol"],["🎵","TikTok","https://tiktok.com/@imdatai","#00f2ea","Takip Et"],["📸","Instagram","https://instagram.com/imdatai","#e1306c","Takip Et"]].map(([e,n,url,c,cta])=>(
-            <a key={n} href={url} target="_blank" rel="noopener noreferrer" style={{display:"flex",gap:8,alignItems:"center",background:c+"15",border:"1px solid "+c+"40",borderRadius:10,padding:"8px 14px",textDecoration:"none"}}>
-              <span style={{fontSize:18}}>{e}</span><span style={{fontSize:12,fontWeight:700,color:c}}>{n}</span>
-              <div style={{background:c,color:"#fff",fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:6}}>{cta}</div>
-            </a>
-          ))}
-        </div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:20,alignItems:"start"}}>
-        <div>
-          <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:10}}>
-            <span>🎬</span><div style={{fontSize:12,fontWeight:700,color:"#ff4444"}}>YouTube · 16:9</div>
-            <a href="https://youtube.com/@imdatai" target="_blank" rel="noopener noreferrer" style={{marginLeft:"auto",fontSize:9,color:"#ff4444",textDecoration:"none",border:"1px solid rgba(255,68,68,0.3)",borderRadius:6,padding:"3px 8px"}}>Kanal →</a>
-          </div>
-          <div style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(255,68,68,0.2)"}}>
-            <div style={{paddingTop:"56.25%",position:"relative"}}>
-              <iframe src="https://www.youtube.com/embed/ZKOKP9jfAMg?mute=1&rel=0&modestbranding=1" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}} allow="accelerometer;autoplay;encrypted-media" allowFullScreen title="YT"/>
-            </div>
-          </div>
-          <a href="https://youtu.be/ZKOKP9jfAMg" target="_blank" rel="noopener noreferrer" style={{display:"block",marginTop:6,padding:"6px",background:"rgba(255,68,68,0.08)",border:"1px solid rgba(255,68,68,0.15)",borderRadius:8,fontSize:10,color:"#ff4444",textDecoration:"none",textAlign:"center",fontWeight:600}}>▶ YouTube'da İzle →</a>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-          {vids.map(v=><div key={v.label}>
-            <div style={{fontSize:9,fontWeight:700,color:v.color,marginBottom:6,textAlign:"center"}}>{v.label}</div>
-            <div style={{borderRadius:10,overflow:"hidden",border:"1px solid "+v.color+"33"}}>
-              <div style={{paddingTop:"177.78%",position:"relative"}}>
-                <iframe src={v.src} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}} allowFullScreen title={v.label}/>
-              </div>
-            </div>
-            <a href={v.href} target="_blank" rel="noopener noreferrer" style={{display:"block",marginTop:5,padding:"4px",background:v.color+"12",border:"1px solid "+v.color+"25",borderRadius:7,fontSize:9,color:v.color,textDecoration:"none",textAlign:"center",fontWeight:600}}>İzle →</a>
-          </div>)}
-        </div>
-      </div>
-    </div>
-  </section>;
-}
-
 async function askGemini(msg, history=[]){
   try {
     const r = await fetch(`${WORKER_URL}/chat`, {
@@ -71,174 +22,109 @@ async function askGemini(msg, history=[]){
   }
 }
 
+function SocialMediaSection(){
+  const VIDS=[
+    {title:"ChatGPT vs Claude vs Gemini 2026",cat:"Karşılaştırma",thumb:"https://img.youtube.com/vi/ZKOKP9jfAMg/mqdefault.jpg",url:"https://youtu.be/ZKOKP9jfAMg",dur:"18:42",color:"#ff4444",platform:"YouTube"},
+    {title:"AI ile 30sn'de Profesyonel Email",cat:"Shorts",thumb:"https://img.youtube.com/vi/5UgwO4rbfNM/mqdefault.jpg",url:"https://youtube.com/shorts/5UgwO4rbfNM",dur:"0:45",color:"#ff4444",platform:"YouTube Shorts"},
+    {title:"Claude ile İçerik Üretimi",cat:"TikTok Video",url:"https://vt.tiktok.com/ZS9oTcvee/",dur:"1:12",color:"#00f2ea",platform:"TikTok",emoji:"🎵"},
+    {title:"2026 AI Araçları İnfografiği",cat:"Instagram Reel",url:"https://www.instagram.com/reel/DX8i6_wtPxf/",dur:"Reel",color:"#e1306c",platform:"Instagram",emoji:"📸"},
+  ];
+  return <section style={{padding:"0 20px 48px",background:"rgba(0,0,0,0.1)"}}>
+    <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:12}}>
+        <div><div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:4}}>SOSYAL MEDYA</div><div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>📱 IMDATAI Kanallarımız</div></div>
+        <div style={{display:"flex",gap:8}}>
+          {[["🎬","https://youtube.com/@imdatai","#ff4444"],["🎵","https://tiktok.com/@imdatai","#00f2ea"],["📸","https://instagram.com/imdatai","#e1306c"]].map(([e,u,c])=>(
+            <a key={e} href={u} target="_blank" rel="noopener noreferrer" style={{width:36,height:36,borderRadius:9,background:c+"20",border:"1px solid "+c+"40",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,textDecoration:"none"}}>{e}</a>
+          ))}
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14}}>
+        {VIDS.map((v,i)=>(
+          <a key={i} href={v.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none",display:"block",borderRadius:12,overflow:"hidden",border:"1px solid "+v.color+"25",background:"rgba(0,0,0,0.3)",transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=v.color+"60";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=v.color+"25";}}>
+            {v.thumb
+              ?<div style={{position:"relative",paddingTop:"56.25%",background:"rgba(0,0,0,0.4)"}}>
+                <img src={v.thumb} alt={v.title} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";e.target.parentElement.innerHTML+='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;color:rgba(255,68,68,0.8)">▶</div>';}}/>
+                <div style={{position:"absolute",bottom:6,right:6,background:"rgba(0,0,0,0.85)",color:"#fff",fontSize:9,padding:"2px 5px",borderRadius:3,fontFamily:"monospace"}}>{v.dur}</div>
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.15)"}}>
+                  <div style={{width:40,height:40,background:"rgba(255,0,0,0.85)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>▶</div>
+                </div>
+              </div>
+              :<div style={{height:130,background:"linear-gradient(135deg,"+v.color+"25,rgba(0,0,0,0.4))",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8}}>
+                <span style={{fontSize:40}}>{v.emoji}</span>
+                <span style={{fontSize:10,color:v.color,fontWeight:700}}>{v.platform}</span>
+              </div>}
+            <div style={{padding:"10px 12px"}}>
+              <div style={{fontSize:11,fontWeight:600,color:"#e2e8f0",lineHeight:1.4,marginBottom:5}}>{v.title}</div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <span style={{fontSize:8,color:v.color,background:v.color+"12",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{v.platform}</span>
+                <span style={{fontSize:8,color:"#475569"}}>→ İzle</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>;
+}
+
 function Chatbot(){
   const[open,setOpen]=useState(false);
-  const[msgs,setMsgs]=useState([{role:"ai",text:"Merhaba! Ben IMDATAI AI Asistanı 🤖\nSana yapay zeka, Claude, ChatGPT ve Türkiye AI ekosistemi hakkında yardımcı olabilirim. Ne sormak istersin?"}]);
+  const[msgs,setMsgs]=useState([{role:"ai",text:"Merhaba! 👋 Ben IMDATAI Asistanı. ChatGPT, Claude, Gemini veya prompt teknikleri hakkında sorularını yanıtlarım!"}]);
   const[inp,setInp]=useState("");const[load,setLoad]=useState(false);
-  const[cnt,setCnt]=useState(0);const[blink,setBlink]=useState(false);
-  const endRef=useRef();const LIMIT=20;
+  const[cnt,setCnt]=useState(0);const endRef=useRef();
+  const LIMIT=20;
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,load]);
-
-  // Göz kırpma efekti
-  useEffect(()=>{
-    const iv=setInterval(()=>{setBlink(true);setTimeout(()=>setBlink(false),150);},3000+Math.random()*2000);
-    return()=>clearInterval(iv);
-  },[]);
-
   async function send(){
     if(!inp.trim()||load||cnt>=LIMIT)return;
     const m=inp.trim();setInp("");setCnt(c=>c+1);
-    setMsgs(p=>[...p,{role:"user",text:m}]);
+    const history=msgs.slice(-8).map(m=>({role:m.role==="ai"?"model":"user",content:m.text}));
+    setMsgs(h=>[...h,{role:"user",text:m}]);
     setLoad(true);
-    try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,
-          system:"Sen IMDATAI'nın Türkçe AI asistanısın. Türkiye'nin yapay zeka platformu IMDATAI hakkında bilgi ver. Claude, ChatGPT, Gemini gibi modeller, AI araçları, prompt mühendisliği ve Türkiye AI ekosistemi konularında yardımcı ol. Kısa, net ve samimi yanıtlar ver. Maksimum 3-4 cümle.",
-          messages:[...msgs.filter(x=>x.role!=="system").slice(-6).map(x=>({role:x.role==="ai"?"assistant":"user",content:x.text})),{role:"user",content:m}]})
-      });
-      const d=await res.json();
-      const txt=d.content?.[0]?.text||"Üzgünüm, şu an yanıt veremiyorum.";
-      setMsgs(p=>[...p,{role:"ai",text:txt}]);
-    }catch(e){setMsgs(p=>[...p,{role:"ai",text:"Bağlantı hatası. Lütfen tekrar dene."}]);}
+    const r=await askGemini(m,history);
+    setMsgs(h=>[...h,{role:"ai",text:r}]);
     setLoad(false);
   }
-
-  // AI Yüzü — SVG tabanlı
-  const AIFace=({size=48,talking=false})=>(
-    <div style={{width:size,height:size,position:"relative",flexShrink:0}}>
-      {/* Glow halkası */}
-      <div style={{position:"absolute",inset:-4,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,220,255,0.3),transparent 70%)",animation:"glow 2s ease-in-out infinite"}}/>
-      {/* Dönen dış halka */}
-      <div style={{position:"absolute",inset:-2,borderRadius:"50%",border:"1.5px solid rgba(0,220,255,0.4)",animation:"spin 6s linear infinite"}}/>
-      {/* Ana yüz */}
-      <div style={{width:"100%",height:"100%",borderRadius:"50%",
-        background:"linear-gradient(135deg,#0d1f35,#0a1628)",
-        border:"2px solid rgba(0,220,255,0.6)",
-        display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-        gap:size>40?4:2,boxShadow:"0 0 16px rgba(0,220,255,0.3),inset 0 0 12px rgba(0,220,255,0.05)",
-        position:"relative",overflow:"hidden"}}>
-        {/* Tarama çizgisi */}
-        <div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(0,220,255,0.5)",animation:"scanLine 2.5s linear infinite"}}/>
-        {/* Gözler */}
-        <div style={{display:"flex",gap:size>40?10:6,alignItems:"center"}}>
-          {[0,1].map(i=>(
-            <div key={i} style={{width:size>40?9:6,height:blink?1:size>40?9:6,borderRadius:"50%",
-              background:"#00dcff",boxShadow:"0 0 8px #00dcff, 0 0 14px rgba(0,220,255,0.5)",
-              transition:"height .08s ease",marginTop:blink?size>40?4:3:0}}/>
-          ))}
-        </div>
-        {/* Ağız / ses dalgası */}
-        <div style={{display:"flex",gap:size>40?2:1,alignItems:"center",height:size>40?10:7}}>
-          {Array.from({length:5},(_,i)=>(
-            <div key={i} style={{width:size>40?2:1.5,borderRadius:2,
-              background:"rgba(0,220,255,0.7)",
-              height:talking||load
-                ?size>40?`${4+Math.sin(Date.now()/200+i)*6}px`:`${3+i%3*2}px`
-                :`${size>40?[3,6,9,6,3][i]:[2,4,6,4,2][i]}px`,
-              animation:talking||load?`voiceWave ${0.4+i*0.1}s ease-in-out infinite alternate`:"none",
-              transition:"height .1s ease"}}/>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  if(!open)return(
-    <button onClick={()=>setOpen(true)}
-      style={{position:"fixed",bottom:24,right:16,zIndex:9000,padding:0,border:"none",
-        background:"transparent",cursor:"pointer",animation:"float 3s ease-in-out infinite"}}>
-      <AIFace size={54}/>
-      {/* Bildirim balonu */}
-      <div style={{position:"absolute",top:-10,left:-30,background:"rgba(4,8,20,0.95)",
-        border:"1px solid rgba(0,220,255,0.3)",borderRadius:8,padding:"4px 8px",
-        fontSize:8,color:"#00dcff",whiteSpace:"nowrap",fontFamily:"monospace",
-        animation:"fadeIn .5s ease",boxShadow:"0 2px 12px rgba(0,220,255,0.15)"}}>
-        💬 Yardım lazım mı?
-      </div>
+  return <>
+    <button onClick={()=>setOpen(o=>!o)} style={{position:"fixed",bottom:28,right:24,zIndex:500,width:58,height:58,borderRadius:"50%",border:"2px solid rgba(0,220,255,0.3)",background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:26,cursor:"pointer",boxShadow:"0 4px 24px rgba(0,220,255,0.5)",display:"flex",alignItems:"center",justifyContent:"center",animation:"glow 3s ease-in-out infinite"}}>
+      {open?"✕":"🤖"}
     </button>
-  );
-
-  return(
-    <div style={{position:"fixed",bottom:20,right:12,zIndex:9000,width:"min(340px,92vw)",
-      display:"flex",flexDirection:"column",
-      background:"rgba(4,8,20,0.97)",border:"1px solid rgba(0,220,255,0.25)",borderRadius:16,
-      boxShadow:"0 8px 40px rgba(0,0,0,0.8),0 0 30px rgba(0,220,255,0.08)",
-      backdropFilter:"blur(20px)",overflow:"hidden"}}>
-
-      {/* Header — AI yüzü + başlık */}
-      <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.08),rgba(168,85,247,0.05))",
-        borderBottom:"1px solid rgba(0,220,255,0.12)",padding:"12px 14px",
-        display:"flex",gap:10,alignItems:"center"}}>
-        <AIFace size={42} talking={load}/>
-        <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:700,color:"#00dcff",fontFamily:"'Space Grotesk',sans-serif"}}>IMDATAI AI</div>
-          <div style={{display:"flex",gap:6,alignItems:"center"}}>
-            <div style={{width:6,height:6,borderRadius:"50%",background:load?"#fbbf24":"#34d399",
-              animation:load?"blink .5s infinite":"none"}}/>
-            <span style={{fontSize:9,color:"#475569"}}>{load?"Yazıyor...":"Çevrimiçi · Türkçe AI Asistan"}</span>
+    {open&&<div style={{position:"fixed",bottom:100,right:24,zIndex:500,width:320,background:"rgba(8,12,24,0.98)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:20,boxShadow:"0 16px 64px rgba(0,0,0,0.8)",overflow:"hidden",display:"flex",flexDirection:"column",backdropFilter:"blur(20px)"}}>
+      <div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.12),rgba(168,85,247,0.08))",padding:"14px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <span style={{fontSize:18}}>🤖</span>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>IMDATAI Asistanı</div>
+            <div style={{fontSize:9,color:"#34d399"}}>● Gemini ile güçlendirildi</div>
           </div>
         </div>
-        <button onClick={()=>setOpen(false)}
-          style={{background:"none",border:"none",color:"#475569",fontSize:18,cursor:"pointer",
-            lineHeight:1,padding:"2px 4px"}}>✕</button>
+        <div style={{fontSize:10,background:cnt>=LIMIT?"rgba(244,114,182,0.15)":"rgba(52,211,153,0.15)",color:cnt>=LIMIT?"#f472b6":"#34d399",padding:"3px 8px",borderRadius:6}}>{LIMIT-cnt} soru kaldı</div>
       </div>
-
-      {/* Mesajlar */}
-      <div style={{flex:1,overflowY:"auto",padding:"12px",display:"flex",flexDirection:"column",gap:8,maxHeight:300}}>
+      <div style={{height:260,overflowY:"auto",padding:"12px",display:"flex",flexDirection:"column",gap:8}}>
         {msgs.map((m,i)=>(
-          <div key={i} style={{display:"flex",gap:6,alignItems:"flex-start",
-            flexDirection:m.role==="ai"?"row":"row-reverse"}}>
-            {m.role==="ai"&&<AIFace size={24}/>}
-            <div style={{maxWidth:"80%",padding:"8px 11px",borderRadius:m.role==="ai"?"4px 12px 12px 12px":"12px 4px 12px 12px",
-              background:m.role==="ai"?"rgba(0,220,255,0.06)":"rgba(168,85,247,0.12)",
-              border:`1px solid ${m.role==="ai"?"rgba(0,220,255,0.15)":"rgba(168,85,247,0.2)"}`,
-              fontSize:11,color:"#cbd5e1",lineHeight:1.6,whiteSpace:"pre-wrap"}}>
-              {m.text}
-            </div>
+          <div key={i} style={{padding:"10px 13px",borderRadius:13,fontSize:12,lineHeight:1.65,maxWidth:"88%",wordBreak:"break-word",alignSelf:m.role==="user"?"flex-end":"flex-start",background:m.role==="user"?"linear-gradient(135deg,rgba(0,220,255,0.15),rgba(168,85,247,0.1))":"rgba(255,255,255,0.05)",color:m.role==="user"?"#e2e8f0":"#cbd5e1",border:`1px solid ${m.role==="user"?"rgba(0,220,255,0.2)":"rgba(255,255,255,0.06)"}`}}>
+            {m.text}
           </div>
         ))}
-        {load&&<div style={{display:"flex",gap:6,alignItems:"center"}}>
-          <AIFace size={24} talking/>
-          <div style={{padding:"8px 12px",background:"rgba(0,220,255,0.06)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:"4px 12px 12px 12px",display:"flex",gap:4,alignItems:"center"}}>
-            {[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:"#00dcff",animation:`blink .8s ${i*0.2}s infinite`}}/>)}
-          </div>
+        {load&&<div style={{alignSelf:"flex-start",padding:"10px 13px",borderRadius:13,background:"rgba(255,255,255,0.05)",fontSize:12,color:"#94a3b8",display:"flex",gap:6,alignItems:"center"}}>
+          <Spin c="#00dcff"/><span>Gemini düşünüyor...</span>
         </div>}
         <div ref={endRef}/>
       </div>
-
-      {/* Hızlı sorular */}
-      {msgs.length<=1&&<div style={{padding:"0 12px 8px",display:"flex",gap:5,flexWrap:"wrap"}}>
-        {["Claude nedir?","En iyi AI araç?","Prompt nasıl yazılır?"].map(q=>(
-          <button key={q} onClick={()=>{setInp(q);setTimeout(()=>send(),50);}}
-            style={{fontSize:9,color:"#00dcff",border:"1px solid rgba(0,220,255,0.2)",borderRadius:12,
-              padding:"4px 9px",background:"rgba(0,220,255,0.06)",cursor:"pointer",fontFamily:"inherit"}}>
-            {q}
-          </button>
-        ))}
-      </div>}
-
-      {/* Input */}
-      <div style={{borderTop:"1px solid rgba(0,220,255,0.1)",padding:"10px 12px",display:"flex",gap:8}}>
-        <input value={inp} onChange={e=>setInp(e.target.value)}
-          onKeyDown={e=>e.key==="Enter"&&send()}
-          placeholder="Bir şey sor..."
-          style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(0,220,255,0.15)",
-            borderRadius:10,padding:"8px 11px",color:"#e2e8f0",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
-        <button onClick={send} disabled={load||!inp.trim()}
-          style={{padding:"8px 14px",border:"none",borderRadius:10,
-            background:load||!inp.trim()?"rgba(0,220,255,0.1)":"linear-gradient(135deg,#00dcff,#a855f7)",
-            color:load||!inp.trim()?"#334155":"#fff",fontSize:12,cursor:load?"wait":"pointer",fontWeight:700}}>
-          ▶
-        </button>
+      <div style={{padding:"10px 12px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+        {cnt>=LIMIT
+          ?<div style={{fontSize:11,color:"#f472b6",textAlign:"center",padding:"4px"}}>Günlük limit doldu 🌙 Yarın tekrar gel!</div>
+          :<div style={{display:"flex",gap:7}}>
+            <input style={{flex:1,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:10,color:"#e2e8f0",padding:"9px 12px",fontSize:12,fontFamily:"inherit",outline:"none"}} placeholder="Sor... (ChatGPT, Claude, Gemini...)" value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")send();}}/>
+            <button onClick={send} disabled={load} className="btn-primary" style={{padding:"9px 13px",borderRadius:10,fontSize:16,fontFamily:"inherit"}}>↑</button>
+          </div>
+        }
       </div>
-      {cnt>=LIMIT&&<div style={{textAlign:"center",fontSize:9,color:"#334155",padding:"4px 0 8px"}}>Oturum limiti doldu. Sayfayı yenile.</div>}
-
-      <style>{`@keyframes voiceWave{from{transform:scaleY(.4)}to{transform:scaleY(1.2)}}@keyframes scanLine{0%{top:0}100%{top:100%}}`}</style>
-    </div>
-  );
+    </div>}
+  </>;
 }
 
+// ── SVG LOGOLAR ───────────────────────────────────────────
 const YT = () => <svg width="20" height="14" viewBox="0 0 20 14"><path d="M19.582 2.186A2.507 2.507 0 0 0 17.824.418C16.254 0 10 0 10 0S3.746 0 2.176.418A2.507 2.507 0 0 0 .418 2.186C0 3.76 0 7 0 7s0 3.24.418 4.814A2.507 2.507 0 0 0 2.176 13.582C3.746 14 10 14 10 14s6.254 0 7.824-.418a2.507 2.507 0 0 0 1.758-1.768C20 10.24 20 7 20 7s0-3.24-.418-4.814z" fill="#FF0000"/><path d="M8 10l5.2-3L8 4v6z" fill="white"/></svg>;
 const TT = () => <svg width="16" height="18" viewBox="0 0 16 18"><path d="M11.301 0h2.368a4.573 4.573 0 0 0 1.305 3.061A4.573 4.573 0 0 0 16 4.366v2.369a7.906 7.906 0 0 1-4.627-1.484v6.724A6.208 6.208 0 0 1 5.165 18a6.208 6.208 0 0 1-6.208-6.208A6.208 6.208 0 0 1 5.165 5.584c.203 0 .403.01.6.03v2.433a3.778 3.778 0 0 0-.6-.048 3.778 3.778 0 0 0-3.778 3.778 3.778 3.778 0 0 0 3.778 3.778 3.778 3.778 0 0 0 3.778-3.778V0h2.358z" fill="white"/></svg>;
 const IG = () => <svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="4" stroke="url(#ig)" strokeWidth="1.5" fill="none"/><circle cx="9" cy="9" r="3.5" stroke="url(#ig)" strokeWidth="1.5" fill="none"/><circle cx="13" cy="5" r="1" fill="url(#ig)"/><defs><linearGradient id="ig" x1="0" y1="18" x2="18" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="50%" stopColor="#dc2743"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs></svg>;
@@ -1233,45 +1119,37 @@ const KARIYER_SCENARIOS=[
 // YENİ OYUN SAYFASI
 // ══════════════════════════════════════════════════════════
 function OyunlarPage({setPage}){
-  const games=[
-    {id:"dedektif",icon:"🕵️",title:"AI mi İnsan mı?",desc:"Metni gör, kim yazdı tahmin et",color:"#00dcff",tag:"Klasik",difficulty:"Kolay"},
-    {id:"trivia",icon:"🏆",title:"AI Trivia Marathon",desc:"50 soruluk bilgi maratonu, streak sistemi",color:"#a855f7",tag:"Marathon",difficulty:"Orta"},
-    {id:"roulette",icon:"🎰",title:"Prompt Roulette",desc:"30sn'de görev tamamla, puan topla",color:"#34d399",tag:"Hızlı",difficulty:"Orta"},
-    {id:"emoji",icon:"😀",title:"AI Emoji Tahmin",desc:"Emojilerden AI kavramını bul",color:"#fb923c",tag:"Eğlenceli",difficulty:"Kolay"},
-    {id:"kariyer",icon:"💼",title:"AI Kariyer Simülasyonu",desc:"Seçimlerle AI kariyerini şekillendir",color:"#f472b6",tag:"Simülasyon",difficulty:"Kolay"},
-    {id:"quiz",icon:"🧩",title:"AI Quiz",desc:"20 soruluk klasik quiz",color:"#60a5fa",tag:"Quiz",difficulty:"Orta"},
-    {id:"iqtest",icon:"🧠",title:"AI IQ Testi",desc:"10 soruda AI IQ'nu ölç",color:"#fbbf24",tag:"Test",difficulty:"Zor"},
-    {id:"puan",icon:"💡",title:"Prompt Puanlayıcı",desc:"Promptunu Gemini ile analiz et",color:"#f472b6",tag:"AI",difficulty:"Kolay"},
+  const GAMES=[
+    {id:"trivia",e:"🎯",t:"AI Trivia Marathon",d:"50 soruluk AI bilgi maratonu. Streak sistemi ile bonus puan!",c:"#00dcff",players:"12.4K",tag:"Popüler"},
+    {id:"roulette",e:"🎰",t:"Prompt Rulet",d:"Rastgele görev çarkı. Her turda farklı AI meydan okuması!",c:"#f472b6",players:"8.1K",tag:"Eğlenceli"},
+    {id:"dedektif",e:"🔍",t:"Model Dedektif",d:"Hangi AI modeli olduğunu tahmin et. 5 soruda bul!",c:"#fbbf24",players:"5.2K",tag:"Zeka"},
+    {id:"emoji",e:"😄",t:"Emoji Tahmin",d:"Emoji'nin AI anlamını bul. Kültürel bilgi testi!",c:"#34d399",players:"9.3K",tag:"Hızlı"},
+    {id:"iqtest",e:"🧠",t:"AI IQ Testi",d:"Yapay zeka bilgini ölç. Puanını arkadaşlarınla karşılaştır!",c:"#a855f7",players:"15.7K",tag:"Test"},
+    {id:"cark",e:"🎡",t:"Çark-ı Felek",d:"Şansını dene! Rastgele AI araçları, promptlar ve ödüller!",c:"#fb923c",players:"6.8K",tag:"Şans"},
+    {id:"quiz",e:"❓",t:"AI Quiz",d:"10 soruluk günlük AI bilgi testi. Her gün yeni sorular!",c:"#60a5fa",players:"11.2K",tag:"Günlük"},
+    {id:"animasyon",e:"🎬",t:"Animasyon Galerisi",d:"24 interaktif AI animasyonu. Tam ekran izle, müzikle keşfet!",c:"#f472b6",players:"4.5K",tag:"Görsel"},
+    {id:"kisilik",e:"🧪",t:"AI Kişilik Testi",d:"Senin AI profilin ne? 4 soruda kişiliğini keşfet!",c:"#00dcff",players:"7.9K",tag:"Kişisel"},
+    {id:"kariyer",e:"💼",t:"Kariyer Simülasyonu",d:"AI çağında kariyer yolunu seç. Farklı senaryolar dene!",c:"#34d399",players:"3.4K",tag:"Kariyer"},
   ];
   return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
-    <div style={{textAlign:"center",marginBottom:32}}>
-      <div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:6}}>İNTERAKTİF</div>
-      <div style={{fontSize:28,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:8}}>🎮 Oyunlar & İnteraktif</div>
-      <div style={{fontSize:13,color:"#64748b",maxWidth:480,margin:"0 auto"}}>AI'ı öğrenmenin en eğlenceli yolu — Ses efektleri, animasyonlar, puan sistemi</div>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:5}}>OYUNLAR & İNTERAKTİF</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginBottom:6}}>🎮 Tüm Oyunlar</div>
+      <div style={{fontSize:12,color:"#64748b"}}>{GAMES.length} interaktif oyun ve uygulama · Her gün güncellenen sorular · Puan sistemi</div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}}>
-      {games.map(g=>(
-        <div key={g.id} onClick={()=>setPage(g.id)} style={{background:`linear-gradient(135deg,${g.color}10,rgba(0,0,0,0))`,border:`1px solid ${g.color}30`,borderRadius:18,padding:"22px",cursor:"pointer",transition:"all .25s",position:"relative",overflow:"hidden"}} className="card-hover"
-          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow=`0 12px 40px ${g.color}30`;Sound.click();}}
-          onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
-          <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:.06}}>{g.icon}</div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
-            <div style={{fontSize:36}}>{g.icon}</div>
-            <div style={{display:"flex",gap:6,flexDirection:"column",alignItems:"flex-end"}}>
-              <span style={{fontSize:9,background:`${g.color}20`,color:g.color,padding:"2px 8px",borderRadius:5,fontWeight:700}}>{g.tag}</span>
-              <span style={{fontSize:9,color:"#334155"}}>{g.difficulty}</span>
-            </div>
-          </div>
-          <div style={{fontSize:15,fontWeight:800,color:"#e2e8f0",marginBottom:6,fontFamily:"'Space Grotesk',sans-serif"}}>{g.title}</div>
-          <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:14}}>{g.desc}</div>
-          <div style={{display:"flex",justifyContent:"flex-end"}}>
-            <div style={{fontSize:11,color:g.color,fontWeight:700}}>Oyna →</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
+      {GAMES.map(g=>(
+        <div key={g.id} onClick={()=>setPage(g.id)} style={{background:g.c+"06",border:"1px solid "+g.c+"20",borderRadius:16,padding:"18px",cursor:"pointer",transition:"all .2s",position:"relative"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 32px "+g.c+"22";e.currentTarget.style.borderColor=g.c+"50";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";e.currentTarget.style.borderColor=g.c+"20";}}>
+          <div style={{position:"absolute",top:12,right:12,fontSize:9,color:g.c,background:g.c+"15",padding:"2px 8px",borderRadius:5,fontWeight:700}}>{g.tag}</div>
+          <div style={{fontSize:40,marginBottom:12}}>{g.e}</div>
+          <div style={{fontSize:14,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginBottom:6}}>{g.t}</div>
+          <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:12}}>{g.d}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:9,color:"#334155"}}>👥 {g.players} oynadı</span>
+            <div style={{padding:"6px 16px",borderRadius:8,background:"linear-gradient(135deg,"+g.c+","+g.c+"aa)",color:"#fff",fontSize:11,fontWeight:700}}>Oyna →</div>
           </div>
         </div>
       ))}
-    </div>
-    <div style={{marginTop:32,background:"rgba(0,220,255,0.05)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:14,padding:"18px",textAlign:"center"}}>
-      <div style={{fontSize:12,color:"#64748b"}}>🔔 Yakında daha fazla oyun • AI Kelime Zinciri • Token Sayma • Model Yarışması</div>
     </div>
   </div>;
 }
@@ -1671,9 +1549,10 @@ function HomePage({setPage,user,setUser}){
         <p style={{fontSize:12,color:"#334155",margin:"0 auto 28px",maxWidth:440,lineHeight:1.8}}>AI haberleri · 40+ araç · 75 prompt · 10 oyun · 8 AI model · Simülasyonlar</p>
         <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginBottom:24}}>
           <button onClick={()=>setPage("tools")} className="btn-primary" style={{padding:"12px 24px",fontSize:13,borderRadius:11,fontFamily:"inherit"}}>🛠️ Tools</button>
-          <button onClick={()=>setPage("trivia")} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(52,211,153,0.4)",background:"rgba(52,211,153,0.08)",color:"#34d399",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🎮 Oyun Oyna</button>
+          <button onClick={()=>setPage("oyunlar")} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(52,211,153,0.4)",background:"rgba(52,211,153,0.08)",color:"#34d399",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🎮 Oyun Oyna</button>
           <button onClick={()=>setPage("claude")} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(168,85,247,0.4)",background:"rgba(168,85,247,0.08)",color:"#a855f7",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🧠 Claude</button>
           <button onClick={()=>setFact(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)])} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(251,146,60,0.4)",background:"rgba(251,146,60,0.08)",color:"#fb923c",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🤯 Şaşırt!</button>
+          <button onClick={()=>setPage("animasyon")} style={{padding:"11px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit",fontWeight:700,border:"none",cursor:"pointer",color:"#fff",background:"linear-gradient(135deg,#a855f7,#7c3aed)",boxShadow:"0 4px 16px rgba(168,85,247,0.3)",transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>🎬 Animasyonlar</button>
         </div>
         {fact&&<div style={{background:"rgba(251,146,60,0.08)",border:"1px solid rgba(251,146,60,0.22)",borderRadius:14,padding:"14px 18px",maxWidth:520,margin:"0 auto 20px",animation:"fadeIn .3s ease"}}>
           <div style={{fontSize:24,marginBottom:6}}>{fact.e}</div>
@@ -1832,7 +1711,7 @@ ${todayTip.tip}`} size="small"/>
           <button onClick={()=>setPage("oyunlar")} style={{fontSize:11,color:"#f472b6",background:"none",border:"1px solid rgba(244,114,182,0.3)",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit"}}>Tümü →</button>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
-          {[{id:"trivia",e:"🏆",t:"AI Trivia",d:"50+ soru",c:"#fb923c"},{id:"roulette",e:"🎡",t:"Roulette",d:"30sn yarış",c:"#a855f7"},{id:"dedektif",e:"🔍",t:"Dedektif",d:"Kim yazdı?",c:"#00dcff"},{id:"emoji",e:"😄",t:"Emoji",d:"AI bul",c:"#34d399"},{id:"cark",e:"🎰",t:"Şans Çarkı",d:"Çevir kazan",c:"#fbbf24"},{id:"iqtest",e:"🧠",t:"IQ Testi",d:"Paylaş",c:"#60a5fa"}].map(g=>(
+          {[{id:"trivia",e:"🎯",t:"AI Trivia",d:"50 soru",c:"#00dcff"},{id:"roulette",e:"🎰",t:"Prompt Rulet",d:"Rastgele görev",c:"#f472b6"},{id:"dedektif",e:"🔍",t:"Dedektif",d:"Kim yazdı?",c:"#fbbf24"},{id:"emoji",e:"😄",t:"Emoji Tahmin",d:"AI bul",c:"#34d399"},{id:"iqtest",e:"🧠",t:"AI IQ Testi",d:"Zekânı ölç",c:"#a855f7"},{id:"cark",e:"🎡",t:"Çark-ı Felek",d:"Şansını dene",c:"#fb923c"},{id:"quiz",e:"❓",t:"AI Quiz",d:"10 soruluk test",c:"#60a5fa"},{id:"animasyon",e:"🎬",t:"Animasyonlar",d:"Görsel şov",c:"#f472b6"},{id:"kisilik",e:"🧪",t:"Kişilik Testi",d:"Profilini bul",c:"#00dcff"},{id:"kariyer",e:"💼",t:"Kariyer Sim",d:"Geleceğini keşfet",c:"#34d399"}].map(g=>(
             <div key={g.id} onClick={()=>setPage(g.id)} className="card-3d" style={{background:`${g.c}06`,border:`1px solid ${g.c}18`,borderRadius:13,padding:"14px",cursor:"pointer",textAlign:"center"}}>
               <div style={{fontSize:26,marginBottom:6}}>{g.e}</div>
               <div style={{fontSize:12,fontWeight:700,color:g.c,marginBottom:3,fontFamily:"Space Grotesk,sans-serif"}}>{g.t}</div>
@@ -1863,6 +1742,7 @@ ${todayTip.tip}`} size="small"/>
     </section>
 
     <SocialMediaSection/>
+
         {/* ═══ AI ALARM + TRENDING ═══ */}
     <section style={{padding:"0 20px 48px"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
@@ -3598,267 +3478,102 @@ function ShareButton({title,text,size="normal"}){
 // LOADING EKRANI
 // ══════════════════════════════════════════════════════════
 function LoadingScreen({onDone}){
-  const[chars,setChars]=useState(()=>{
-    const CH="IMDATAI01CLAUDE10GPT01GEMINI10NEURAL01MLAI01HACK10";
-    return Array.from({length:32*20},(_,i)=>({id:i,ch:CH[i%CH.length],sp:i%7===0,op:0.4+Math.random()*0.5,br:i%11===0}));
-  });
+  const[chars,setChars]=useState(()=>{const CH="IMDATAI01CLAUDE10GPT01GEMINI10NEURAL01";return Array.from({length:28*16},(_,i)=>({id:i,ch:CH[i%CH.length],sp:i%7===0,op:.4+Math.random()*.5,br:i%11===0}));});
   const[phase,setPhase]=useState(0);
   const[tLines,setTLines]=useState([]);
   const[pct,setPct]=useState(0);
   const doneRef=useRef(false);
   const audioRef=useRef(null);
-  const loopCount=useRef(0);
-
+  const loopN=useRef(0);
   const TERM=[
     {t:"IMDATAI NEURAL OS v4.7.2",c:"#00ff88",b:true},
     {t:"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",c:"#0a2a14"},
     {t:">> Claude Opus 4.7 [BAĞLANDI ✓]",c:"#a855f7"},
     {t:">> GPT-5.5 / Gemini [BAĞLANDI ✓]",c:"#00dcff"},
-    {t:">> Grok 3 / DeepSeek[BAĞLANDI ✓]",c:"#34d399"},
+    {t:">> Grok / DeepSeek  [BAĞLANDI ✓]",c:"#34d399"},
     {t:">> TÜRKİYE AI #1 ██ %94.49",c:"#ff4444",b:true},
-    {t:">> GÜVENLİK........ [GEÇTİ ✓]",c:"#34d399"},
-    {t:">> 52 SAYFA/75+ PR [HAZIR ✓]",c:"#00dcff"},
+    {t:">> GÜVENLİK ........ [GEÇTİ ✓]",c:"#34d399"},
+    {t:">> 52 SAYFA/75+ PR  [HAZIR ✓]",c:"#00dcff"},
     {t:"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",c:"#0a2a14"},
     {t:"⚡ ERİŞİM ONAYLANDI",c:"#00ff88",b:true},
   ];
-
   useEffect(()=>{
-    try{
-      const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
-      const ctx=new AC();audioRef.current=ctx;const T=ctx.currentTime;
-      const o=(type,f,g,s,e)=>{const osc=ctx.createOscillator(),gn=ctx.createGain();osc.type=type;osc.frequency.value=f;gn.gain.setValueAtTime(0,T+s);gn.gain.linearRampToValueAtTime(g,T+s+0.5);gn.gain.linearRampToValueAtTime(0,T+e);osc.connect(gn);gn.connect(ctx.destination);osc.start(T+s);osc.stop(T+e+0.1);};
-      o("sawtooth",40,0.1,0,20);o("sine",35,0.13,0,20);o("sine",220,0.035,0.5,18);o("sine",330,0.025,1,18);
-      [261,329,392,523,659,784].forEach((f,i)=>o("sine",f,0.025,1+i*0.38,2.5+i*0.38));
-      for(let i=0;i<28;i++){const t2=T+i*0.13+Math.random()*0.07;try{const b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.03),ctx.sampleRate);const d=b.getChannelData(0);for(let j=0;j<d.length;j++)d[j]=(Math.random()*2-1)*Math.pow(1-j/d.length,4)*0.28;const s=ctx.createBufferSource(),gn=ctx.createGain();s.buffer=b;s.connect(gn);gn.connect(ctx.destination);s.start(t2);}catch(e){}}
-      [6,6.12].forEach(t2=>{try{const b=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);const d=b.getChannelData(0);for(let j=0;j<d.length;j++)d[j]=(Math.random()*2-1)*Math.pow(1-j/d.length,1.2);const s=ctx.createBufferSource(),gn=ctx.createGain(),f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=200;gn.gain.setValueAtTime(1.2,T+t2);gn.gain.exponentialRampToValueAtTime(0.001,T+t2+0.9);s.buffer=b;s.connect(f);f.connect(gn);gn.connect(ctx.destination);s.start(T+t2);}catch(e){}});
-      o("sine",2093,0.012,6,18);o("sine",2637,0.008,6.5,18);
+    try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC();audioRef.current=ctx;const T=ctx.currentTime;
+      const o=(type,f,g,s,e)=>{const osc=ctx.createOscillator(),gn=ctx.createGain();osc.type=type;osc.frequency.value=f;gn.gain.setValueAtTime(0,T+s);gn.gain.linearRampToValueAtTime(g,T+s+.5);gn.gain.linearRampToValueAtTime(0,T+e);osc.connect(gn);gn.connect(ctx.destination);osc.start(T+s);osc.stop(T+e+.1);};
+      o("sawtooth",40,.1,0,20);o("sine",35,.13,0,20);o("sine",220,.035,.5,18);o("sine",330,.025,1,18);
+      [261,329,392,523,659].forEach((f,i)=>o("sine",f,.025,1+i*.38,2.5+i*.38));
+      for(let i=0;i<25;i++){const t2=T+i*.13+Math.random()*.07;try{const b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.03),ctx.sampleRate);const d=b.getChannelData(0);for(let j=0;j<d.length;j++)d[j]=(Math.random()*2-1)*Math.pow(1-j/d.length,4)*.28;const s=ctx.createBufferSource(),gn=ctx.createGain();s.buffer=b;s.connect(gn);gn.connect(ctx.destination);s.start(t2);}catch(e){}}
+      o("sine",2093,.012,6,18);o("sine",2637,.008,6.5,18);
     }catch(e){}
   },[]);
-
-  useEffect(()=>{
-    const iv=setInterval(()=>setChars(p=>p.map(c=>({...c,
-      ch:"IMDATAI01CLAUDE10GPT01GEMINI10NEURAL01MLAI01HACK10"[Math.floor(Math.random()*50)],
-      op:Math.max(0.15,Math.min(0.95,c.op+(Math.random()-.5)*0.25)),
-      br:Math.random()>.91,sp:Math.random()>.97,
-    }))),85);
-    return()=>clearInterval(iv);
-  },[]);
-
+  useEffect(()=>{const CH="IMDATAI01CLAUDE10GPT01GEMINI10NEURAL01";const iv=setInterval(()=>setChars(p=>p.map(c=>({...c,ch:CH[Math.floor(Math.random()*CH.length)],op:Math.max(.05,Math.min(.9,c.op+(Math.random()-.5)*.28)),br:Math.random()>.92,sp:Math.random()>.97}))),90);return()=>clearInterval(iv);},[]);
   useEffect(()=>{
     if(doneRef.current)return;
     if(phase===0){
-      setTLines([]);setPct(0);
-      const TM=[];let li=0;
+      setTLines([]);setPct(0);const TM=[];let li=0;
       const add=()=>{if(doneRef.current)return;const ln=TERM[li];if(ln){setTLines(p=>[...p,ln]);li++;setPct(Math.round(li/TERM.length*100));if(li<TERM.length)TM.push(setTimeout(add,280+Math.random()*110));}};
       TM.push(setTimeout(add,350));
-      TM.push(setTimeout(()=>{if(!doneRef.current)setPhase(1);},6200));
+      TM.push(setTimeout(()=>{if(!doneRef.current)setPhase(1);},6500));
       return()=>TM.forEach(clearTimeout);
     }
-    if(phase===1){
-      const t=setTimeout(()=>{if(!doneRef.current){loopCount.current++;setPhase(0);}},8500);
-      return()=>clearTimeout(t);
-    }
+    if(phase===1){const t=setTimeout(()=>{if(!doneRef.current){loopN.current++;setPhase(0);}},9000);return()=>clearTimeout(t);}
   },[phase]);
-
-  const doSkip=()=>{if(doneRef.current)return;doneRef.current=true;try{audioRef.current?.close();}catch(e){}onDone();};
-
-  // Platform logo bileşeni — gerçek marka renkleri
-  const Logo=({type})=>{
-    if(type==="yt")return <div style={{width:32,height:22,background:"#ff0000",borderRadius:4,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:0,height:0,borderTop:"6px solid transparent",borderBottom:"6px solid transparent",borderLeft:"11px solid #fff"}}/></div>;
-    if(type==="tt")return <div style={{width:28,height:28,background:"#010101",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}><span style={{fontSize:18,fontWeight:900,color:"#ff0050",fontFamily:"sans-serif",lineHeight:1}}>♪</span><div style={{position:"absolute",top:2,right:2,width:8,height:8,background:"#00f2ea",borderRadius:"50%",opacity:0.8}}/></div>;
-    if(type==="ig")return <div style={{width:28,height:28,borderRadius:7,background:"radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285AEB 90%)",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:16,height:16,border:"2px solid #fff",borderRadius:4,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:6,height:6,background:"#fff",borderRadius:"50%"}}/></div></div>;
-    return <div style={{width:28,height:28,borderRadius:7,background:"linear-gradient(135deg,#00ff88,#00dcff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>⬡</div>;
-  };
-
-  const SCard=({pos,type,name,handle,videoUrl,profileUrl,color,cta})=>(
-    <div onClick={e=>e.stopPropagation()} style={{position:"fixed",...pos,zIndex:100000,animation:"fadeIn 1.5s ease"}}>
-      <div style={{background:"rgba(3,8,4,0.95)",border:`1.5px solid ${color}55`,borderRadius:11,
-        padding:"9px 10px",backdropFilter:"blur(12px)",boxShadow:`0 4px 20px ${color}25`,
-        display:"flex",flexDirection:"column",alignItems:"center",gap:6,width:72}}>
-        <Logo type={type}/>
-        <div style={{textAlign:"center"}}>
-          <div style={{fontSize:9,fontWeight:700,color,fontFamily:"sans-serif"}}>{name}</div>
-          <div style={{fontSize:7,color:"rgba(255,255,255,0.35)",fontFamily:"sans-serif"}}>{handle}</div>
+  const skip=()=>{if(doneRef.current)return;doneRef.current=true;try{audioRef.current?.close();}catch(e){}onDone();};
+  const SCard=({pos,em,name,handle,vurl,purl,color,cta})=><a href={vurl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{position:"fixed",...pos,zIndex:100000,textDecoration:"none",animation:"fadeIn 1.5s ease"}}>
+    <div style={{background:"rgba(3,8,4,.95)",border:"1.5px solid "+color+"55",borderRadius:10,padding:"8px 10px",backdropFilter:"blur(10px)",boxShadow:"0 4px 16px "+color+"20",display:"flex",flexDirection:"column",alignItems:"center",gap:5,width:72}}>
+      <div style={{width:34,height:34,borderRadius:8,background:color+"30",border:"1.5px solid "+color+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{em}</div>
+      <div style={{textAlign:"center"}}><div style={{fontSize:9,fontWeight:700,color,fontFamily:"sans-serif"}}>{name}</div><div style={{fontSize:7,color:"rgba(255,255,255,.3)",fontFamily:"sans-serif"}}>{handle}</div></div>
+      <a href={purl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{width:"100%",padding:"4px 0",background:color+"20",border:"1px solid "+color+"40",borderRadius:6,fontSize:8,color,fontWeight:700,fontFamily:"sans-serif",textAlign:"center",textDecoration:"none",display:"block"}}>{cta}</a>
+    </div>
+  </a>;
+  return <div onClick={skip} style={{position:"fixed",inset:0,zIndex:99999,background:"#020508",overflow:"hidden",cursor:"pointer",fontFamily:"monospace"}}>
+    <div style={{position:"absolute",inset:0,display:"grid",gridTemplateColumns:"repeat(28,1fr)",gridTemplateRows:"repeat(16,1fr)",pointerEvents:"none"}}>
+      {chars.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",justifyContent:"center",fontSize:c.sp?13:9,color:c.sp?"rgba(0,255,136,1)":c.br?"rgba(0,220,255,.9)":"rgba(0,150,50,.35)",opacity:c.op,textShadow:c.sp?"0 0 10px #00ff88":c.br?"0 0 7px #00dcff":"none",fontWeight:c.sp||c.br?700:400,userSelect:"none"}}>{c.ch}</div>)}
+    </div>
+    <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,80,.007) 3px,rgba(0,255,80,.007) 4px)",pointerEvents:"none",zIndex:1}}/>
+    <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 60% 60% at 50% 50%,transparent 10%,rgba(3,6,9,.5) 55%,rgba(3,6,9,.96) 100%)",pointerEvents:"none",zIndex:1}}/>
+    {["tl","tr","bl","br"].map(c=><div key={c} style={{position:"absolute",width:28,height:28,zIndex:2,pointerEvents:"none",top:c[0]==="t"?10:"auto",bottom:c[0]==="b"?10:"auto",left:c[1]==="l"?10:"auto",right:c[1]==="r"?10:"auto",borderTop:c[0]==="t"?"2px solid rgba(0,255,136,.5)":"none",borderBottom:c[0]==="b"?"2px solid rgba(0,255,136,.5)":"none",borderLeft:c[1]==="l"?"2px solid rgba(0,255,136,.5)":"none",borderRight:c[1]==="r"?"2px solid rgba(0,255,136,.5)":"none"}}/>)}
+    <div style={{position:"absolute",inset:0,zIndex:3,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 12px 75px"}}>
+      {phase===0&&<div style={{width:"100%",maxWidth:420,animation:"fadeIn .4s ease"}}>
+        <div style={{background:"rgba(1,8,3,.96)",border:"1px solid rgba(0,255,136,.2)",borderRadius:8,padding:"12px 14px",backdropFilter:"blur(8px)"}}>
+          <div style={{display:"flex",gap:5,marginBottom:8,alignItems:"center"}}>
+            {["#ff5f57","#febc2e","#28c840"].map((c,i)=><div key={i} style={{width:9,height:9,borderRadius:"50%",background:c}}/>)}
+            <span style={{fontSize:8,color:"rgba(0,255,136,.28)",marginLeft:5}}>IMDATAI TERMINAL{loopN.current>0?` [${loopN.current+1}]`:""}</span>
+            <span style={{marginLeft:"auto",fontSize:8,color:"rgba(0,255,136,.2)"}}>%{pct}</span>
+          </div>
+          {tLines.length===0&&<div style={{fontSize:10,color:"rgba(0,255,136,.35)",animation:"blink .9s infinite"}}>SİSTEM BAŞLATILIYOR<span style={{marginLeft:2}}>█</span></div>}
+          {tLines.map((l,i)=>l&&<div key={i} style={{fontSize:"clamp(9px,2.2vw,11px)",color:l.c,fontWeight:l.b?700:400,marginBottom:2,lineHeight:1.5}}>{l.t}{i===tLines.length-1&&<span style={{animation:"blink .6s infinite",marginLeft:1}}>█</span>}</div>)}
+          <div style={{marginTop:8,height:2,background:"rgba(0,255,136,.07)",borderRadius:1}}><div style={{width:`${pct}%`,height:"100%",background:"linear-gradient(90deg,#00ff88,#00dcff,#a855f7)",transition:"width .5s ease"}}/></div>
         </div>
-        <a href={videoUrl} target="_blank" rel="noopener noreferrer"
-          style={{width:"100%",padding:"4px 0",background:`${color}20`,border:`1px solid ${color}40`,
-            borderRadius:6,fontSize:8,color,fontWeight:700,fontFamily:"sans-serif",
-            textAlign:"center",textDecoration:"none",display:"block"}}>
-          ▶ Video
-        </a>
-        <a href={profileUrl} target="_blank" rel="noopener noreferrer"
-          style={{width:"100%",padding:"4px 0",background:`${color}10`,border:`1px solid ${color}25`,
-            borderRadius:6,fontSize:8,color:`${color}cc`,fontFamily:"sans-serif",
-            textAlign:"center",textDecoration:"none",display:"block"}}>
-          {cta}
-        </a>
-      </div>
+      </div>}
+      {phase===1&&<div style={{textAlign:"center",animation:"fadeIn .5s ease"}}>
+        <div style={{position:"relative",display:"inline-block",marginBottom:14}}>
+          {[-44,-30,-18].map((n,i)=><div key={i} style={{position:"absolute",inset:n,borderRadius:"50%",border:`1px solid rgba(${["0,255,136","0,220,255","168,85,247"][i]},${[.1,.14,.2][i]})`,animation:`spin ${[12,8,5][i]}s linear infinite ${i===1?"reverse":""}`}}/>)}
+          <div style={{position:"absolute",inset:-26,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,255,136,.09),transparent 70%)",animation:"glow 2s ease-in-out infinite"}}/>
+          <div style={{width:82,height:82,borderRadius:18,background:"linear-gradient(135deg,rgba(0,255,136,.13),rgba(0,220,255,.08))",border:"2px solid rgba(0,255,136,.5)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 32px rgba(0,255,136,.25)",position:"relative",overflow:"hidden"}}>
+            <img src="/logo.png" alt="IMDATAI" style={{width:62,height:62,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(0,255,136,.8)) brightness(1.2)"}} onError={e=>{e.target.style.display="none";e.target.parentElement.innerHTML+='<div style="font-size:28px;color:#00ff88;filter:drop-shadow(0 0 10px #00ff88)">⬡</div>';}}/>
+          </div>
+          {[0,51,102,153,204,255,306].map((deg,i)=><div key={i} style={{position:"absolute",width:i%2===0?6:4,height:i%2===0?6:4,borderRadius:"50%",top:"50%",left:"50%",background:["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i],boxShadow:`0 0 ${i%2===0?10:7}px ${["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i]}`,transform:`rotate(${deg}deg) translateX(52px) translateY(-50%)`,animation:`spin ${3.5+i*.35}s linear infinite`}}/>)}
+        </div>
+        <div style={{fontSize:"clamp(24px,6vw,52px)",fontWeight:900,background:"linear-gradient(90deg,#00ff88,#00dcff,#a855f7,#f472b6,#00ff88)",backgroundSize:"250% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradient 2s linear infinite",fontFamily:"Space Grotesk,monospace",letterSpacing:".15em",marginBottom:3}}>IMDATAI</div>
+        <div style={{fontSize:"clamp(6px,1.3vw,9px)",letterSpacing:".4em",color:"rgba(0,255,136,.45)",marginBottom:12}}>TÜRKİYE'NİN AI HUB'I</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,maxWidth:300,margin:"0 auto 12px"}}>
+          {[["900M+","Kullanıcı","#00dcff"],["8","Model","#a855f7"],["75+","Prompt","#fbbf24"],["52","Sayfa","#34d399"]].map(([v,l,c])=><div key={l} style={{background:c+"12",border:"1px solid "+c+"25",borderRadius:8,padding:"7px 2px",textAlign:"center"}}><div style={{fontSize:"clamp(11px,2.5vw,16px)",fontWeight:900,color:c,fontFamily:"Space Grotesk,sans-serif"}}>{v}</div><div style={{fontSize:7,color:"#334155",marginTop:1}}>{l}</div></div>)}
+        </div>
+        <div style={{fontSize:10,color:"rgba(0,255,136,.38)",letterSpacing:".18em",animation:"blink 1.1s infinite",marginBottom:5}}>[ EKRANA TIKLAYINiZ ]</div>
+      </div>}
     </div>
-  );
-
-  return(
-    <div onClick={doSkip} style={{position:"fixed",inset:0,zIndex:99999,background:"#020508",overflow:"hidden",cursor:"pointer",fontFamily:"monospace"}}>
-
-      {/* MATRİS — güçlü ve belirgin */}
-      <div style={{position:"absolute",inset:0,display:"grid",gridTemplateColumns:"repeat(32,1fr)",gridTemplateRows:"repeat(20,1fr)",pointerEvents:"none",zIndex:0}}>
-        {chars.map(c=>(
-          <div key={c.id} style={{display:"flex",alignItems:"center",justifyContent:"center",
-            fontSize:c.sp?14:10,fontWeight:c.sp||c.br?700:400,
-            color:c.sp?"rgba(0,255,136,1)":c.br?"rgba(0,220,255,0.9)":"rgba(0,180,60,0.5)",
-            opacity:c.op,
-            textShadow:c.sp?"0 0 12px #00ff88, 0 0 20px #00ff88":c.br?"0 0 8px #00dcff":"none",
-            userSelect:"none",lineHeight:1}}>
-            {c.ch}
-          </div>
-        ))}
-      </div>
-
-      {/* Tarama çizgileri */}
-      <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,rgba(0,0,0,0.15),rgba(0,0,0,0.15) 1px,transparent 1px,transparent 4px)",pointerEvents:"none",zIndex:1}}/>
-
-      {/* Yumuşak vignette — merkezi açık bırak */}
-      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 70% 70% at 50% 50%,rgba(2,5,8,0.2) 0%,rgba(2,5,8,0.5) 60%,rgba(2,5,8,0.88) 100%)",pointerEvents:"none",zIndex:2}}/>
-
-      {/* HUD köşe çerçeveleri */}
-      {[{t:8,l:8},{t:8,r:8},{b:8,l:8},{b:8,r:8}].map((p,i)=>(
-        <div key={i} style={{position:"absolute",width:28,height:28,zIndex:3,pointerEvents:"none",
-          top:p.t,bottom:p.b,left:p.l,right:p.r,
-          borderTop:p.t!==undefined?"2px solid rgba(0,255,136,0.55)":"none",
-          borderBottom:p.b!==undefined?"2px solid rgba(0,255,136,0.55)":"none",
-          borderLeft:p.l!==undefined?"2px solid rgba(0,255,136,0.55)":"none",
-          borderRight:p.r!==undefined?"2px solid rgba(0,255,136,0.55)":"none"}}/>
-      ))}
-
-      {/* MERKEZ İÇERİK */}
-      <div style={{position:"absolute",inset:0,zIndex:4,display:"flex",flexDirection:"column",
-        alignItems:"center",justifyContent:"center",padding:"8px 12px 75px"}}>
-
-        {phase===0&&(
-          <div style={{width:"100%",maxWidth:400,animation:"fadeIn .35s ease"}}>
-            <div style={{background:"rgba(1,8,3,0.96)",border:"1px solid rgba(0,255,136,0.25)",
-              borderRadius:9,padding:"13px 15px",backdropFilter:"blur(10px)",
-              boxShadow:"0 0 30px rgba(0,255,136,0.06)"}}>
-              <div style={{display:"flex",gap:5,marginBottom:9,alignItems:"center"}}>
-                {["#ff5f57","#febc2e","#28c840"].map((c,i)=><div key={i} style={{width:9,height:9,borderRadius:"50%",background:c}}/>)}
-                <span style={{fontSize:8,color:"rgba(0,255,136,0.3)",marginLeft:5}}>IMDATAI TERMINAL{loopCount.current>0?` [${loopCount.current+1}]`:""}</span>
-                <span style={{marginLeft:"auto",fontSize:8,color:"rgba(0,255,136,0.22)"}}>%{pct}</span>
-              </div>
-              {tLines.length===0
-                ?<div style={{fontSize:10,color:"rgba(0,255,136,0.35)",animation:"blink .9s infinite"}}>SİSTEM BAŞLATILIYOR <span>█</span></div>
-                :tLines.map((l,i)=>l&&(
-                  <div key={i} style={{fontSize:"clamp(9px,2.2vw,11px)",color:l.c,fontWeight:l.b?700:400,
-                    marginBottom:2,lineHeight:1.5,wordBreak:"break-word"}}>
-                    {l.t}{i===tLines.length-1&&<span style={{animation:"blink .65s infinite",marginLeft:1}}>█</span>}
-                  </div>
-                ))
-              }
-              <div style={{marginTop:9,height:2,background:"rgba(0,255,136,0.08)",borderRadius:1}}>
-                <div style={{width:`${pct}%`,height:"100%",
-                  background:"linear-gradient(90deg,#00ff88,#00dcff,#a855f7)",transition:"width .5s ease",
-                  boxShadow:"0 0 6px rgba(0,255,136,0.4)"}}/>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {phase===1&&(
-          <div style={{textAlign:"center",animation:"fadeIn .5s ease"}}>
-            <div style={{position:"relative",display:"inline-block",marginBottom:14}}>
-              {[-46,-32,-19].map((r,i)=>(
-                <div key={i} style={{position:"absolute",inset:r,borderRadius:"50%",
-                  border:`1px solid rgba(${i===0?"0,255,136":i===1?"0,220,255":"168,85,247"},${i===0?0.12:i===1?0.15:0.2})`,
-                  animation:`spin ${[12,8,5][i]}s linear infinite ${i===1?"reverse":""}`}}/>
-              ))}
-              <div style={{position:"absolute",inset:-28,borderRadius:"50%",
-                background:"radial-gradient(ellipse,rgba(0,255,136,0.1),transparent 70%)",
-                animation:"glow 2s ease-in-out infinite"}}/>
-              <div style={{width:82,height:82,borderRadius:18,
-                background:"linear-gradient(135deg,rgba(0,255,136,0.16),rgba(0,220,255,0.1))",
-                border:"2px solid rgba(0,255,136,0.55)",display:"flex",alignItems:"center",justifyContent:"center",
-                boxShadow:"0 0 35px rgba(0,255,136,0.28),inset 0 0 20px rgba(0,255,136,0.06)",
-                position:"relative",overflow:"hidden"}}>
-                <div style={{position:"absolute",top:0,left:0,right:0,height:2,
-                  background:"linear-gradient(90deg,transparent,rgba(0,255,136,0.85),transparent)",
-                  animation:"scanLine 2s linear infinite"}}/>
-                <img src="/logo.png" alt="IMDATAI"
-                  style={{width:60,height:60,objectFit:"contain",
-                    filter:"drop-shadow(0 0 10px rgba(0,255,136,0.9)) brightness(1.3) saturate(1.2)"}}
-                  onError={e=>{
-                    e.target.style.display="none";
-                    e.target.parentElement.innerHTML+=
-                      '<div style="display:flex;flex-direction:column;align-items:center;gap:2px">'+
-                      '<svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,2 36,11 36,29 20,38 4,29 4,11" fill="none" stroke="#00ff88" stroke-width="2"/><polygon points="20,8 30,14 30,26 20,32 10,26 10,14" fill="rgba(0,255,136,0.15)" stroke="#00ff88" stroke-width="1"/><text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle" fill="#00ff88" font-size="10" font-weight="900" font-family="monospace">AI</text></svg>'+
-                      '<div style="font-size:5px;letter-spacing:.25em;color:rgba(0,255,136,0.7);font-weight:700">IMDATAI</div></div>';
-                  }}/>
-              </div>
-              {[0,51,102,153,204,255,306].map((deg,i)=>(
-                <div key={i} style={{position:"absolute",width:i%2===0?6:4,height:i%2===0?6:4,
-                  borderRadius:"50%",top:"50%",left:"50%",
-                  background:["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i],
-                  boxShadow:`0 0 ${i%2===0?10:7}px ${["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i]}`,
-                  transform:`rotate(${deg}deg) translateX(52px) translateY(-50%)`,
-                  animation:`spin ${3.5+i*0.35}s linear infinite`}}/>
-              ))}
-            </div>
-            <div style={{fontSize:"clamp(24px,6vw,52px)",fontWeight:900,
-              background:"linear-gradient(90deg,#00ff88,#00dcff,#a855f7,#f472b6,#00ff88)",
-              backgroundSize:"250% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
-              animation:"gradient 2s linear infinite",fontFamily:"Space Grotesk,monospace",
-              letterSpacing:".15em",marginBottom:3}}>IMDATAI</div>
-            <div style={{fontSize:"clamp(6px,1.3vw,9px)",letterSpacing:".4em",
-              color:"rgba(0,255,136,0.45)",marginBottom:12}}>TÜRKİYE'NİN AI HUB'I</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,maxWidth:300,margin:"0 auto 12px"}}>
-              {[["900M+","Kullanıcı","#00dcff"],["8","Model","#a855f7"],["75+","Prompt","#fbbf24"],["52","Sayfa","#34d399"]].map(([v,l,c])=>(
-                <div key={l} style={{background:`${c}12`,border:`1px solid ${c}28`,borderRadius:8,padding:"7px 2px",textAlign:"center"}}>
-                  <div style={{fontSize:"clamp(11px,2.5vw,16px)",fontWeight:900,color:c,fontFamily:"Space Grotesk,sans-serif"}}>{v}</div>
-                  <div style={{fontSize:7,color:"#334155",marginTop:1}}>{l}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{fontSize:10,color:"rgba(0,255,136,0.38)",letterSpacing:".18em",animation:"blink 1.1s infinite",marginBottom:5}}>[ EKRANA TIKLAYINiZ ]</div>
-            <div style={{width:150,height:1,background:"linear-gradient(90deg,transparent,rgba(0,255,136,0.45),transparent)",margin:"0 auto"}}/>
-          </div>
-        )}
-      </div>
-
-      {/* 4 KÖŞE — gerçek videolara link */}
-      <SCard pos={{top:42,left:6}} type="yt" name="YouTube" handle="@imdatai"
-        videoUrl="https://youtu.be/ZKOKP9jfAMg" profileUrl="https://youtube.com/@imdatai"
-        color="#ff4444" cta="🔔 Abone Ol"/>
-      <SCard pos={{top:42,right:6}} type="tt" name="TikTok" handle="@imdatai"
-        videoUrl="https://vt.tiktok.com/ZS9oTcvee/" profileUrl="https://tiktok.com/@imdatai"
-        color="#00f2ea" cta="➕ Takip Et"/>
-      <SCard pos={{bottom:52,left:6}} type="ig" name="Instagram" handle="@imdatai"
-        videoUrl="https://www.instagram.com/reel/DX8i6_wtPxf/" profileUrl="https://instagram.com/imdatai"
-        color="#e1306c" cta="❤️ Takip Et"/>
-      <SCard pos={{bottom:52,right:6}} type="yt" name="Shorts" handle="@imdatai"
-        videoUrl="https://youtube.com/shorts/5UgwO4rbfNM" profileUrl="https://youtube.com/@imdatai"
-        color="#ff6b6b" cta="▶ Shorts"/>
-
-      <button onClick={e=>{e.stopPropagation();doSkip();}}
-        style={{position:"fixed",top:12,right:6,zIndex:100001,padding:"6px 12px",
-          border:"1px solid rgba(0,255,136,0.25)",borderRadius:14,background:"rgba(1,8,3,0.9)",
-          color:"rgba(0,255,136,0.55)",fontSize:9,cursor:"pointer",fontFamily:"monospace",
-          backdropFilter:"blur(8px)"}}>
-        ⏭ INTRO'YU GEÇ
-      </button>
-
-      <div style={{position:"fixed",bottom:10,left:"50%",transform:"translateX(-50%)",zIndex:100001}}>
-        <button onClick={doSkip}
-          style={{padding:"9px 28px",border:"2px solid rgba(0,255,136,0.55)",borderRadius:22,
-            background:"linear-gradient(135deg,rgba(0,255,136,0.11),rgba(0,220,255,0.07))",
-            color:"#00ff88",fontSize:11,cursor:"pointer",fontFamily:"monospace",fontWeight:700,
-            letterSpacing:".1em",backdropFilter:"blur(8px)",
-            boxShadow:"0 0 16px rgba(0,255,136,0.15)",animation:"glow 2s ease-in-out infinite"}}>
-          ⚡ SİSTEME GİRİŞ YAP
-        </button>
-      </div>
-
-      <style>{`@keyframes scanLine{0%{top:0}100%{top:100%}}`}</style>
+    <SCard pos={{top:42,left:6}} em="🎬" name="YouTube" handle="@imdatai" vurl="https://youtu.be/ZKOKP9jfAMg" purl="https://youtube.com/@imdatai" color="#ff4444" cta="Kanal"/>
+    <SCard pos={{top:42,right:6}} em="🎵" name="TikTok" handle="@imdatai" vurl="https://vt.tiktok.com/ZS9oTcvee/" purl="https://tiktok.com/@imdatai" color="#00f2ea" cta="Takip"/>
+    <SCard pos={{bottom:52,left:6}} em="📸" name="Instagram" handle="@imdatai" vurl="https://www.instagram.com/reel/DX8i6_wtPxf/" purl="https://instagram.com/imdatai" color="#e1306c" cta="Takip"/>
+    <SCard pos={{bottom:52,right:6}} em="🎬" name="Shorts" handle="@imdatai" vurl="https://youtube.com/shorts/5UgwO4rbfNM" purl="https://youtube.com/@imdatai" color="#ff6b6b" cta="Shorts"/>
+    <button onClick={e=>{e.stopPropagation();skip();}} style={{position:"fixed",top:12,right:6,zIndex:100001,padding:"6px 12px",border:"1px solid rgba(0,255,136,.28)",borderRadius:14,background:"rgba(1,8,3,.9)",color:"rgba(0,255,136,.6)",fontSize:9,cursor:"pointer",fontFamily:"monospace"}}>⏭ INTRO'YU GEÇ</button>
+    <div style={{position:"fixed",bottom:10,left:"50%",transform:"translateX(-50%)",zIndex:100001}}>
+      <button onClick={skip} style={{padding:"9px 28px",border:"2px solid rgba(0,255,136,.55)",borderRadius:22,background:"linear-gradient(135deg,rgba(0,255,136,.11),rgba(0,220,255,.07))",color:"#00ff88",fontSize:11,cursor:"pointer",fontFamily:"monospace",fontWeight:700,letterSpacing:".1em",animation:"glow 2s ease-in-out infinite"}}>⚡ SİSTEME GİRİŞ YAP</button>
     </div>
-  );
+    <style>{"@keyframes scanLine{0%{top:0}100%{top:100%}}"}</style>
+  </div>;
 }
-
 
 // ══════════════════════════════════════════════════════════
 // CANLI AKTİVİTE FEED
@@ -4124,67 +3839,91 @@ function AnimGlobe(){
 }
 
 const ANIMS=[
-  {id:"particle",t:"🌌 Parçacık Evreni",d:"500 parçacık, ağ bağlantıları",Comp:AnimParticle},
-  {id:"neural",t:"🧠 Nöral Ağ",d:"Sinir ağı görselleştirmesi",Comp:NeuralNetSim},
-  {id:"dna",t:"🧬 DNA Sarmalı",d:"3D dönen çift sarmal",Comp:AnimDNA},
+  {id:"particle",t:"🌌 Parçacık Evreni",d:"500 parçacık + ağ",Comp:AnimParticle},
+  {id:"neural",t:"🧠 Nöral Ağ",d:"Sinir ağı görsel",Comp:NeuralNetSim},
+  {id:"dna",t:"🧬 DNA Sarmalı",d:"3D çift sarmal",Comp:AnimDNA},
   {id:"wave",t:"🌊 Dalga Denizi",d:"Sin/Cos dalgaları",Comp:AnimWave},
-  {id:"globe",t:"🌐 3D Küre",d:"Dönen dünya ağı",Comp:AnimGlobe},
-  {id:"matrix",t:"🔢 Matrix",d:"Kod yağmuru",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cols=Math.floor(c.width/14);const drops=Array.from({length:cols},()=>0);const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.07)";ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle="#00ff88";ctx.font="12px monospace";drops.forEach((y,i)=>{ctx.fillText("IMDATAI01"[Math.floor(Math.random()*9)],i*14,y*14);if(y*14>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"jarvis",t:"⬡ Jarvis HUD",d:"Holografik ızgara efekti",Comp:()=><div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#020a14"}}><svg width="260" height="260" viewBox="0 0 260 260"><defs><radialGradient id="jg" cx="50%" cy="50%"><stop offset="0%" stopColor="#00dcff" stopOpacity="0.3"/><stop offset="100%" stopColor="#00dcff" stopOpacity="0"/></radialGradient></defs>{[30,55,80,105].map(r=><circle key={r} cx="130" cy="130" r={r} fill="none" stroke="#00dcff" strokeWidth="0.5" strokeOpacity={0.4-r/300}/>)}<circle cx="130" cy="130" r="20" fill="url(#jg)" stroke="#00dcff" strokeWidth="1.5"/><polygon points="130,80 160,110 160,150 130,180 100,150 100,110" fill="none" stroke="#00dcff" strokeWidth="1" strokeOpacity="0.6"/><text x="130" y="135" textAnchor="middle" fill="#00dcff" fontSize="10" fontFamily="monospace">IMDATAI</text></svg></div>},
-  {id:"fireworks",t:"🎆 Havai Fişek",d:"Renkli patlama animasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const ps=[];function ex(x,y){const col="hsl("+Math.random()*360+",100%,60%)";for(let i=0;i<60;i++)ps.push({x,y,vx:(Math.random()-.5)*8,vy:(Math.random()-.5)*8,life:1,col});}let t=0;const iv=setInterval(()=>{t++;ctx.fillStyle="rgba(2,5,10,0.2)";ctx.fillRect(0,0,c.width,c.height);if(t%80===0)ex(Math.random()*c.width,Math.random()*c.height*0.7);for(let i=ps.length-1;i>=0;i--){const p=ps[i];ctx.fillStyle=p.col;ctx.globalAlpha=p.life;ctx.fillRect(p.x,p.y,3,3);p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.018;if(p.life<=0)ps.splice(i,1);}ctx.globalAlpha=1;},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"blackhole",t:"⚫ Kara Delik",d:"Spiral çekim animasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cx=c.width/2,cy=c.height/2;const pts=Array.from({length:200},()=>({a:Math.random()*Math.PI*2,r2:50+Math.random()*120,sp:0.005+Math.random()*0.02,col:"hsl("+(220+Math.random()*60)+",80%,"+(40+Math.random()*30)+"%)"}));const iv=setInterval(()=>{ctx.fillStyle="rgba(0,0,0,0.15)";ctx.fillRect(0,0,c.width,c.height);pts.forEach(p=>{p.a+=p.sp;p.r2=Math.max(5,p.r2-0.1);const x=cx+p.r2*Math.cos(p.a),y=cy+p.r2*Math.sin(p.a);ctx.fillStyle=p.col;ctx.fillRect(x,y,2,2);if(p.r2<8)p.r2=50+Math.random()*120;});},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"lightning",t:"⚡ Şimşek",d:"Elektrik şimşek efekti",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");function bolt(x1,y1,x2,y2,d){if(d<=0){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();return;}const mx=(x1+x2)/2+(Math.random()-.5)*d*2,my=(y1+y2)/2+(Math.random()-.5)*d*2;bolt(x1,y1,mx,my,d/2);bolt(mx,my,x2,y2,d/2);}const iv=setInterval(()=>{ctx.fillStyle="rgba(2,5,15,0.4)";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="hsl("+(200+Math.random()*60)+",100%,"+(70+Math.random()*20)+"%)";ctx.lineWidth=Math.random()*2+0.5;ctx.shadowBlur=15;ctx.shadowColor="#00dcff";if(Math.random()>.5)bolt(c.width/2,0,c.width/2+(Math.random()-.5)*c.width,c.height,60);ctx.shadowBlur=0;},120);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"nebula",t:"🌠 Nebula",d:"Uzay bulutsulu arka plan",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const stars=Array.from({length:150},()=>({x:Math.random()*c.width,y:Math.random()*c.height,rr:Math.random()*1.5,b:Math.random()}));let t=0;const iv=setInterval(()=>{t+=0.01;ctx.fillStyle="rgba(2,4,12,0.06)";ctx.fillRect(0,0,c.width,c.height);stars.forEach(s=>{s.b+=0.01;ctx.fillStyle="rgba(255,255,255,"+(0.3+Math.sin(s.b)*0.4)+")";ctx.beginPath();ctx.arc(s.x,s.y,s.rr,0,Math.PI*2);ctx.fill();});},60);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"heartbeat",t:"❤️ Kalp Atışı",d:"EKG kalp ritmi simülasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const pts=[];let x=0;const iv=setInterval(()=>{x=(x+3)%c.width;const cy=c.height/2;const t2=x/c.width*Math.PI*8;let y=cy;if(Math.sin(t2)>0.8)y=cy-80*Math.sin(t2*3);else y=cy+Math.sin(t2)*8;pts.push({x,y});if(pts.length>100)pts.shift();ctx.fillStyle="rgba(10,2,4,0.3)";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#ff4466";ctx.lineWidth=2;ctx.shadowBlur=10;ctx.shadowColor="#ff4466";ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();ctx.shadowBlur=0;},20);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"boids",t:"🐦 Boids Sürüsü",d:"Yapay zeka sürü davranışı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const boids=Array.from({length:60},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.15)";ctx.fillRect(0,0,c.width,c.height);boids.forEach(b=>{let ax=0,ay=0,n=0;boids.forEach(o=>{if(o===b)return;const dx=o.x-b.x,dy=o.y-b.y,d=Math.sqrt(dx*dx+dy*dy);if(d<60){ax+=o.vx;ay+=o.vy;n++;}if(d<20){ax-=dx*0.1;ay-=dy*0.1;}});if(n>0){b.vx+=(ax/n-b.vx)*0.05;b.vy+=(ay/n-b.vy)*0.05;}const spd=Math.sqrt(b.vx*b.vx+b.vy*b.vy);if(spd>3){b.vx=b.vx/spd*3;b.vy=b.vy/spd*3;}b.x=(b.x+b.vx+c.width)%c.width;b.y=(b.y+b.vy+c.height)%c.height;ctx.fillStyle="#00dcff";ctx.fillRect(b.x,b.y,3,3);});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"spiral",t:"🌀 Fibonacci Sarmalı",d:"Fibonacci sarmalı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.05;ctx.fillStyle="rgba(4,8,20,0.08)";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;for(let i=0;i<400;i++){const a=i*0.2+t;const rr=i*0.4;const x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a);const hue=(i*2+t*20)%360;ctx.fillStyle="hsl("+hue+",80%,60%)";ctx.fillRect(x,y,2,2);}},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"constellation",t:"✨ Takımyıldız",d:"İnteraktif yıldız bağlantıları",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const stars=Array.from({length:80},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*0.3,vy:(Math.random()-.5)*0.3,rr:Math.random()*2+0.5}));const iv=setInterval(()=>{ctx.fillStyle="rgba(2,4,12,0.2)";ctx.fillRect(0,0,c.width,c.height);stars.forEach(s=>{s.x=(s.x+s.vx+c.width)%c.width;s.y=(s.y+s.vy+c.height)%c.height;ctx.fillStyle="#e2e8f0";ctx.beginPath();ctx.arc(s.x,s.y,s.rr,0,Math.PI*2);ctx.fill();stars.forEach((o,j)=>{const d=Math.hypot(s.x-o.x,s.y-o.y);if(d<80){ctx.strokeStyle="rgba(0,220,255,"+(1-d/80)+")";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(o.x,o.y);ctx.stroke();}});});},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"geometry",t:"📐 Geometri",d:"Dönen geometrik şekiller",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.02;ctx.fillStyle="rgba(4,8,20,0.1)";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;[3,4,5,6,8].forEach((sides,i)=>{ctx.save();ctx.translate(cx,cy);ctx.rotate(t*(i%2===0?1:-1)*(0.5+i*0.2));const rr=30+i*22;ctx.strokeStyle="hsl("+(i*40+t*20)+",80%,60%)";ctx.lineWidth=1.5;ctx.beginPath();for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2;j===0?ctx.moveTo(rr*Math.cos(a),rr*Math.sin(a)):ctx.lineTo(rr*Math.cos(a),rr*Math.sin(a));}ctx.closePath();ctx.stroke();ctx.restore();});},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"pulsar",t:"📡 Pulsar",d:"Radyo dalgası yayılımı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const rings=[];let t=0;const iv=setInterval(()=>{t++;if(t%40===0)rings.push({rr:0,a:0.9});ctx.fillStyle="rgba(4,8,20,0.2)";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;ctx.fillStyle="#a855f7";ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);ctx.fill();for(let i=rings.length-1;i>=0;i--){const ring=rings[i];ctx.strokeStyle="rgba(168,85,247,"+ring.a+")";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,ring.rr,0,Math.PI*2);ctx.stroke();ring.rr+=2.5;ring.a-=0.018;if(ring.a<=0)rings.splice(i,1);}},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"audio",t:"🎵 Ses Görselleştirici",d:"Müzik frekans görselleştirici",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const bars=Array.from({length:48},(_,i)=>({h:20,target:20,hue:200+i*3}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.3)";ctx.fillRect(0,0,c.width,c.height);bars.forEach((b,i)=>{b.target+=(Math.random()-.5)*40;b.target=Math.max(5,Math.min(c.height*.8,b.target));b.h+=(b.target-b.h)*0.15;const x=i*(c.width/bars.length)+2;const g=ctx.createLinearGradient(0,c.height,0,c.height-b.h);g.addColorStop(0,"hsla("+b.hue+",90%,55%,0.9)");g.addColorStop(1,"hsla("+(b.hue+30)+",100%,70%,0.7)");ctx.fillStyle=g;ctx.fillRect(x,c.height-b.h,c.width/bars.length-2,b.h);});},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"gameoflife",t:"🔲 Game of Life",d:"Conway'in yaşam oyunu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const W=Math.floor(c.width/8),H=Math.floor(c.height/8);let grid=Array.from({length:H},()=>Array.from({length:W},()=>Math.random()>.7?1:0));const iv=setInterval(()=>{ctx.fillStyle="#030609";ctx.fillRect(0,0,c.width,c.height);const next=Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>{let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(dx===0&&dy===0)continue;n+=grid[(y+dy+H)%H][(x+dx+W)%W];}return grid[y][x]?n===2||n===3?1:0:n===3?1:0;}));grid=next;grid.forEach((row,y)=>row.forEach((cell,x)=>{if(cell){ctx.fillStyle="#00dcff";ctx.fillRect(x*8,y*8,7,7);}}));},120);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"crystal",t:"💎 Kristal Büyümesi",d:"Büyüyen kristal yapısı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const pts=[{x:c.width/2,y:c.height/2,size:2}];let t=0;const iv=setInterval(()=>{t++;ctx.fillStyle="rgba(4,8,20,0.05)";ctx.fillRect(0,0,c.width,c.height);if(t%5===0&&pts.length<200){const base=pts[Math.floor(Math.random()*pts.length)];const a=Math.random()*Math.PI*2;const d=8+Math.random()*8;pts.push({x:base.x+Math.cos(a)*d,y:base.y+Math.sin(a)*d,size:base.size*0.95+0.2});}pts.forEach(p=>{const hue=(p.x+p.y+t)%360;ctx.fillStyle="hsla("+hue+",70%,60%,0.8)";ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"metaballs",t:"🫧 Metaballs",d:"Organik damla simülasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const balls=Array.from({length:6},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,rr:30+Math.random()*30,h:Math.random()*360}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.3)";ctx.fillRect(0,0,c.width,c.height);balls.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(b.x<b.rr||b.x>c.width-b.rr)b.vx*=-1;if(b.y<b.rr||b.y>c.height-b.rr)b.vy*=-1;const g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.rr);g.addColorStop(0,"hsla("+b.h+",90%,65%,0.9)");g.addColorStop(1,"hsla("+b.h+",90%,65%,0)");ctx.fillStyle=g;ctx.beginPath();ctx.arc(b.x,b.y,b.rr,0,Math.PI*2);ctx.fill();});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"grid3d",t:"🔷 3D Izgara",d:"Perspektifli ızgara animasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.03;ctx.fillStyle="#030609";ctx.fillRect(0,0,c.width,c.height);const cols=10,rows=10;for(let i=0;i<=cols;i++){for(let j=0;j<=rows;j++){const x3=(i/cols-.5)*4,z3=(j/rows-.5)*4;const y3=Math.sin(i/cols*Math.PI*2+t)*0.5+Math.cos(j/rows*Math.PI*2+t)*0.5;const px=c.width/2+x3/(z3+3)*c.width*.6,py=c.height/2+(y3-1)/(z3+3)*c.height*.6;const hue=(i*36+j*36+t*30)%360;ctx.fillStyle="hsl("+hue+",80%,60%)";ctx.fillRect(px-2,py-2,4,4);}}},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"globe",t:"🌐 3D Küre",d:"Dünya ağı",Comp:AnimGlobe},
+  {id:"matrix",t:"🔢 Matrix",d:"Kod yağmuru",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cols=Math.floor(c.width/14);const drops=Array(cols).fill(0);const CH="IMDATAI01MLAI10";const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.07)";ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle="#00ff88";ctx.font="12px monospace";drops.forEach((y,i)=>{ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*14,y*14);if(y*14>c.height&&Math.random()>.97)drops[i]=0;drops[i]++;});},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"fireworks",t:"🎆 Havai Fişek",d:"Renkli patlamalar",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const ps=[];function ex(x,y){const h=Math.random()*360;for(let i=0;i<50;i++)ps.push({x,y,vx:(Math.random()-.5)*7,vy:(Math.random()-.5)*7,life:1,h});}let t=0;const iv=setInterval(()=>{t++;ctx.fillStyle="rgba(2,5,10,0.2)";ctx.fillRect(0,0,c.width,c.height);if(t%70===0)ex(Math.random()*c.width,Math.random()*c.height*0.7);for(let i=ps.length-1;i>=0;i--){const p=ps[i];ctx.fillStyle=`hsl(${p.h},100%,60%)`;ctx.globalAlpha=p.life;ctx.fillRect(p.x,p.y,3,3);p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.018;if(p.life<=0)ps.splice(i,1);}ctx.globalAlpha=1;},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"blackhole",t:"⚫ Kara Delik",d:"Spiral çekim",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cx=c.width/2,cy=c.height/2;const pts=Array.from({length:200},()=>({a:Math.random()*Math.PI*2,rr:50+Math.random()*120,sp:0.005+Math.random()*0.02,h:220+Math.random()*60}));const iv=setInterval(()=>{ctx.fillStyle="rgba(0,0,0,0.15)";ctx.fillRect(0,0,c.width,c.height);pts.forEach(p=>{p.a+=p.sp;p.rr=Math.max(5,p.rr-0.1);const x=cx+p.rr*Math.cos(p.a),y=cy+p.rr*Math.sin(p.a);ctx.fillStyle=`hsl(${p.h},80%,55%)`;ctx.fillRect(x,y,2,2);if(p.rr<8)p.rr=50+Math.random()*120;});},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"lightning",t:"⚡ Şimşek",d:"Elektrik efekti",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");function bolt(x1,y1,x2,y2,d){if(d<=0){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();return;}const mx=(x1+x2)/2+(Math.random()-.5)*d*2,my=(y1+y2)/2+(Math.random()-.5)*d*2;bolt(x1,y1,mx,my,d/2);bolt(mx,my,x2,y2,d/2);}const iv=setInterval(()=>{ctx.fillStyle="rgba(2,5,15,0.35)";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle=`hsl(${200+Math.random()*60},100%,70%)`;ctx.lineWidth=Math.random()*2+0.5;ctx.shadowBlur=12;ctx.shadowColor="#00dcff";if(Math.random()>.5)bolt(c.width/2,0,c.width/2+(Math.random()-.5)*c.width,c.height,60);ctx.shadowBlur=0;},120);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"nebula",t:"🌠 Nebula",d:"Uzay bulutu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const stars=Array.from({length:120},()=>({x:Math.random()*c.width,y:Math.random()*c.height,rr:Math.random()*1.5,b:Math.random()}));const iv=setInterval(()=>{ctx.fillStyle="rgba(2,4,12,0.06)";ctx.fillRect(0,0,c.width,c.height);stars.forEach(s=>{s.b+=0.01;ctx.fillStyle=`rgba(255,255,255,${0.3+Math.sin(s.b)*0.4})`;ctx.beginPath();ctx.arc(s.x,s.y,s.rr,0,Math.PI*2);ctx.fill();});},60);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"heartbeat",t:"❤️ Kalp Atışı",d:"EKG ritmi",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const pts=[];let x=0;const iv=setInterval(()=>{x=(x+3)%c.width;const cy2=c.height/2;const t2=x/c.width*Math.PI*8;let y=cy2;if(Math.sin(t2)>0.8)y=cy2-80*Math.sin(t2*3);else y=cy2+Math.sin(t2)*8;pts.push({x,y});if(pts.length>100)pts.shift();ctx.fillStyle="rgba(10,2,4,0.3)";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#ff4466";ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor="#ff4466";ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();ctx.shadowBlur=0;},20);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"boids",t:"🐦 Sürü",d:"Yapay zeka sürüsü",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const B=Array.from({length:60},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.15)";ctx.fillRect(0,0,c.width,c.height);B.forEach(b=>{let ax=0,ay=0,n=0;B.forEach(o=>{if(o===b)return;const dx=o.x-b.x,dy=o.y-b.y,d=Math.sqrt(dx*dx+dy*dy);if(d<60){ax+=o.vx;ay+=o.vy;n++;}if(d<20){ax-=dx*0.1;ay-=dy*0.1;}});if(n>0){b.vx+=(ax/n-b.vx)*0.05;b.vy+=(ay/n-b.vy)*0.05;}const sp=Math.sqrt(b.vx*b.vx+b.vy*b.vy);if(sp>3){b.vx=b.vx/sp*3;b.vy=b.vy/sp*3;}b.x=(b.x+b.vx+c.width)%c.width;b.y=(b.y+b.vy+c.height)%c.height;ctx.fillStyle="#00dcff";ctx.fillRect(b.x,b.y,3,3);});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"spiral",t:"🌀 Sarmal",d:"Fibonacci sarmalı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.05;ctx.fillStyle="rgba(4,8,20,0.08)";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;for(let i=0;i<400;i++){const a=i*0.2+t;const rr=i*0.4;const x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a);ctx.fillStyle=`hsl(${(i*2+t*20)%360},80%,60%)`;ctx.fillRect(x,y,2,2);}},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"constellation",t:"✨ Takımyıldız",d:"Yıldız bağlantıları",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const S=Array.from({length:80},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*0.3,vy:(Math.random()-.5)*0.3,rr:Math.random()*2+0.5}));const iv=setInterval(()=>{ctx.fillStyle="rgba(2,4,12,0.2)";ctx.fillRect(0,0,c.width,c.height);S.forEach(s=>{s.x=(s.x+s.vx+c.width)%c.width;s.y=(s.y+s.vy+c.height)%c.height;ctx.fillStyle="#e2e8f0";ctx.beginPath();ctx.arc(s.x,s.y,s.rr,0,Math.PI*2);ctx.fill();S.forEach(o=>{const d=Math.hypot(s.x-o.x,s.y-o.y);if(d<80&&d>0){ctx.strokeStyle=`rgba(0,220,255,${1-d/80})`;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(o.x,o.y);ctx.stroke();}});});},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"pulsar",t:"📡 Pulsar",d:"Radyo dalgaları",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const rings=[];let t=0;const iv=setInterval(()=>{t++;if(t%40===0)rings.push({rr:0,a:0.9});ctx.fillStyle="rgba(4,8,20,0.2)";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;ctx.fillStyle="#a855f7";ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);ctx.fill();for(let i=rings.length-1;i>=0;i--){const ring=rings[i];ctx.strokeStyle=`rgba(168,85,247,${ring.a})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,ring.rr,0,Math.PI*2);ctx.stroke();ring.rr+=2.5;ring.a-=0.018;if(ring.a<=0)rings.splice(i,1);}},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"audio",t:"🎵 Ses Dalgası",d:"Frekans görsel",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const bars=Array.from({length:48},(_,i)=>({h:20,target:20,hue:200+i*3}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.3)";ctx.fillRect(0,0,c.width,c.height);bars.forEach((b,i)=>{b.target+=(Math.random()-.5)*40;b.target=Math.max(5,Math.min(c.height*.8,b.target));b.h+=(b.target-b.h)*0.15;const x=i*(c.width/bars.length)+1;const g=ctx.createLinearGradient(0,c.height,0,c.height-b.h);g.addColorStop(0,`hsla(${b.hue},90%,55%,.9)`);g.addColorStop(1,`hsla(${b.hue+30},100%,70%,.7)`);ctx.fillStyle=g;ctx.fillRect(x,c.height-b.h,c.width/bars.length-2,b.h);});},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"gameoflife",t:"🔲 Game of Life",d:"Conway yaşam",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const W=Math.floor(c.width/8),H=Math.floor(c.height/8);let grid=Array.from({length:H},()=>Array.from({length:W},()=>Math.random()>.7?1:0));const iv=setInterval(()=>{ctx.fillStyle="#030609";ctx.fillRect(0,0,c.width,c.height);const next=grid.map((row,y)=>row.map((_,x)=>{let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(dx===0&&dy===0)continue;n+=grid[(y+dy+H)%H][(x+dx+W)%W];}return grid[y][x]?n===2||n===3?1:0:n===3?1:0;}));grid=next;grid.forEach((row,y)=>row.forEach((cell,x)=>{if(cell){ctx.fillStyle="#00dcff";ctx.fillRect(x*8,y*8,7,7);}}));},120);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"crystal",t:"💎 Kristal",d:"Büyüyen yapı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const pts=[{x:c.width/2,y:c.height/2,size:2}];let t=0;const iv=setInterval(()=>{t++;ctx.fillStyle="rgba(4,8,20,0.05)";ctx.fillRect(0,0,c.width,c.height);if(t%5===0&&pts.length<200){const base=pts[Math.floor(Math.random()*pts.length)];const a=Math.random()*Math.PI*2,d=8+Math.random()*8;pts.push({x:base.x+Math.cos(a)*d,y:base.y+Math.sin(a)*d,size:Math.max(0.5,base.size*0.95)});}pts.forEach(p=>{ctx.fillStyle=`hsla(${(p.x+p.y+t)%360},70%,60%,.8)`;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"metaballs",t:"🫧 Metaballs",d:"Organik damlalar",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const balls=Array.from({length:6},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,rr:30+Math.random()*30,h:Math.random()*360}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.3)";ctx.fillRect(0,0,c.width,c.height);balls.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(b.x<b.rr||b.x>c.width-b.rr)b.vx*=-1;if(b.y<b.rr||b.y>c.height-b.rr)b.vy*=-1;const g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.rr);g.addColorStop(0,`hsla(${b.h},90%,65%,.9)`);g.addColorStop(1,`hsla(${b.h},90%,65%,0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(b.x,b.y,b.rr,0,Math.PI*2);ctx.fill();});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"geometry",t:"📐 Geometri",d:"Dönen şekiller",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.02;ctx.fillStyle="rgba(4,8,20,0.1)";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;[3,4,5,6,8].forEach((sides,i)=>{ctx.save();ctx.translate(cx,cy);ctx.rotate(t*(i%2===0?1:-1)*(0.5+i*0.2));const rr=30+i*22;ctx.strokeStyle=`hsl(${i*40+t*20},80%,60%)`;ctx.lineWidth=1.5;ctx.beginPath();for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2;j===0?ctx.moveTo(rr*Math.cos(a),rr*Math.sin(a)):ctx.lineTo(rr*Math.cos(a),rr*Math.sin(a));}ctx.closePath();ctx.stroke();ctx.restore();});},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"clock",t:"🕐 Sanat Saati",d:"Canlı analog",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cx=c.width/2,cy=c.height/2,rad=Math.min(c.width,c.height)/2-20;const iv=setInterval(()=>{const now=new Date();ctx.fillStyle="#030609";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#00dcff";ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor="#00dcff";ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const x1=cx+(rad-8)*Math.cos(a-Math.PI/2),y1=cy+(rad-8)*Math.sin(a-Math.PI/2),x2=cx+(rad-18)*Math.cos(a-Math.PI/2),y2=cy+(rad-18)*Math.sin(a-Math.PI/2);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}[[now.getHours()%12/12,"#a855f7",rad*.5,4],[now.getMinutes()/60,"#00dcff",rad*.7,2],[now.getSeconds()/60,"#ff4466",rad*.85,1]].forEach(([frac,col,len,lw])=>{const a=frac*Math.PI*2-Math.PI/2;ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+len*Math.cos(a),cy+len*Math.sin(a));ctx.stroke();});},1000);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
 ];
+
+class ErrorBoundary extends React.Component{
+  constructor(props){super(props);this.state={err:false};}
+  static getDerivedStateFromError(){return{err:true};}
+  componentDidCatch(){}
+  render(){if(this.state.err)return <div style={{padding:8,color:"#475569",fontSize:10,textAlign:"center"}}>⚠️</div>;return this.props.children;}
+}
+function Safe({children}){return <ErrorBoundary>{children}</ErrorBoundary>;}
+
 function AnimasyonPage(){
-  const[active,setActive]=useState(null);
-  const[fullscreen,setFullscreen]=useState(false);
-  const ActiveComp=active?ANIMS.find(a=>a.id===active)?.Comp:null;
-  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
-    <div style={{marginBottom:24}}>
-      <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:5}}>GÖRSEL ŞOV</div>
-      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>🎬 AI Animasyon Galerisi</div>
-      <div style={{fontSize:12,color:"#64748b"}}>Yapay zekanın iç dünyası — interaktif canvas animasyonları. Tam ekranda izle.</div>
-    </div>
-    {active&&<div style={{background:"rgba(0,0,0,0.5)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:16,marginBottom:20,overflow:"hidden",position:"relative"}}>
-      <div style={{height:fullscreen?"100vh":380,transition:"height .3s"}}>
-        <ActiveComp/>
-      </div>
-      <div style={{position:"absolute",top:12,right:12,display:"flex",gap:8}}>
-        <button onClick={()=>setFullscreen(f=>!f)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid rgba(255,255,255,0.2)",background:"rgba(0,0,0,0.6)",color:"#e2e8f0",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
-          {fullscreen?"⊡ Küçült":"⊞ Tam Ekran"}
-        </button>
-        <button onClick={()=>{setActive(null);setFullscreen(false);}} style={{padding:"6px 12px",borderRadius:8,border:"1px solid rgba(255,255,255,0.1)",background:"rgba(0,0,0,0.6)",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>✕</button>
-      </div>
-      <div style={{position:"absolute",bottom:12,left:12,fontSize:10,color:"#475569"}}>{ANIMS.find(a=>a.id===active)?.t}</div>
-    </div>}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
-      {ANIMS.map(a=>(
-        <div key={a.id} onClick={()=>setActive(a.id)} className="card-hover" style={{background:active===a.id?"rgba(168,85,247,0.12)":"rgba(255,255,255,0.02)",border:`1px solid ${active===a.id?"rgba(168,85,247,0.4)":"rgba(255,255,255,0.07)"}`,borderRadius:13,padding:"16px",cursor:"pointer"}}>
-          <div style={{fontSize:28,marginBottom:8}}>{a.t.split(" ")[0]}</div>
-          <div style={{fontSize:13,fontWeight:700,color:active===a.id?"#a855f7":"#e2e8f0",marginBottom:4,fontFamily:"'Space Grotesk',sans-serif"}}>{a.t.split(" ").slice(1).join(" ")}</div>
-          <div style={{fontSize:10,color:"#475569",marginBottom:10}}>{a.d}</div>
-          <div style={{fontSize:11,color:"#a855f7",fontWeight:600}}>{active===a.id?"▶ Oynatılıyor":"▷ Başlat"}</div>
+  const[sel,setSel]=useState(null);
+  function openAnim(a){setSel(a);}
+  function closeAnim(){setSel(null);}
+  if(sel){
+    const AnimComp=sel.Comp;
+    return (
+      <div style={{position:"fixed",inset:0,zIndex:99999,background:"#000",display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"10px 16px",background:"rgba(0,0,0,0.9)",borderBottom:"1px solid rgba(0,220,255,0.15)",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+          <button onClick={closeAnim} style={{padding:"6px 14px",border:"1px solid rgba(0,220,255,0.4)",borderRadius:20,background:"rgba(0,0,0,0.8)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"monospace",fontWeight:700,flexShrink:0}}>✕ Çıkış</button>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:15,fontWeight:800,color:"#fff",fontFamily:"Space Grotesk,sans-serif"}}>{sel.t}</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>{sel.d}</div>
+          </div>
         </div>
-      ))}
+        <div style={{flex:1,position:"relative",overflow:"hidden"}}>
+          <Safe><AnimComp/></Safe>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{padding:"24px 16px",maxWidth:1200,margin:"0 auto"}}>
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:4}}>GÖRSEL ŞOV</div>
+        <div style={{fontSize:22,fontWeight:900,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginBottom:6}}>🎬 AI Animasyon Galerisi</div>
+        <div style={{fontSize:12,color:"#64748b"}}>{ANIMS.length} interaktif animasyon · Tıkla → Tam ekran</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:10}}>
+        {ANIMS.map(function(anim){
+          const Preview=anim.Comp;
+          return (
+            <div key={anim.id} onClick={()=>openAnim(anim)}
+              style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:"1px solid rgba(168,85,247,0.2)",background:"rgba(168,85,247,0.04)",transition:"all .2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.borderColor="rgba(168,85,247,0.5)";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor="rgba(168,85,247,0.2)";}}>
+              <div style={{height:120,background:"#030609",position:"relative",overflow:"hidden"}}>
+                <Safe><Preview/></Safe>
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.25)"}}>
+                  <div style={{width:40,height:40,borderRadius:"50%",background:"rgba(168,85,247,0.85)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>▶</div>
+                </div>
+              </div>
+              <div style={{padding:"8px 10px"}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#e2e8f0",marginBottom:2,fontFamily:"Space Grotesk,sans-serif"}}>{anim.t}</div>
+                <div style={{fontSize:9,color:"#475569"}}>{anim.d}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
-  </div>;
+  );
 }
 
-// ══════════════════════════════════════════════════════════
-// YENİ AI MODEL SAYFALARI
-// ══════════════════════════════════════════════════════════
 function GrokPage({setPage}){
   return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
     <div style={{background:"linear-gradient(135deg,rgba(0,0,0,0.4),rgba(251,146,60,0.05))",border:"1px solid rgba(251,146,60,0.25)",borderRadius:20,padding:"28px",marginBottom:20}}>
@@ -4503,6 +4242,45 @@ const PERSONAS=[
   {id:"gelistirici",e:"💻",t:"Geliştirici",d:"Teknik, kod, verimli",color:"#a855f7",pages:["claude","tools","maliyet","puan","flashcard"],ipucu:"Cursor + Claude Code ikilisi 2026'nın en güçlü dev setup'ı. Task Budget ile maliyet kontrolü şart.",tools:["Cursor","Claude Code","GitHub Copilot","v0.dev"]},
   {id:"ogrenci",e:"📚",t:"Öğrenci",d:"Öğrenme odaklı, meraklı",color:"#00dcff",pages:["ogrenme","flashcard","sozluk","mitler","karsilastirma"],ipucu:"ChatGPT Feynman tekniğiyle öğret: 'Bunu 12 yaşında birine anlatır gibi açıkla'. Öğrenme hızın 3x artar!",tools:["ChatGPT","Perplexity","Notion AI","Claude"]},
 ];
+function KisilikPage({setPage}){
+  const[sel,setSel]=useState(()=>{try{return localStorage.getItem("imdatai_persona")||null;}catch{return null;}});
+  function choose(id){setSel(id);try{localStorage.setItem("imdatai_persona",id);}catch{}playSound("level");}
+  const p=sel?PERSONAS.find(p=>p.id===sel):null;
+  return <div style={{padding:"28px 20px",maxWidth:860,margin:"0 auto"}}>
+    <div style={{marginBottom:24,textAlign:"center"}}>
+      <div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:5}}>KİŞİSELLEŞTİR</div>
+      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>🤖 AI Kişiliğini Seç</div>
+      <div style={{fontSize:12,color:"#64748b"}}>Seçtiğine göre sana özel içerik, araç ve ipuçları sunalım</div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))",gap:12,marginBottom:24}}>
+      {PERSONAS.map(persona=>(
+        <div key={persona.id} onClick={()=>choose(persona.id)} className="card-hover" style={{background:sel===persona.id?`${persona.color}12`:"rgba(255,255,255,0.02)",border:`2px solid ${sel===persona.id?persona.color:persona.color+"22"}`,borderRadius:14,padding:"18px",cursor:"pointer",transition:"all .2s"}}>
+          <div style={{fontSize:36,marginBottom:8}}>{persona.e}</div>
+          <div style={{fontSize:14,fontWeight:800,color:sel===persona.id?persona.color:"#e2e8f0",marginBottom:4,fontFamily:"'Space Grotesk',sans-serif"}}>{persona.t}</div>
+          <div style={{fontSize:11,color:"#64748b",marginBottom:8}}>{persona.d}</div>
+          <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+            {persona.tools.map(t=><span key={t} style={{fontSize:8,color:persona.color,background:`${persona.color}12`,borderRadius:4,padding:"2px 6px"}}>{t}</span>)}
+          </div>
+          {sel===persona.id&&<div style={{marginTop:8,fontSize:10,color:persona.color,fontWeight:700}}>✅ Seçili</div>}
+        </div>
+      ))}
+    </div>
+    {p&&<div style={{background:`${p.color}06`,border:`1px solid ${p.color}20`,borderRadius:16,padding:"20px",animation:"fadeIn .3s ease"}}>
+      <div style={{fontSize:12,fontWeight:700,color:p.color,marginBottom:10}}>💡 {p.t} İçin Altın İpucu</div>
+      <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.7,marginBottom:16,fontStyle:"italic"}}>"{p.ipucu}"</div>
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:10,color:"#475569",marginBottom:8}}>ÖNERİLEN SAYFALAR:</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {p.pages.map(pg=>{const n={ogrenme:"🎓 Öğren",sozluk:"📖 Sözlük",prompt:"💡 Prompt",karsilastirma:"🆚 Karşılaştır",mitler:"🔍 Mitler",para:"💰 Para",kariyer:"🚀 Kariyer",tools:"🛠️ Tools",claude:"🧠 Claude",puan:"💡 Puanla",galeri:"🎨 Galeri",animasyon:"🎬 Animasyon",cark:"🎰 Çark",roulette:"🎡 Roulette",trivia:"🏆 Trivia",dedektif:"🔍 Dedektif",emoji:"😄 Emoji",iqtest:"🧠 IQ",flashcard:"🃏 Flashcard",maliyet:"💸 Maliyet"}[pg]||pg;return <button key={pg} onClick={()=>setPage(pg)} style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${p.color}30`,background:`${p.color}10`,color:p.color,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>{n}</button>;})}
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════
+// PARALAKS + AMBIENT SES + SESLI KARŞILAMA
+// ══════════════════════════════════════════════════════════
 function useParallax(){
   useEffect(()=>{
     const h=()=>{const y=window.scrollY;document.querySelectorAll("[data-parallax]").forEach(el=>{const speed=parseFloat(el.dataset.parallax||"0.3");el.style.transform=`translateY(${y*speed}px)`;});};
@@ -4548,156 +4326,6 @@ function useSesliKarsilama(){
 }
 
 // ── NAVIGATION ─────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════
-// VIDEO REHBERİ SAYFASI
-// ══════════════════════════════════════════════════════════
-function VideoRehberPage(){
-  const VIDEOS=[
-    {id:"ZKOKP9jfAMg",title:"ChatGPT vs Claude vs Gemini 2026",cat:"Karşılaştırma",dur:"18:42",url:"https://youtu.be/ZKOKP9jfAMg",thumb:"🎬",type:"yt"},
-    {id:"5UgwO4rbfNM",title:"AI ile 30 Saniyede Profesyonel Email",cat:"İpucu",dur:"0:45",url:"https://youtube.com/shorts/5UgwO4rbfNM",thumb:"⚡",type:"short"},
-    {id:"ZS9oTcvee",title:"Claude ile İçerik Üretimi",cat:"Tutorial",dur:"1:12",url:"https://vt.tiktok.com/ZS9oTcvee/",thumb:"🎵",type:"tiktok"},
-    {id:"DX8i6_wtPxf",title:"2026 AI Araçları İnfografiği",cat:"Eğitim",dur:"Reel",url:"https://www.instagram.com/reel/DX8i6_wtPxf/",thumb:"📸",type:"ig"},
-  ];
-  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
-    <div style={{marginBottom:24}}>
-      <div style={{fontSize:9,letterSpacing:".2em",color:"#ff4444",marginBottom:5}}>YOUTUBE · TİKTOK · INSTAGRAM</div>
-      <div style={{fontSize:22,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:6}}>🎬 Video Rehberleri</div>
-      <div style={{fontSize:12,color:"#64748b"}}>IMDATAI'nın tüm platformlardaki içerikleri</div>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
-      {VIDEOS.map((v,i)=>{
-        const colors={yt:"#ff4444",short:"#ff6b6b",tiktok:"#00f2ea",ig:"#e1306c"};
-        const c=colors[v.type]||"#00dcff";
-        return <div key={i} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${c}20`,borderRadius:14,overflow:"hidden"}}>
-          <div style={{background:`linear-gradient(135deg,${c}15,rgba(0,0,0,0.3))`,padding:"16px",display:"flex",gap:10,alignItems:"center"}}>
-            <div style={{width:52,height:52,background:`${c}18`,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0}}>{v.thumb}</div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:4,lineHeight:1.4}}>{v.title}</div>
-              <div style={{display:"flex",gap:6}}>
-                <span style={{fontSize:9,color:c,background:`${c}15`,padding:"2px 7px",borderRadius:5}}>{v.cat}</span>
-                <span style={{fontSize:9,color:"#475569"}}>{v.dur}</span>
-              </div>
-            </div>
-          </div>
-          <div style={{padding:"10px 16px"}}>
-            <a href={v.url} target="_blank" rel="noopener noreferrer"
-              style={{display:"block",padding:"8px",background:`${c}15`,border:`1px solid ${c}35`,borderRadius:9,
-                color:c,fontSize:11,fontWeight:700,textDecoration:"none",textAlign:"center"}}>
-              ▶ {v.type==="tiktok"?"TikTok'ta İzle":v.type==="ig"?"Instagram'da İzle":"YouTube'da İzle"}
-            </a>
-          </div>
-        </div>;
-      })}
-    </div>
-    <div style={{marginTop:24,background:"rgba(255,68,68,0.05)",border:"1px solid rgba(255,68,68,0.15)",borderRadius:12,padding:"16px",textAlign:"center"}}>
-      <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>📺 Tüm İçerikler için Kanallarımızı Takip Et</div>
-      <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-        {[["🎬","YouTube","https://youtube.com/@imdatai","#ff4444"],["🎵","TikTok","https://tiktok.com/@imdatai","#00f2ea"],["📸","Instagram","https://instagram.com/imdatai","#e1306c"]].map(([e,n,u,c])=>(
-          <a key={n} href={u} target="_blank" rel="noopener noreferrer"
-            style={{padding:"8px 16px",background:`${c}12`,border:`1px solid ${c}30`,borderRadius:9,color:c,fontSize:11,fontWeight:700,textDecoration:"none"}}>
-            {e} {n}
-          </a>
-        ))}
-      </div>
-    </div>
-  </div>;
-}
-
-// ══════════════════════════════════════════════════════════
-// AI KİŞİLİK TESTİ
-// ══════════════════════════════════════════════════════════
-function KisilikPage(){
-  const[step,setStep]=useState(0);const[ans,setAns]=useState({});const[result,setResult]=useState(null);
-  const QS=[
-    {q:"AI'ı en çok hangi amaçla kullanıyorsun?",opts:["İş/verimlilik","Yaratıcı projeler","Öğrenme/araştırma","Eğlence/oyun"]},
-    {q:"Hangi AI özelliği seni en çok etkiler?",opts:["Kod yazma gücü","Yaratıcı yazarlık","Derin analiz","Hız ve kullanım kolaylığı"]},
-    {q:"Yeni bir AI çıktığında ilk ne yaparsın?",opts:["Hemen test ederim","Yorumları okur beklerim","Karşılaştırma yaparım","Gerek görmem"]},
-    {q:"AI geleceği hakkında ne düşünüyorsun?",opts:["Heyecan verici fırsat","Dikkatli olunmalı","Kaçınılmaz dönüşüm","Abartılıyor"]},
-  ];
-  const RESULTS={
-    "0,0,0,0":{t:"🚀 AI Öncüsü",d:"Sen teknolojiyi en erken benimseyen, verimliliği maksimize eden bir AI Öncüsü'sün. Claude Code ve GPT-5.5 senin için.",c:"#00dcff"},
-    "1,1,1,0":{t:"🎨 AI Yaratıcısı",d:"Yaratıcı projeler, içerik üretimi ve sanatsal ifade senin güçlü yönün. Midjourney ve Claude senin aracın.",c:"#f472b6"},
-    "2,2,2,2":{t:"🔬 AI Araştırmacısı",d:"Derinlemesine analiz ve öğrenme odaklısın. Perplexity ve Claude Opus ideal modellerindir.",c:"#34d399"},
-    "default":{t:"⚡ AI Bağımlısı",d:"Her kategoride güçlüsün! Tüm AI araçlarını dengeli kullanan nadir bir profil.",c:"#fbbf24"},
-  };
-  function finish(){
-    const key=Object.values(ans).map(v=>["0,1,2,3".split(",").indexOf(String(v))]).join(",");
-    setResult(RESULTS[key]||RESULTS["default"]);
-  }
-  if(result)return <div style={{padding:"28px 20px",maxWidth:600,margin:"0 auto",textAlign:"center"}}>
-    <div style={{fontSize:60,marginBottom:16}}>{result.t.split(" ")[0]}</div>
-    <div style={{fontSize:22,fontWeight:900,color:result.c,fontFamily:"'Space Grotesk',sans-serif",marginBottom:10}}>{result.t.split(" ").slice(1).join(" ")}</div>
-    <div style={{fontSize:14,color:"#94a3b8",lineHeight:1.7,marginBottom:20}}>{result.d}</div>
-    <button onClick={()=>{setStep(0);setAns({});setResult(null);}} style={{padding:"10px 24px",border:"none",borderRadius:10,background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:13,cursor:"pointer",fontWeight:700}}>Tekrar Test Et</button>
-  </div>;
-  if(step>=QS.length)return <div style={{padding:28,textAlign:"center"}}><button onClick={finish} style={{padding:"12px 32px",border:"none",borderRadius:12,background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:14,cursor:"pointer",fontWeight:700}}>✨ Sonucu Gör!</button></div>;
-  const q=QS[step];
-  return <div style={{padding:"28px 20px",maxWidth:600,margin:"0 auto"}}>
-    <div style={{marginBottom:20,textAlign:"center"}}>
-      <div style={{fontSize:9,letterSpacing:".2em",color:"#fbbf24",marginBottom:5}}>KİŞİLİK TESTİ</div>
-      <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🧠 AI Kişilik Profilin</div>
-      <div style={{fontSize:11,color:"#475569",marginTop:4}}>{step+1} / {QS.length} soru</div>
-      <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,marginTop:10}}>
-        <div style={{width:`${(step/QS.length)*100}%`,height:"100%",background:"linear-gradient(90deg,#fbbf24,#f472b6)",borderRadius:2}}/>
-      </div>
-    </div>
-    <div style={{fontSize:16,fontWeight:700,color:"#e2e8f0",textAlign:"center",marginBottom:20,lineHeight:1.5}}>{q.q}</div>
-    <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      {q.opts.map((opt,i)=><button key={i} onClick={()=>{setAns(a=>({...a,[step]:i}));setStep(s=>s+1);}}
-        style={{padding:"13px 18px",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,
-          background:ans[step]===i?"rgba(0,220,255,0.1)":"rgba(255,255,255,0.02)",
-          color:"#e2e8f0",fontSize:13,cursor:"pointer",fontFamily:"inherit",textAlign:"left",
-          transition:"all .2s"}}>
-        <span style={{color:"#475569",marginRight:8}}>{["A","B","C","D"][i]}.</span>{opt}
-      </button>)}
-    </div>
-  </div>;
-}
-
-// ══════════════════════════════════════════════════════════
-// AI GÜNLÜK ÖZET
-// ══════════════════════════════════════════════════════════
-function GunlukOzetPage(){
-  const today=new Date().toLocaleDateString("tr-TR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  const DIGEST=[
-    {time:"09:00",emoji:"🔥",title:"GPT-5.5 Türkiye'de aktif",summary:"OpenAI'ın en güçlü modeli artık Türkçe arayüzle kullanılabiliyor. İlk 24 saatte 2M+ kullanıcı.",tag:"Flaş",color:"#ff4444"},
-    {time:"10:30",emoji:"🧠",title:"Claude kodlama benchmarkı kırdı",summary:"SWE-bench'te %87.6 ile yeni dünya rekoru. Gerçek bug'ları insanüstü performansla çözüyor.",tag:"Araştırma",color:"#a855f7"},
-    {time:"12:00",emoji:"💡",title:"Günün Prompt İpucu",summary:"'Chain of Thought' tekniği: Karmaşık problemlerde modele 'adım adım düşün' diyerek %40 daha iyi sonuç alın.",tag:"İpucu",color:"#fbbf24"},
-    {time:"14:00",emoji:"📊",title:"Türkiye AI yatırım raporu",summary:"2026 Q1: Türk startup'ları 1.2 milyar dolar AI yatırımı çekti. İstanbul Avrupa'nın 3. AI merkezi.",tag:"Ekonomi",color:"#34d399"},
-    {time:"16:00",emoji:"🎮",title:"Yeni AI oyun motoru",summary:"Google DeepMind'ın GameNGen modeli, Doom'u gerçek zamanlı simüle ediyor. Oyun tasarımı değişiyor.",tag:"Teknoloji",color:"#60a5fa"},
-    {time:"18:00",emoji:"🤝",title:"Meta Llama 4 açık kaynak",summary:"Meta'nın en güçlü modeli ticari kullanıma açıldı. Geliştiriciler için ücretsiz API erişimi başladı.",tag:"Açık Kaynak",color:"#00dcff"},
-  ];
-  return <div style={{padding:"28px 20px",maxWidth:700,margin:"0 auto"}}>
-    <div style={{marginBottom:22}}>
-      <div style={{fontSize:9,letterSpacing:".2em",color:"#00dcff",marginBottom:5}}>GÜNLÜK ÖZET</div>
-      <div style={{fontSize:22,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",marginBottom:4}}>📰 AI Günlük Digest</div>
-      <div style={{fontSize:11,color:"#475569"}}>{today} · Her gün 18:00'de güncellenir</div>
-    </div>
-    <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      {DIGEST.map((d,i)=><div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",
-        background:"rgba(255,255,255,0.02)",border:`1px solid ${d.color}15`,borderRadius:12,padding:"14px",
-        position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",left:0,top:0,bottom:0,width:3,background:d.color,borderRadius:"3px 0 0 3px"}}/>
-        <div style={{textAlign:"center",flexShrink:0,paddingLeft:8}}>
-          <div style={{fontSize:24}}>{d.emoji}</div>
-          <div style={{fontSize:9,color:"#334155",marginTop:2}}>{d.time}</div>
-        </div>
-        <div style={{flex:1}}>
-          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:5,flexWrap:"wrap"}}>
-            <span style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{d.title}</span>
-            <span style={{fontSize:8,color:d.color,background:`${d.color}15`,padding:"2px 7px",borderRadius:5,fontWeight:700}}>{d.tag}</span>
-          </div>
-          <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6}}>{d.summary}</div>
-        </div>
-      </div>)}
-    </div>
-    <div style={{marginTop:16,padding:"12px 16px",background:"rgba(0,220,255,0.04)",border:"1px solid rgba(0,220,255,0.12)",borderRadius:10,textAlign:"center"}}>
-      <div style={{fontSize:11,color:"#475569"}}>📧 Günlük özeti almak için: <span style={{color:"#00dcff"}}>newsletter@imdatai.com</span></div>
-    </div>
-  </div>;
-}
-
-
 const NAV_GROUPS=[
   {id:"home",label:"Ana Sayfa"},
   {id:"haberler",label:"Haberler"},
@@ -5014,8 +4642,7 @@ function ToolsPage(){
           </div>
         </a>)}
       </div>
-    </div>;
-  })}
+    </div>;})}
   </div>;
 }
 
@@ -5073,8 +4700,6 @@ export default function App(){
     {page==="gorev"         &&<div style={{padding:"28px 20px",textAlign:"center"}}><DailyMissionsWidget setPage={nav}/><div style={{fontSize:14,color:"#64748b",marginTop:60}}>Görev widget'ı sağ alt köşede! 📋</div></div>}
     {page==="dashboard"     &&<DashboardPage setPage={nav}/>}
     {page==="kisilik"       &&<KisilikPage setPage={nav}/>}
-    {page==="videorehber"   &&<VideoRehberPage/>}
-    {page==="gunlukezet"    &&<GunlukOzetPage/>}
     {page==="topluluk"      &&<ToplulukPage/>}
     {page==="kariyer"       &&<KariyerPage/>}
     {page==="mitler"        &&<MitlerPage/>}
@@ -5445,6 +5070,42 @@ function GeminiPage({setPage}){
   </div>;
 }
 
+function NavSearchBar({nav}){
+  const[open,setOpen]=useState(false);
+  const[q,setQ]=useState('');
+  const ref=useRef();
+  const PAGES=[
+    {p:'home',t:'Ana Sayfa',e:'🏠'},{p:'haberler',t:'Haberler',e:'📰'},{p:'blog',t:'Blog',e:'✍️'},
+    {p:'claude',t:'Claude',e:'🧠'},{p:'chatgpt',t:'ChatGPT',e:'🤖'},{p:'gemini',t:'Gemini',e:'🌟'},
+    {p:'tools',t:'Tools',e:'🛠️'},{p:'animasyon',t:'Animasyonlar',e:'🎬'},{p:'oyunlar',t:'Oyunlar',e:'🎮'},
+    {p:'prompt',t:'Prompt Rehberi',e:'💡'},{p:'sozluk',t:'Sözlük',e:'📖'},{p:'para',t:'Para Kazan',e:'💰'},
+    {p:'trivia',t:'AI Trivia',e:'🎯'},{p:'iqtest',t:'IQ Testi',e:'🧠'},{p:'kariyer',t:'Kariyer',e:'💼'},
+    {p:'ogrenme',t:'Öğren',e:'🎓'},{p:'sertifika',t:'Sertifika',e:'🏆'},{p:'wizard',t:'Sihirbaz',e:'🔮'},
+  ];
+  const results=q.length>1?PAGES.filter(p=>p.t.toLowerCase().includes(q.toLowerCase())).slice(0,8):[];
+  useEffect(()=>{
+    if(!open)return;
+    const h=e=>{if(ref.current&&!ref.current.contains(e.target)){setOpen(false);setQ('');}};
+    document.addEventListener('mousedown',h);
+    return()=>document.removeEventListener('mousedown',h);
+  },[open]);
+  return <div ref={ref} style={{position:'relative',flexShrink:0}}>
+    <button onClick={()=>setOpen(o=>!o)} style={{width:34,height:34,border:'1px solid rgba(0,220,255,0.2)',borderRadius:8,background:open?'rgba(0,220,255,0.1)':'transparent',color:'#64748b',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}} title="Ara">🔍</button>
+    {open&&<div style={{position:'fixed',top:52,right:50,zIndex:99999,width:260,background:'rgba(4,8,20,0.99)',border:'1px solid rgba(0,220,255,0.3)',borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,0.9)',overflow:'hidden'}}>
+      <div style={{padding:'10px 12px',borderBottom:'1px solid rgba(0,220,255,0.1)',display:'flex',alignItems:'center',gap:8}}>
+        <span style={{color:'#334155',fontSize:14}}>🔍</span>
+        <input autoFocus value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==='Escape'&&(setOpen(false)||setQ(''))} placeholder='Ara...' style={{flex:1,background:'none',border:'none',outline:'none',color:'#e2e8f0',fontSize:12,fontFamily:'inherit'}}/>
+        {q&&<button onClick={()=>setQ('')} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:12}}>✕</button>}
+      </div>
+      <div style={{maxHeight:280,overflowY:'auto'}}>
+        {results.length>0
+          ?results.map(r=><div key={r.p} onClick={()=>{nav(r.p);setOpen(false);setQ('');}} style={{display:'flex',gap:10,alignItems:'center',padding:'8px 12px',cursor:'pointer',fontSize:11,color:'#e2e8f0',transition:'background .1s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,0.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}><span style={{fontSize:14}}>{r.e}</span><span>{r.t}</span></div>)
+          :<div style={{padding:'10px 12px'}}>{PAGES.slice(0,6).map(r=><div key={r.p} onClick={()=>{nav(r.p);setOpen(false);}} style={{display:'flex',gap:10,alignItems:'center',padding:'6px 8px',borderRadius:8,cursor:'pointer',fontSize:11,color:'#64748b'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,0.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}><span style={{fontSize:13}}>{r.e}</span><span>{r.t}</span></div>)}</div>}
+      </div>
+    </div>}
+  </div>;
+}
+
 function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
   const[email,setEmail]=useState("");const[sent,setSent]=useState(false);
   const[openMenu,setOpenMenu]=useState(null);
@@ -5493,56 +5154,63 @@ function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
       <div style={{display:"flex",gap:8}}><button onClick={()=>setCookie(false)} className="btn-primary" style={{padding:"6px 16px",fontSize:11,borderRadius:8,fontFamily:"inherit"}}>Kabul Et</button><button onClick={()=>setCookie(false)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid rgba(255,255,255,0.1)",background:"transparent",color:"#475569",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reddet</button></div>
     </div>}
     <Ticker/>
-    {/* ═══ DROPDOWN NAVBAR ═══ */}
-    <nav style={{position:"sticky",top:0,zIndex:200,background:"rgba(6,10,20,0.8)",borderBottom:"1px solid rgba(0,220,255,0.1)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",boxShadow:"0 4px 32px rgba(0,0,0,0.4)"}} data-nav="true">
-      <div style={{display:"flex",alignItems:"center",gap:4,padding:"8px 16px",overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
-        {/* Logo */}
-        <div onClick={()=>{nav("home");setOpenMenu(null);}} style={{cursor:"pointer",display:"flex",alignItems:"center",gap:8,flexShrink:0,marginRight:8}}>
-          <div style={{animation:"logoPulse 3s ease-in-out infinite",width:32,height:32,borderRadius:8,overflow:"hidden",flexShrink:0}}>
-            <img src="/logo.png" alt="IMDATAI" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";e.target.parentElement.style.background="linear-gradient(135deg,#00dcff,#a855f7)";e.target.parentElement.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff">⬡</div>';}}/>
+            {/* ═══ NAVBAR ═══ */}
+    <nav style={{position:"sticky",top:0,zIndex:10000,background:"rgba(4,8,20,0.97)",borderBottom:"1px solid rgba(0,220,255,0.1)",backdropFilter:"blur(20px)"}}>
+      <div style={{display:"flex",alignItems:"center",padding:"0 12px",height:54,gap:4}}>
+        {/* Logo + Slogan */}
+        <div onClick={()=>{nav("home");setMobileOpen(false);}} style={{cursor:"pointer",display:"flex",alignItems:"center",gap:8,flexShrink:0,marginRight:8}}>
+          <div style={{position:"relative",flexShrink:0}}>
+            <div style={{position:"absolute",inset:-4,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,220,255,0.35),transparent 70%)",animation:"glow 2s ease-in-out infinite",zIndex:0}}/>
+            <img src="/logo.png" alt="IMDATAI" style={{width:44,height:44,objectFit:"contain",borderRadius:10,position:"relative",zIndex:1,filter:"drop-shadow(0 0 8px rgba(0,220,255,0.8)) brightness(1.1)",animation:"logoPulse 2.5s ease-in-out infinite"}} onError={e=>{e.target.style.display="none";e.target.parentElement.innerHTML+='<div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,rgba(0,220,255,0.2),rgba(168,85,247,0.2));border:2px solid rgba(0,220,255,0.5);display:flex;align-items:center;justify-content:center;font-size:26px;color:#00dcff;filter:drop-shadow(0 0 8px #00dcff)">⬡</div>';}}/>
           </div>
-          <div style={{flexShrink:0}}>
-            <div style={{fontSize:14,fontWeight:900,background:"linear-gradient(90deg,#00dcff,#a855f7)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:".08em",fontFamily:"'Space Grotesk',sans-serif"}}>IMDATAI</div>
-            <div style={{fontSize:7,color:"#334155",letterSpacing:".08em"}}>TÜRKİYE'NİN AI HUB'I</div>
+          <div style={{display:"flex",flexDirection:"column",gap:1}}>
+            <span style={{fontSize:18,fontWeight:900,background:"linear-gradient(90deg,#00dcff,#a855f7)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontFamily:"Space Grotesk,sans-serif",lineHeight:1}}>IMDATAI</span>
+            <span style={{fontSize:9,color:"rgba(0,220,255,0.55)",letterSpacing:".1em",lineHeight:1,whiteSpace:"nowrap"}}>TÜRKİYE'NİN AI HUB'I</span>
           </div>
         </div>
-        {/* Nav items */}
-        {NAV_GROUPS.map(g=>{
-          if(!g.sub){return <button key={g.id} onClick={()=>{nav(g.id);setOpenMenu(null);}} style={{padding:"6px 10px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:7,background:page===g.id?"rgba(0,220,255,0.12)":"transparent",color:page===g.id?"#00dcff":"#475569",whiteSpace:"nowrap",flexShrink:0,fontWeight:page===g.id?700:400,borderBottom:page===g.id?"2px solid rgba(0,220,255,0.5)":"2px solid transparent"}}>{g.label}</button>;}
-          const isOpen=openMenu===g.id;
-          return <div key={g.id} style={{position:"relative",flexShrink:0}}>
-            <button onClick={()=>setOpenMenu(openMenu===g.id?null:g.id)} style={{padding:"6px 10px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:7,background:openMenu===g.id?"rgba(0,220,255,0.12)":"transparent",color:openMenu===g.id?"#00dcff":"#64748b",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,fontWeight:openMenu===g.id?600:400}}>
-              {g.label}<span style={{fontSize:8,opacity:.6}}>{openMenu===g.id?"▲":"▼"}</span>
-            </button>
-            {openMenu===g.id&&<div style={{position:"absolute",top:"100%",left:0,background:"rgba(6,10,24,0.99)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:14,padding:"8px",minWidth:220,backdropFilter:"blur(24px)",boxShadow:"0 20px 60px rgba(0,0,0,0.9)",zIndex:500,animation:"fadeIn .15s ease"}}>
-              {g.sub.map(s=><div key={s.id} onClick={()=>{nav(s.id);setOpenMenu(null);}} style={{padding:"10px 14px",borderRadius:10,cursor:"pointer",display:"flex",gap:12,alignItems:"flex-start",marginBottom:2}} onMouseEnter={e=>e.currentTarget.style.background="rgba(0,220,255,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                <span style={{fontSize:18,flexShrink:0,width:24,textAlign:"center"}}>{s.icon}</span>
-                <div><div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{s.label}</div>{s.desc&&<div style={{fontSize:10,color:"#475569",marginTop:1}}>{s.desc}</div>}</div>
-              </div>)}
-            </div>}
-          </div>;
-        })}
-        {/* Sağ grup */}
-        <div style={{marginLeft:"auto",flexShrink:0,display:"flex",gap:4,alignItems:"center"}}>
-          {[{id:"hakkimizda",l:"Hakkımızda"},{id:"iletisim",l:"İletişim"}].map(n=><button key={n.id} onClick={()=>nav(n.id)} style={{padding:"5px 8px",border:"none",cursor:"pointer",fontSize:9,fontFamily:"inherit",borderRadius:6,background:"transparent",color:"#334155",whiteSpace:"nowrap",display:"none"}} className="desktop-only">{n.l}</button>)}
-          {/* Hamburger - mobile */}
-          <button onClick={()=>setMobileOpen(o=>!o)} style={{padding:"7px",border:"1px solid rgba(0,220,255,0.2)",borderRadius:8,background:mobileOpen?"rgba(0,220,255,0.1)":"transparent",cursor:"pointer",color:"#00dcff",fontSize:16,lineHeight:1,flexShrink:0}}>
-            {mobileOpen?"✕":"☰"}
-          </button>
-        </div>
-      </div>
-      {/* Mobile Menu Dropdown */}
-      {mobileOpen&&<div style={{background:"rgba(6,10,24,0.98)",borderTop:"1px solid rgba(0,220,255,0.1)",padding:"12px",backdropFilter:"blur(20px)",maxHeight:"70vh",overflowY:"auto"}}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-          {NAV_GROUPS.flatMap(g=>g.sub?g.sub:[g]).map(item=>(
-            <button key={item.id} onClick={()=>{nav(item.id);setMobileOpen(false);}} style={{padding:"10px",borderRadius:9,border:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.02)",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",gap:6,alignItems:"center"}}>
-              {item.icon&&<span>{item.icon}</span>}
-              <span>{item.label}</span>
-            </button>
+        <div style={{display:"flex",alignItems:"center",gap:1,flexShrink:0}}>
+          {[{id:"home",l:"Ana Sayfa"},{id:"haberler",l:"Haberler"},{id:"blog",l:"Blog"}].map(n=>(
+            <button key={n.id} onClick={()=>{nav(n.id);setMobileOpen(false);}} style={{padding:"5px 9px",border:"none",cursor:"pointer",fontSize:10,fontFamily:"inherit",borderRadius:6,background:page===n.id?"rgba(0,220,255,0.12)":"transparent",color:page===n.id?"#00dcff":"#64748b",whiteSpace:"nowrap",flexShrink:0,fontWeight:page===n.id?700:400,borderBottom:page===n.id?"2px solid #00dcff":"2px solid transparent"}}>{n.l}</button>
           ))}
         </div>
-      </div>}
-    </nav>
+        <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+          <NavSearchBar nav={nav}/>
+          <button onClick={()=>setMobileOpen(o=>!o)} style={{width:34,height:34,border:"1px solid rgba(0,220,255,0.2)",borderRadius:8,background:mobileOpen?"rgba(0,220,255,0.12)":"transparent",cursor:"pointer",color:"#00dcff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{mobileOpen?"✕":"☰"}</button>
+        </div>
+      </div>
+    </nav>{mobileOpen&&<div style={{position:"fixed",inset:0,zIndex:9998}} onClick={()=>setMobileOpen(false)}>
+      <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,right:0,width:"min(320px,90vw)",height:"100vh",background:"rgba(4,8,20,0.99)",borderLeft:"1px solid rgba(0,220,255,0.12)",overflowY:"auto",boxShadow:"-20px 0 60px rgba(0,0,0,0.9)"}}>
+        <div style={{padding:"14px 16px",borderBottom:"1px solid rgba(0,220,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"rgba(4,8,20,0.99)",zIndex:1}}>
+          <span style={{fontSize:13,fontWeight:700,color:"#00dcff",fontFamily:"Space Grotesk,sans-serif"}}>🗺️ Tüm Sayfalar</span>
+          <button onClick={()=>setMobileOpen(false)} style={{background:"none",border:"none",color:"#475569",fontSize:20,cursor:"pointer",lineHeight:1}}>✕</button>
+        </div>
+        <div style={{padding:"12px"}}>
+          {NAV_GROUPS.map(g=>(
+            <div key={g.id||g.label} style={{marginBottom:14}}>
+              {!g.sub
+                ?<button onClick={()=>{nav(g.id);setMobileOpen(false);}} style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1px solid rgba(0,220,255,0.1)",background:page===g.id?"rgba(0,220,255,0.08)":"rgba(255,255,255,0.02)",color:page===g.id?"#00dcff":"#94a3b8",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",fontWeight:page===g.id?700:400}}>{g.label}</button>
+                :<><div style={{fontSize:9,color:"#334155",letterSpacing:".12em",padding:"2px 4px 7px",fontWeight:700,textTransform:"uppercase"}}>{g.label}</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
+                  {g.sub.map(s=><button key={s.id} onClick={()=>{nav(s.id);setMobileOpen(false);}} style={{padding:"8px 10px",borderRadius:9,border:"1px solid rgba(255,255,255,0.05)",background:page===s.id?"rgba(0,220,255,0.08)":"rgba(255,255,255,0.02)",color:page===s.id?"#00dcff":"#64748b",fontSize:10,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",gap:5,alignItems:"center",fontWeight:page===s.id?600:400}}>
+                    <span style={{fontSize:13,flexShrink:0}}>{s.icon}</span><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.label}</span>
+                  </button>)}
+                </div></>
+              }
+            </div>
+          ))}
+          <div style={{borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:12,marginTop:4}}>
+            <div style={{fontSize:9,color:"#334155",letterSpacing:".12em",marginBottom:8,fontWeight:700}}>SOSYAL MEDYA</div>
+            <div style={{display:"flex",gap:8}}>
+              {[["🎬","YouTube","https://youtube.com/@imdatai","#ff4444"],["🎵","TikTok","https://tiktok.com/@imdatai","#00f2ea"],["📸","Instagram","https://instagram.com/imdatai","#e1306c"]].map(([e,n,u,c])=>(
+                <a key={n} href={u} target="_blank" rel="noopener noreferrer" style={{flex:1,padding:"8px 4px",borderRadius:8,border:"1px solid "+c+"33",background:c+"11",color:c,fontSize:9,textAlign:"center",textDecoration:"none",display:"flex",flexDirection:"column",gap:2,alignItems:"center"}}>
+                  <span style={{fontSize:18}}>{e}</span><span style={{fontWeight:700}}>{n}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>}
     <div style={{animation:"fadeIn .3s ease"}} key={page}>{children}</div>
     <BadgeDisplay/>
     <footer style={{borderTop:"1px solid rgba(255,255,255,0.05)",padding:"40px 20px 32px",marginTop:40,background:"linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.3))"}}>
