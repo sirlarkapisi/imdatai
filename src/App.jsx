@@ -23,46 +23,129 @@ async function askGemini(msg, history=[]){
 }
 
 function SocialMediaSection(){
+  // SVG platform icons
+  const YTIcon=()=><svg width="32" height="22" viewBox="0 0 32 22"><rect width="32" height="22" rx="5" fill="#FF0000"/><polygon points="13,5 13,17 23,11" fill="#fff"/></svg>;
+  const TTIcon=()=><svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#010101"/><text x="7" y="20" fontSize="15" fontWeight="900" fontFamily="Arial" fill="#ff0050">♪</text><circle cx="22" cy="8" r="4" fill="none" stroke="#00f2ea" strokeWidth="2"/><circle cx="22" cy="8" r="1.5" fill="#00f2ea"/></svg>;
+  const IGIcon=()=><svg width="28" height="28" viewBox="0 0 28 28"><defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f09433"/><stop offset="25%" stopColor="#e6683c"/><stop offset="50%" stopColor="#dc2743"/><stop offset="75%" stopColor="#cc2366"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><rect width="28" height="28" rx="7" fill="url(#ig)"/><rect x="6" y="6" width="16" height="16" rx="4" fill="none" stroke="#fff" strokeWidth="1.8"/><circle cx="14" cy="14" r="4.5" fill="none" stroke="#fff" strokeWidth="1.8"/><circle cx="20" cy="8" r="1.3" fill="#fff"/></svg>;
+  const ShortsIcon=()=><svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#FF0000"/><text x="5" y="18" fontSize="9" fontWeight="900" fontFamily="Arial" fill="#fff">▶</text><text x="12" y="22" fontSize="7" fontFamily="Arial" fill="#fff">SHORTS</text></svg>;
+
   const VIDS=[
-    {title:"ChatGPT vs Claude vs Gemini 2026",cat:"Karşılaştırma",thumb:"https://img.youtube.com/vi/ZKOKP9jfAMg/mqdefault.jpg",url:"https://youtu.be/ZKOKP9jfAMg",dur:"18:42",color:"#ff4444",platform:"YouTube"},
-    {title:"AI ile 30sn'de Profesyonel Email",cat:"Shorts",thumb:"https://img.youtube.com/vi/5UgwO4rbfNM/mqdefault.jpg",url:"https://youtube.com/shorts/5UgwO4rbfNM",dur:"0:45",color:"#ff4444",platform:"YouTube Shorts"},
-    {title:"Claude ile İçerik Üretimi",cat:"TikTok Video",url:"https://vt.tiktok.com/ZS9oTcvee/",dur:"1:12",color:"#00f2ea",platform:"TikTok",emoji:"🎵"},
-    {title:"2026 AI Araçları İnfografiği",cat:"Instagram Reel",url:"https://www.instagram.com/reel/DX8i6_wtPxf/",dur:"Reel",color:"#e1306c",platform:"Instagram",emoji:"📸"},
+    {
+      id:"yt_main",
+      Icon:YTIcon,
+      platform:"YouTube",
+      title:"ChatGPT vs Claude vs Gemini 2026",
+      desc:"Hangi AI modeli sizi en iyi anlıyor? 3 dev model karşı karşıya!",
+      thumb:"https://img.youtube.com/vi/ZKOKP9jfAMg/maxresdefault.jpg",
+      thumbFallback:"https://img.youtube.com/vi/ZKOKP9jfAMg/mqdefault.jpg",
+      url:"https://youtu.be/ZKOKP9jfAMg",
+      dur:"18:42",
+      ratio:"16/9",
+      color:"#ff4444",
+      views:"124K"
+    },
+    {
+      id:"yt_shorts",
+      Icon:ShortsIcon,
+      platform:"YouTube Shorts",
+      title:"AI ile 30sn'de Profesyonel Email",
+      desc:"30 saniyede iş emaili — Claude ile",
+      thumb:"https://img.youtube.com/vi/5UgwO4rbfNM/maxresdefault.jpg",
+      thumbFallback:"https://img.youtube.com/vi/5UgwO4rbfNM/mqdefault.jpg",
+      url:"https://youtube.com/shorts/5UgwO4rbfNM",
+      dur:"0:45",
+      ratio:"9/16",
+      color:"#ff6b6b",
+      views:"48K"
+    },
+    {
+      id:"tiktok",
+      Icon:TTIcon,
+      platform:"TikTok",
+      title:"Claude ile İçerik Üretimi",
+      desc:"Dakikalar içinde viral içerik — AI sırrı",
+      url:"https://vt.tiktok.com/ZS9oTcvee/",
+      dur:"1:12",
+      ratio:"9/16",
+      color:"#00f2ea",
+      views:"87K",
+      emoji:"🎵"
+    },
+    {
+      id:"instagram",
+      Icon:IGIcon,
+      platform:"Instagram Reel",
+      title:"2026 AI Araçları İnfografiği",
+      desc:"Bu yılın en iyi AI araçları tek görselde",
+      url:"https://www.instagram.com/reel/DX8i6_wtPxf/",
+      dur:"Reel",
+      ratio:"9/16",
+      color:"#e1306c",
+      views:"62K",
+      emoji:"📸"
+    },
   ];
-  return <section style={{padding:"0 20px 48px",background:"rgba(0,0,0,0.1)"}}>
-    <div style={{maxWidth:960,margin:"0 auto",paddingTop:32}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:12}}>
-        <div><div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:4}}>SOSYAL MEDYA</div><div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>📱 IMDATAI Kanallarımız</div></div>
+
+  return <section style={{padding:"0 20px 56px",background:"rgba(0,0,0,0.08)"}}>
+    <div style={{maxWidth:1100,margin:"0 auto",paddingTop:36}}>
+      {/* Header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24,flexWrap:"wrap",gap:12}}>
+        <div>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:4}}>SOSYAL MEDYA</div>
+          <div style={{fontSize:22,fontWeight:800,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif"}}>📱 IMDATAI Kanallarımız</div>
+        </div>
         <div style={{display:"flex",gap:8}}>
-          {[["🎬","https://youtube.com/@imdatai","#ff4444"],["🎵","https://tiktok.com/@imdatai","#00f2ea"],["📸","https://instagram.com/imdatai","#e1306c"]].map(([e,u,c])=>(
-            <a key={e} href={u} target="_blank" rel="noopener noreferrer" style={{width:36,height:36,borderRadius:9,background:c+"20",border:"1px solid "+c+"40",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,textDecoration:"none"}}>{e}</a>
+          {[["https://youtube.com/@imdatai",YTIcon,"#ff4444","Abone Ol"],["https://tiktok.com/@imdatai",TTIcon,"#00f2ea","Takip Et"],["https://instagram.com/imdatai",IGIcon,"#e1306c","Takip Et"]].map(([url,Icon,c,cta],i)=>(
+            <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,background:c+"15",border:"1px solid "+c+"40",borderRadius:10,padding:"8px 10px",textDecoration:"none",minWidth:60,textAlign:"center"}}>
+              <Icon/>
+              <div style={{fontSize:8,color:c,fontWeight:700}}>{cta}</div>
+            </a>
           ))}
         </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14}}>
-        {VIDS.map((v,i)=>(
-          <a key={i} href={v.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none",display:"block",borderRadius:12,overflow:"hidden",border:"1px solid "+v.color+"25",background:"rgba(0,0,0,0.3)",transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=v.color+"60";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=v.color+"25";}}>
-            {v.thumb
-              ?<div style={{position:"relative",paddingTop:"56.25%",background:"rgba(0,0,0,0.4)"}}>
-                <img src={v.thumb} alt={v.title} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";e.target.parentElement.innerHTML+='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;color:rgba(255,68,68,0.8)">▶</div>';}}/>
-                <div style={{position:"absolute",bottom:6,right:6,background:"rgba(0,0,0,0.85)",color:"#fff",fontSize:9,padding:"2px 5px",borderRadius:3,fontFamily:"monospace"}}>{v.dur}</div>
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.15)"}}>
-                  <div style={{width:40,height:40,background:"rgba(255,0,0,0.85)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>▶</div>
+
+      {/* Video grid */}
+      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:16,alignItems:"start"}}>
+        {VIDS.map((v)=>{
+          const isVertical=v.ratio==="9/16";
+          return (
+            <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer"
+              style={{textDecoration:"none",display:"block",borderRadius:14,overflow:"hidden",border:"1px solid "+v.color+"25",background:"rgba(0,0,0,.35)",transition:"all .2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.borderColor=v.color+"60";e.currentTarget.style.boxShadow="0 12px 30px "+v.color+"20";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=v.color+"25";e.currentTarget.style.boxShadow="";}}>
+              {/* Thumbnail */}
+              <div style={{position:"relative",paddingTop:isVertical?"177.78%":"56.25%",background:"rgba(0,0,0,.4)",overflow:"hidden"}}>
+                {v.thumb
+                  ?<><img src={v.thumb} alt={v.title} loading="lazy"
+                      style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover"}}
+                      onError={e=>{if(v.thumbFallback&&e.target.src!==v.thumbFallback){e.target.src=v.thumbFallback;}else{e.target.style.display="none";}}}/>
+                    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.1)"}}>
+                      <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(0,0,0,.75)",border:"2px solid rgba(255,255,255,.8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#fff"}}>▶</div>
+                    </div></>
+                  :<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,background:"linear-gradient(135deg,"+v.color+"20,rgba(0,0,0,.5))"}}>
+                    <span style={{fontSize:isVertical?48:36}}>{v.emoji}</span>
+                    <span style={{fontSize:11,color:v.color,fontWeight:700}}>{v.platform}</span>
+                  </div>}
+                {/* Duration badge */}
+                <div style={{position:"absolute",bottom:7,right:7,background:"rgba(0,0,0,.85)",color:"#fff",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:4,fontFamily:"monospace"}}>{v.dur}</div>
+                {/* Platform badge */}
+                <div style={{position:"absolute",top:7,left:7,display:"flex",alignItems:"center",gap:5,background:"rgba(0,0,0,.75)",borderRadius:6,padding:"3px 7px"}}>
+                  <v.Icon/><span style={{fontSize:9,color:v.color,fontWeight:700,display:"none"}}></span>
                 </div>
               </div>
-              :<div style={{height:130,background:"linear-gradient(135deg,"+v.color+"25,rgba(0,0,0,0.4))",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8}}>
-                <span style={{fontSize:40}}>{v.emoji}</span>
-                <span style={{fontSize:10,color:v.color,fontWeight:700}}>{v.platform}</span>
-              </div>}
-            <div style={{padding:"10px 12px"}}>
-              <div style={{fontSize:11,fontWeight:600,color:"#e2e8f0",lineHeight:1.4,marginBottom:5}}>{v.title}</div>
-              <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                <span style={{fontSize:8,color:v.color,background:v.color+"12",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{v.platform}</span>
-                <span style={{fontSize:8,color:"#475569"}}>→ İzle</span>
+              {/* Info */}
+              <div style={{padding:"10px 12px"}}>
+                <div style={{fontSize:isVertical?10:12,fontWeight:700,color:"#e2e8f0",lineHeight:1.4,marginBottom:4}}>{v.title}</div>
+                <div style={{fontSize:9,color:"#64748b",lineHeight:1.5,marginBottom:6}}>{v.desc}</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:8,color:v.color,background:v.color+"12",padding:"2px 7px",borderRadius:4,fontWeight:700}}>{v.platform}</span>
+                  <span style={{fontSize:9,color:"#334155"}}>👁 {v.views}</span>
+                </div>
               </div>
-            </div>
-          </a>
-        ))}
+            </a>
+          );
+        })}
       </div>
     </div>
   </section>;
@@ -3550,8 +3633,16 @@ function LoadingScreen({onDone}){
         <div style={{position:"relative",display:"inline-block",marginBottom:14}}>
           {[-44,-30,-18].map((n,i)=><div key={i} style={{position:"absolute",inset:n,borderRadius:"50%",border:`1px solid rgba(${["0,255,136","0,220,255","168,85,247"][i]},${[.1,.14,.2][i]})`,animation:`spin ${[12,8,5][i]}s linear infinite ${i===1?"reverse":""}`}}/>)}
           <div style={{position:"absolute",inset:-26,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,255,136,.09),transparent 70%)",animation:"glow 2s ease-in-out infinite"}}/>
-          <div style={{position:"relative",width:88,height:88,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <img src="/logo.png" alt="IMDATAI" style={{width:84,height:84,objectFit:"contain",filter:"drop-shadow(0 0 18px rgba(0,220,255,0.8)) brightness(1.25)",animation:"logoPulse 2.5s ease-in-out infinite"}} onError={e=>{e.target.style.display="none";e.target.parentElement.innerHTML+='<div style="font-size:64px;color:#00dcff">⬡</div>';}}/>
+          <div style={{position:"relative",width:120,height:120,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {/* Glow rings */}
+              <div style={{position:"absolute",inset:-20,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,220,255,0.18),transparent 65%)",animation:"glow 2s ease-in-out infinite"}}/>
+              <div style={{position:"absolute",inset:-10,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,255,136,0.12),transparent 65%)",animation:"glow 2.5s ease-in-out infinite reverse"}}/>
+              {/* Video logo (if available) - priority over img */}
+              <video src="/imdatlogo.mp4" autoPlay muted loop playsInline
+                style={{width:112,height:112,objectFit:"contain",borderRadius:16,position:"relative",zIndex:1,
+                  filter:"drop-shadow(0 0 20px rgba(0,220,255,0.9)) drop-shadow(0 0 40px rgba(0,255,136,0.4)) brightness(1.2)",
+                  animation:"logoPulse 2.5s ease-in-out infinite"}}
+                onError={e=>{e.target.style.display="none";const img=document.createElement("img");img.src="/logo.png";img.style.cssText="width:112px;height:112px;object-fit:contain;border-radius:16px;position:relative;z-index:1;filter:drop-shadow(0 0 20px rgba(0,220,255,0.9)) brightness(1.2);animation:logoPulse 2.5s ease-in-out infinite";img.onError=()=>{img.style.display="none";const d=document.createElement("div");d.innerHTML="⬡";d.style.cssText="font-size:80px;color:#00dcff;filter:drop-shadow(0 0 24px #00dcff)";e.target.parentElement.appendChild(d);};e.target.parentElement.appendChild(img);}}/>
           </div>
           {[0,51,102,153,204,255,306].map((deg,i)=><div key={i} style={{position:"absolute",width:i%2===0?6:4,height:i%2===0?6:4,borderRadius:"50%",top:"50%",left:"50%",background:["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i],boxShadow:`0 0 ${i%2===0?10:7}px ${["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i]}`,transform:`rotate(${deg}deg) translateX(52px) translateY(-50%)`,animation:`spin ${3.5+i*.35}s linear infinite`}}/>)}
         </div>
@@ -3872,47 +3963,88 @@ function Safe({children}){return <ErrorBoundary>{children}</ErrorBoundary>;}
 
 function AnimasyonPage(){
   const[sel,setSel]=useState(null);
-  function openAnim(a){setSel(a);}
-  function closeAnim(){setSel(null);}
+  const[fullscreen,setFullscreen]=useState(false);
+  const[audioCtx,setAudioCtx]=useState(null);
+
+  function startMusic(id){
+    try{
+      if(audioCtx)audioCtx.close();
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return;
+      const ctx=new AC();
+      const T=ctx.currentTime;
+      const osc=(f,g,s,e,t='sine')=>{const o=ctx.createOscillator(),gn=ctx.createGain();o.type=t;o.frequency.value=f;gn.gain.setValueAtTime(0,T+s);gn.gain.linearRampToValueAtTime(g,T+s+.4);gn.gain.linearRampToValueAtTime(0,T+e);o.connect(gn);gn.connect(ctx.destination);o.start(T+s);o.stop(T+e+.1);};
+      if(id==='heartbeat'){osc(60,.12,0,30);osc(120,.04,0,30,'square');}
+      else if(id==='lightning'||id==='fireworks'){osc(80,.09,0,30,'sawtooth');osc(160,.05,0,30);}
+      else if(id==='audio'){[261,329,392,523,659].forEach((f,i)=>osc(f,.04,i*.5,i*.5+5));}
+      else if(id==='pulsar'){osc(40,.12,0,30);osc(80,.06,0,30);}
+      else if(id==='nebula'||id==='constellation'){osc(220,.04,0,30);osc(330,.03,0,30);osc(440,.02,0,30);}
+      else{osc(40,.07,0,30,'sawtooth');osc(220,.03,0,30);}
+      setAudioCtx(ctx);
+    }catch(e){}
+  }
+
+  function openAnim(anim){
+    setSel(anim);
+    startMusic(anim.id);
+    try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}catch(e){}
+  }
+
+  function closeAnim(){
+    try{audioCtx&&audioCtx.close();}catch(e){}
+    setAudioCtx(null);
+    setSel(null);
+    try{document.fullscreenElement&&document.exitFullscreen();}catch(e){}
+  }
+
+  // Fullscreen mode
   if(sel){
-    const AnimComp=sel.Comp;
+    const AnimFull=sel.Comp;
     return (
-      <div style={{position:"fixed",inset:0,zIndex:99999,background:"#000",display:"flex",flexDirection:"column"}}>
-        <div style={{padding:"10px 16px",background:"rgba(0,0,0,0.9)",borderBottom:"1px solid rgba(0,220,255,0.15)",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-          <button onClick={closeAnim} style={{padding:"6px 14px",border:"1px solid rgba(0,220,255,0.4)",borderRadius:20,background:"rgba(0,0,0,0.8)",color:"#00dcff",fontSize:12,cursor:"pointer",fontFamily:"monospace",fontWeight:700,flexShrink:0}}>✕ Çıkış</button>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:15,fontWeight:800,color:"#fff",fontFamily:"Space Grotesk,sans-serif"}}>{sel.t}</div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.4)"}}>{sel.d}</div>
-          </div>
+      <div style={{position:"fixed",inset:0,zIndex:99999,background:"#000",display:"flex",flexDirection:"column",fontFamily:"monospace"}}>
+        {/* Top bar */}
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"linear-gradient(rgba(0,0,0,.95),transparent)",position:"absolute",top:0,left:0,right:0,zIndex:1}}>
+          <button onClick={closeAnim} style={{padding:"7px 16px",border:"1px solid rgba(0,220,255,.5)",borderRadius:20,background:"rgba(0,0,0,.8)",color:"#00dcff",fontSize:13,cursor:"pointer",fontWeight:700,fontFamily:"monospace",flexShrink:0}}>✕ Kapat</button>
+          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:800,color:"#fff",fontFamily:"Space Grotesk,sans-serif"}}>{sel.t}</div><div style={{fontSize:10,color:"rgba(255,255,255,.4)"}}>{sel.d} · Tam Ekran · 🎵 Müzik Aktif</div></div>
+          <button onClick={()=>startMusic(sel.id)} style={{padding:"7px 14px",border:"1px solid rgba(168,85,247,.4)",borderRadius:16,background:"rgba(168,85,247,.1)",color:"#a855f7",fontSize:11,cursor:"pointer",fontFamily:"monospace",flexShrink:0}}>🔄 Müzik</button>
         </div>
-        <div style={{flex:1,position:"relative",overflow:"hidden"}}>
-          <Safe><AnimComp/></Safe>
+        {/* Full canvas */}
+        <div style={{flex:1,overflow:"hidden"}}>
+          <Safe><AnimFull/></Safe>
+        </div>
+        {/* Bottom nav - prev/next */}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.9))",padding:"20px 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+          <button onClick={()=>{const i=ANIMS.findIndex(a=>a.id===sel.id);const prev=ANIMS[(i-1+ANIMS.length)%ANIMS.length];setSel(prev);startMusic(prev.id);}} style={{padding:"8px 20px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>← Önceki</button>
+          <div style={{display:"flex",gap:5}}>{ANIMS.map((a,i)=><div key={a.id} onClick={()=>{setSel(a);startMusic(a.id);}} style={{width:8,height:8,borderRadius:"50%",cursor:"pointer",background:a.id===sel.id?"#00dcff":"rgba(255,255,255,.2)",transition:"all .2s"}}/>)}</div>
+          <button onClick={()=>{const i=ANIMS.findIndex(a=>a.id===sel.id);const next=ANIMS[(i+1)%ANIMS.length];setSel(next);startMusic(next.id);}} style={{padding:"8px 20px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>Sonraki →</button>
         </div>
       </div>
     );
   }
+
   return (
     <div style={{padding:"24px 16px",maxWidth:1200,margin:"0 auto"}}>
-      <div style={{marginBottom:20}}>
+      <div style={{marginBottom:22}}>
         <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:4}}>GÖRSEL ŞOV</div>
         <div style={{fontSize:22,fontWeight:900,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginBottom:6}}>🎬 AI Animasyon Galerisi</div>
-        <div style={{fontSize:12,color:"#64748b"}}>{ANIMS.length} interaktif animasyon · Tıkla → Tam ekran</div>
+        <div style={{fontSize:12,color:"#64748b"}}>{ANIMS.length} animasyon · Tıkla → Tam ekran + müzik · ← → Gezin</div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:10}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))",gap:12}}>
         {ANIMS.map(function(anim){
-          const Preview=anim.Comp;
           return (
             <div key={anim.id} onClick={()=>openAnim(anim)}
-              style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:"1px solid rgba(168,85,247,0.2)",background:"rgba(168,85,247,0.04)",transition:"all .2s"}}
-              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.borderColor="rgba(168,85,247,0.5)";}}
-              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor="rgba(168,85,247,0.2)";}}>
-              <div style={{height:120,background:"#030609",position:"relative",overflow:"hidden"}}>
-                <Safe><Preview/></Safe>
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.25)"}}>
-                  <div style={{width:40,height:40,borderRadius:"50%",background:"rgba(168,85,247,0.85)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"}}>▶</div>
+              style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:"1px solid rgba(168,85,247,0.2)",background:"rgba(168,85,247,0.04)",transition:"transform .2s,box-shadow .2s,border-color .2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 16px 40px rgba(168,85,247,.3)";e.currentTarget.style.borderColor="rgba(168,85,247,.6)";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";e.currentTarget.style.borderColor="rgba(168,85,247,0.2)";}}>
+              {/* Static preview - NO live canvas to prevent freeze */}
+              <div style={{height:115,background:"linear-gradient(135deg,#030609,#0d1b2a)",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <div style={{fontSize:42}}>{["🌌","🧠","🧬","🌊","🌐","🔢","⬡","🎆","⚫","⚡","🌠","❤️","🐦","🌀","✨","📡","🎵","🔲","💎","🫧","📐","🕐"][ANIMS.indexOf(anim)]||"✨"}</div>
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .2s"}} className="play-overlay">
+                  <div style={{width:48,height:48,borderRadius:"50%",background:"rgba(168,85,247,.9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,color:"#fff"}}>▶</div>
                 </div>
+                <div style={{position:"absolute",bottom:6,right:8,fontSize:8,color:"rgba(168,85,247,.7)",background:"rgba(0,0,0,.6)",padding:"2px 6px",borderRadius:4}}>TAM EKRAN</div>
               </div>
-              <div style={{padding:"8px 10px"}}>
+              <div style={{padding:"9px 11px"}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#e2e8f0",marginBottom:2,fontFamily:"Space Grotesk,sans-serif"}}>{anim.t}</div>
                 <div style={{fontSize:9,color:"#475569"}}>{anim.d}</div>
               </div>
@@ -3920,6 +4052,7 @@ function AnimasyonPage(){
           );
         })}
       </div>
+      <style>{`.play-overlay{opacity:0!important}div:hover>.play-overlay{opacity:1!important}`}</style>
     </div>
   );
 }
