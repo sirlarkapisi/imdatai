@@ -231,7 +231,27 @@ const NEWS = [
   {tag:"🤖",hot:false,color:"#a855f7",title:"Perplexity Pro: Yapay Zeka Araştırma Motoru",desc:"Kaynaklı yanıtlar, akademik paper analizi, kod yazma. Google'a gerçek rakip olmaya başladı. 30M kullanıcı.",src:"Perplexity",time:"2 hafta",read:"2 dk",emoji:"🔍"},
   {tag:"🎬",hot:false,color:"#fb923c",title:"Sora Enterprise: Küresel Açılış",desc:"OpenAI'nin metin-video modeli tüm dünyaya açıldı. 1080p, 60 saniye, tutarlı karakterler. Reklam ajansları hızla adaptasyon.",src:"OpenAI",time:"2 hafta",read:"3 dk",emoji:"🎬"},
   {tag:"🏛️",hot:false,color:"#60a5fa",title:"AB AI Yasası Yürürlüğe Girdi",desc:"Yüksek riskli AI uygulamaları için sıkı kurallar başladı. Türk şirketleri AB pazarında uyum zorunluluğuyla karşı karşıya.",src:"European Commission",time:"3 hafta",read:"4 dk",emoji:"🏛️"},
-  {tag:"🇹🇷",hot:false,color:"#34d399",title:"Türkiye'de AI Girişim Sayısı 300'ü Aştı",desc:"İstanbul merkezli AI startup'lar 2025'e kıyasla %180 arttı. Sağlık, eğitim ve tarım öne çıkan sektörler.",src:"Startups.com.tr",time:"3 hafta",read:"3 dk",emoji:"🚀"},
+  {tag:"🇹🇷",hot:false,color:"#34d399",title:"Türkiye'de AI Girişim Sayısı 300'ü Aştı",desc:"İstanbul merkezli AI startup'lar 2025'e kıyasla %180 arttı. Sağlık, eğitim ve tarım öne çıkan sektörler.",src:"Startups.com.tr",time:"3 hafta",read:"3 dk",emoji:"🚀"},,
+  {id:1,title:"GPT-5.5 Türkiye'de Aktif",summary:"OpenAI'ın en güçlü modeli Türkçe arayüzle kullanılabilir hale geldi.",tag:"Flaş",color:"#ff4444",date:"2026-05-14",source:"OpenAI"},
+  {id:2,title:"Claude Opus 4.7 Kodlamada Dünya Rekoru",summary:"SWE-bench %87.6 ile yeni dünya rekoru. Anthropic'in en güçlü modeli piyasaya çıktı.",tag:"Model",color:"#a855f7",date:"2026-05-13",source:"Anthropic"},
+  {id:3,title:"Gemini 2.5 Pro 2M Token Destekliyor",summary:"Google'ın yeni modeli 2 milyon token context ile en uzun belleğe sahip model oldu.",tag:"Google",color:"#34d399",date:"2026-05-12",source:"Google DeepMind"},
+  {id:4,title:"Türkiye AI Trafiğinde Dünya #1",summary:"imdatai.com verilerine göre Türkiye, AI platformlarına erişimde küresel olarak %94.49 ile lider.",tag:"Türkiye",color:"#fbbf24",date:"2026-05-11",source:"IMDATAI"},
+  {id:5,title:"Grok 3 Meta Araştırma Yetenekleriyle Çıktı",summary:"xAI'ın Grok 3 modeli web araması ve görüntü analizi özelliklerine kavuştu.",tag:"xAI",color:"#60a5fa",date:"2026-05-10",source:"xAI"},
+  {id:6,title:"DeepSeek R2 Açık Kaynak Yayınlandı",summary:"Çin yapımı DeepSeek R2 tüm parametreleriyle açık kaynak olarak paylaşıldı.",tag:"Açık Kaynak",color:"#00dcff",date:"2026-05-09",source:"DeepSeek"},
+  {id:7,title:"Midjourney v7 Fotorealizmi Geçti",summary:"Yeni Midjourney v7 fotoğraflardan ayırt edilemeyen görseller üretiyor.",tag:"Görsel",color:"#f472b6",date:"2026-05-08",source:"Midjourney"},
+  {id:8,title:"Suno v5 Gerçek Enstrüman Sesi Üretiyor",summary:"AI müzik platformu Suno v5 ile artık akustik gitar ve piyano sesleri insan performansından ayırt edilemiyor.",tag:"Müzik",color:"#fb923c",date:"2026-05-07",source:"Suno"},
+  {id:9,title:"Meta Llama 4 Ticari Kullanıma Açıldı",summary:"Meta'nın en güçlü açık kaynak modeli ücretsiz ticari lisansla geliştiricilere sunuldu.",tag:"Meta",color:"#60a5fa",date:"2026-05-06",source:"Meta AI"},
+  {id:10,title:"Türk AI Startup'ları 1.2 Milyar TL Yatırım Aldı",summary:"2026 Q1 raporuna göre Türk AI girişimleri rekor yatırım çekti.",tag:"Ekonomi",color:"#34d399",date:"2026-05-05",source:"TÜBİTAK"},
+  {id:11,title:"Cursor AI Türk Geliştiriciler Arasında #1",summary:"Kod yazma AI'ı Cursor, Türkiye'de en çok indirilen geliştirici aracı oldu.",tag:"Araçlar",color:"#00dcff",date:"2026-05-04",source:"Cursor"},
+  {id:12,title:"Sora Enterprise Küresel Kullanıma Açıldı",summary:"OpenAI'ın video üretici Sora'sı kurumsal planıyla 150 ülkede kullanılabilir hale geldi.",tag:"Video AI",color:"#ff4444",date:"2026-05-03",source:"OpenAI"},
+  {id:13,title:"AI ile İstihdam: 2026 Türkiye Raporu",summary:"Türkiye'de AI kaynaklı 120.000 yeni iş pozisyonu açıldı, 45.000 pozisyon dönüştürüldü.",tag:"İş",color:"#fbbf24",date:"2026-05-02",source:"McKinsey TR"},
+  {id:14,title:"Google NotebookLM Türkçe Desteği Ekledi",summary:"Belge analizi aracı NotebookLM artık Türkçe içerikleri anlıyor ve podcast üretiyor.",tag:"Google",color:"#34d399",date:"2026-05-01",source:"Google"},
+  {id:15,title:"Perplexity AI 50M Kullanıcıya Ulaştı",summary:"Arama motoru AI'ı Perplexity, aylık 50 milyon aktif kullanıcıyla rekora imza attı.",tag:"Arama",color:"#a855f7",date:"2026-04-30",source:"Perplexity"},
+  {id:16,title:"Mistral Le Chat Pro Türkiye'de",summary:"Fransız AI şirketi Mistral'ın premium sohbet aracı Le Chat Pro Türkiye pazarına girdi.",tag:"Mistral",color:"#60a5fa",date:"2026-04-29",source:"Mistral AI"},
+  {id:17,title:"BOTAŞ AI Boru Hattı İzleme Sistemi",summary:"Türkiye'nin enerji altyapısı AI ile monitörize edildi. 97.3% arıza tespiti başarısı.",tag:"Türkiye",color:"#fbbf24",date:"2026-04-28",source:"BOTAŞ"},
+  {id:18,title:"Adobe Firefly 4 Türkçe Komut Destekliyor",summary:"Adobe'nin AI grafik aracı artık Türkçe komutlarla görsel ve video oluşturuyor.",tag:"Araçlar",color:"#f472b6",date:"2026-04-27",source:"Adobe"},
+  {id:19,title:"Claude ile 1 Saatte Uygulama Geliştirme",summary:"IMDATAI rehberi: Claude kullanarak 1 saatte tam işlevsel web uygulaması nasıl yapılır?",tag:"Rehber",color:"#00dcff",date:"2026-04-26",source:"IMDATAI"},
+  {id:20,title:"GPT-4o Ses Özelliği Türkçeye Geldi",summary:"ChatGPT'nin sesli sohbet modu artık Türkçe anlıyor ve konuşuyor.",tag:"Flaş",color:"#ff4444",date:"2026-04-25",source:"OpenAI"}
 ];
 
 const TRENDING = [
@@ -1085,7 +1105,17 @@ const TRIVIA_Q=[
   {q:"'LoRA' tekniği ne için kullanılır?",o:["Görsel üretim","Verimli fine-tuning","Hızlı inference","Veri temizleme"],a:1,c:"#f472b6",cat:"Teknik"},
   {q:"Gamma hangi tür içerik üretir?",o:["Kod","Sunum/Prezantasyon","Görsel","Ses"],a:1,c:"#60a5fa",cat:"Araç"},
   {q:"'Task Budget' özelliği kimin ürünü?",o:["OpenAI","Google","Anthropic","Meta"],a:2,c:"#00dcff",cat:"Özellik"},
-  {q:"MCP'nin kaç kurulumu var?",o:["10M+","50M+","97M+","200M+"],a:2,c:"#a855f7",cat:"İstatistik"},
+  {q:"MCP'nin kaç kurulumu var?",o:["10M+","50M+","97M+","200M+"],a:2,c:"#a855f7",cat:"İstatistik"},,
+  {q:"Claude'un anayasa AI yaklaşımının adı nedir?",o:["Constitutional AI","Recursive AI","Bounded AI","Ethical AI"],a:0,c:"#a855f7",cat:"Model"},
+  {q:"2026'da Türkiye, AI trafiğinde dünyada kaçıncı?",o:["3.","1.","5.","2."],a:1,c:"#00dcff",cat:"Türkiye"},
+  {q:"GPT'nin 'G' harfi neyi temsil eder?",o:["Global","Generative","Graph","Gradient"],a:1,c:"#34d399",cat:"Temel"},
+  {q:"Llama modelini kim geliştirdi?",o:["Google","OpenAI","Meta","Apple"],a:2,c:"#fb923c",cat:"Model"},
+  {q:"Hangi AI modeli 2 milyon token context destekler?",o:["GPT-4o","Claude Opus","Gemini 1.5 Pro","Grok-2"],a:2,c:"#fbbf24",cat:"Teknik"},
+  {q:"'Hallucination' yapay zekada ne anlama gelir?",o:["Yanlış çıktı üretme","Görüntü analizi","Ses sentezi","Kod yazma"],a:0,c:"#00dcff",cat:"Temel"},
+  {q:"Midjourney hangi platformda başladı?",o:["Twitter","Reddit","Discord","Telegram"],a:2,c:"#f472b6",cat:"Araçlar"},
+  {q:"DeepSeek hangi ülke kökenlidir?",o:["ABD","Japonya","Çin","Kore"],a:2,c:"#00ff88",cat:"Model"},
+  {q:"RLHF açılımı nedir?",o:["Real Learning from Human Feedback","Reinforcement Learning from Human Feedback","Recursive Learning Human Framework","Random Layer Hierarchical Functions"],a:1,c:"#a855f7",cat:"Teknik"},
+  {q:"İlk GPT modeli kaç yılında çıktı?",o:["2017","2018","2019","2020"],a:1,c:"#fbbf24",cat:"Tarih"}
 ];
 
 // PROMPT ROULETTE — 40 görev
@@ -2498,7 +2528,18 @@ const GLOSSARY_DATA = [
   {term:"Constitutional AI",cat:"Güvenlik",en:"Constitutional AI",def:"Anthropic'in güvenlik yaklaşımı. AI, kural seti (anayasa) ile kendi davranışını değerlendirip düzeltir."},
   {term:"Emergent Behavior",cat:"Modeller",en:"Emergent Behavior",def:"Modeller belirli büyüklüğe ulaşınca beklenmedik yetenekler ortaya çıkması. Eğitimde verilmeyen özellikler."},
   {term:"Synthetic Data",cat:"Teknik",en:"Synthetic Data",def:"AI tarafından üretilen eğitim verisi. Gerçek veri yetersizliğinde kullanılır. Özellikle tıp ve finans alanında."},
-  {term:"RLVR",cat:"Teknik",en:"RL with Verifiable Rewards",def:"Doğrulanabilir ödüllü pekiştirmeli öğrenme. DeepSeek'in başarısında kilit teknik. Doğru/yanlış yanıtları otomatik doğrular."},
+  {term:"RLVR",cat:"Teknik",en:"RL with Verifiable Rewards",def:"Doğrulanabilir ödüllü pekiştirmeli öğrenme. DeepSeek'in başarısında kilit teknik. Doğru/yanlış yanıtları otomatik doğrular."},,
+  {term:"Quantization",cat:"Teknik",en:"Quantization",def:"Model boyutunu küçültmek için ağırlıkları düşük hassasiyetle (int4/int8) temsil etme tekniği. Yerel AI çalıştırmayı mümkün kılar."},
+  {term:"Agentic AI",cat:"Yeni Nesil",en:"Agentic AI",def:"Görevleri adım adım planlayıp araçları kullanarak otonom tamamlayabilen AI sistemi. Örn: Claude Code, AutoGPT."},
+  {term:"Multimodal",cat:"Temel",en:"Multimodal",def:"Metin, görüntü, ses ve video gibi birden fazla veri türünü anlayıp üretebilen AI modeli. GPT-4o ve Gemini örnektir."},
+  {term:"Token Limit",cat:"Teknik",en:"Context Window",def:"Modelin bir seferde işleyebildiği maksimum metin miktarı. 1 token ≈ 0.75 İngilizce kelime. Claude Opus 1M token destekler."},
+  {term:"Fine-tuning",cat:"Eğitim",en:"Fine-tuning",def:"Önceden eğitilmiş bir modeli belirli bir görev veya domain için küçük veri setiyle yeniden eğitme süreci."},
+  {term:"Zero-shot",cat:"Teknik",en:"Zero-shot",def:"Modele hiçbir örnek vermeden yeni bir görevi yapmasını isteme. Örn: 'Şu metni Fransızcaya çevir' - çeviri örneği olmadan."},
+  {term:"Few-shot",cat:"Teknik",en:"Few-shot",def:"Modele 2-5 örnek vererek yeni görevi öğretme tekniği. Zero-shot'tan genellikle daha başarılı sonuç verir."},
+  {term:"Embeddings",cat:"Teknik",en:"Embeddings",def:"Metin veya nesneleri sayısal vektörlere dönüştürme işlemi. Anlam benzerliği aramak için kullanılır. RAG sistemlerinin temelidir."},
+  {term:"Guardrails",cat:"Güvenlik",en:"Guardrails",def:"AI modellerinin zararlı veya istenmeyen içerik üretmesini engelleyen kural ve filtre sistemi."},
+  {term:"Reasoning Model",cat:"Yeni Nesil",en:"Reasoning Model",def:"Cevap vermeden önce adım adım düşünerek çıkarsama yapan AI. OpenAI o3, Claude Sonnet 3.7 Thinking örnek."},
+  {term:"Vibe Coding",cat:"Yeni Nesil",en:"Vibe Coding",def:"Doğal dille açıklama yaparak AI'ın kod yazmasını sağlama yöntemi. Programlama bilmeden uygulama geliştirme trendi."}
 ];
 
 const AI_MODELS_DATA = {
@@ -3665,9 +3706,17 @@ function LoadingScreen({onDone}){
               {/* Video logo (if available) - priority over img */}
               <div style={{position:"relative",display:"inline-block"}}>
                 <video ref={vidRef} src="/imdatlogo.mp4" autoPlay loop playsInline
-                  style={{width:"clamp(200px,42vw,380px)",height:"auto",objectFit:"contain",
-                    filter:"drop-shadow(0 0 20px rgba(0,220,255,0.9)) drop-shadow(0 0 40px rgba(0,255,136,0.4)) brightness(1.2)",
-                    animation:"logoPulse 2.5s ease-in-out infinite",borderRadius:12,display:"block"}}
+                  style={{
+                    width:"clamp(160px,38vw,360px)",
+                    maxWidth:"90vw",
+                    maxHeight:"38vh",
+                    height:"auto",
+                    objectFit:"contain",
+                    display:"block",
+                    borderRadius:12,
+                    filter:"drop-shadow(0 0 18px rgba(0,220,255,0.85)) drop-shadow(0 0 36px rgba(0,255,136,0.35)) brightness(1.2)",
+                    animation:"logoPulse 2.5s ease-in-out infinite"
+                  }}
                   onError={e=>{e.target.style.display="none";}}/>
                 {/* Mute toggle */}
                 <button onClick={e=>{e.stopPropagation();const v=vidRef.current;if(v){v.muted=!v.muted;setVidMuted(v.muted);}}} style={{position:"absolute",top:6,right:6,width:26,height:26,borderRadius:"50%",background:"rgba(0,0,0,.7)",border:"1px solid rgba(0,220,255,.4)",color:"#00dcff",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>
@@ -4037,20 +4086,46 @@ function AnimasyonPage(){
 
   const EMOJIS=["🌌","🧠","🧬","🌊","🌐","🔢","⬡","🎆","⚫","🌠","❤️","🐦","🌀","✨","📡","🎵","🔲","💎","🫧","📐","🕐","🚇","⚗️","🌿","〰️","🏖️"];
 
-  function playAudio(id){
+  const[audioOn,setAudioOn]=useState(false);
+
+  function tryPlayAudio(id){
+    const src=getAnimAudio(id);
     try{
-      if(audioElemRef.current){audioElemRef.current.pause();audioElemRef.current=null;}
-      const audio=new Audio(getAnimAudio(id));
-      audio.volume=0.4;audio.loop=true;
-      audio.play().catch(()=>{});
-      audioElemRef.current=audio;
-    }catch(e){}
+      if(audioElemRef.current){
+        audioElemRef.current.pause();
+        audioElemRef.current.currentTime=0;
+      }
+      const a=new Audio(src);
+      a.volume=0.45;
+      a.loop=true;
+      const p=a.play();
+      if(p&&p.catch){
+        p.then(()=>setAudioOn(true)).catch(err=>{
+          console.log('Audio blocked:',err);
+          setAudioOn(false);
+        });
+      }else{
+        setAudioOn(true);
+      }
+      audioElemRef.current=a;
+    }catch(e){
+      console.log('Audio error:',e);
+      setAudioOn(false);
+    }
   }
   function stopAudio(){
-    try{if(audioElemRef.current){audioElemRef.current.pause();audioElemRef.current=null;}}catch(e){}
+    try{
+      if(audioElemRef.current){
+        audioElemRef.current.pause();
+        audioElemRef.current.currentTime=0;
+        audioElemRef.current=null;
+      }
+    }catch(e){}
+    setAudioOn(false);
   }
 
-  function openAnim(anim){setSel(anim);setViewMode('mini');playAudio(anim.id);}
+
+  function openAnim(anim){setSel(anim);setViewMode('mini');tryPlayAudio(anim.id);}
   function closeAnim(){stopAudio();setSel(null);}
   function goFull(){
     setViewMode('full');
@@ -4060,44 +4135,60 @@ function AnimasyonPage(){
     setViewMode('mini');
     try{document.fullscreenElement&&document.exitFullscreen();}catch(e){}
   }
-  function prevAnim(){const i=ANIMS.findIndex(a=>a.id===sel.id);const p=ANIMS[(i-1+ANIMS.length)%ANIMS.length];setSel(p);playAudio(p.id);}
-  function nextAnim(){const i=ANIMS.findIndex(a=>a.id===sel.id);const n=ANIMS[(i+1)%ANIMS.length];setSel(n);playAudio(n.id);}
+  function prevAnim(){const i=ANIMS.findIndex(a=>a.id===sel.id);const p=ANIMS[(i-1+ANIMS.length)%ANIMS.length];setSel(p);tryPlayAudio(p.id);}
+  function nextAnim(){const i=ANIMS.findIndex(a=>a.id===sel.id);const n=ANIMS[(i+1)%ANIMS.length];setSel(n);tryPlayAudio(n.id);}
 
-  // ── MINI WINDOW ──────────────────────────────────
+    // ── MINI WINDOW ──────────────────────────────────
   if(sel&&viewMode==='mini'){
     const AnimComp=sel.Comp;
     return(
-      <div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.75)",backdropFilter:"blur(4px)"}}>
-        <div style={{background:"#040810",border:"1.5px solid rgba(168,85,247,.5)",borderRadius:14,overflow:"hidden",boxShadow:"0 20px 80px rgba(0,0,0,.9),0 0 40px rgba(168,85,247,.15)",width:"min(700px,94vw)",maxWidth:"700px"}}>
-          {/* Mini header */}
-          <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"rgba(168,85,247,.06)",borderBottom:"1px solid rgba(168,85,247,.15)"}}>
-            <button onClick={closeAnim} style={{width:22,height:22,borderRadius:"50%",background:"#ff5f57",border:"none",cursor:"pointer",flexShrink:0,fontSize:10,color:"rgba(0,0,0,.6)",fontWeight:900}}>✕</button>
-            <button onClick={exitFull} style={{width:22,height:22,borderRadius:"50%",background:"#febc2e",border:"none",cursor:"pointer",flexShrink:0}}/>
-            <button onClick={goFull} style={{width:22,height:22,borderRadius:"50%",background:"#28c840",border:"none",cursor:"pointer",flexShrink:0}}/>
-            <div style={{flex:1,fontSize:12,fontWeight:700,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginLeft:4}}>{sel.t}</div>
-            <div style={{fontSize:10,color:"rgba(168,85,247,.7)"}}>🎵 Müzik Aktif</div>
-            <button onClick={goFull} style={{padding:"4px 12px",border:"1px solid rgba(0,220,255,.35)",borderRadius:8,background:"rgba(0,220,255,.08)",color:"#00dcff",fontSize:10,cursor:"pointer",fontFamily:"monospace",fontWeight:700}}>⛶ Tam Ekran</button>
+      <div style={{
+        position:"fixed",inset:0,zIndex:9998,
+        display:"flex",alignItems:"center",justifyContent:"center",
+        background:"rgba(0,0,0,.82)",backdropFilter:"blur(6px)"
+      }} onClick={closeAnim}>
+        <div onClick={e=>e.stopPropagation()} style={{
+          background:"#030810",
+          border:"1.5px solid rgba(168,85,247,.55)",
+          borderRadius:14,
+          overflow:"hidden",
+          boxShadow:"0 16px 60px rgba(0,0,0,.95),0 0 40px rgba(168,85,247,.18)",
+          width:"min(680px,92vw)",
+          maxHeight:"92vh",
+          display:"flex",
+          flexDirection:"column"
+        }}>
+          {/* macOS-style title bar */}
+          <div style={{display:"flex",alignItems:"center",gap:8,padding:"9px 14px",background:"rgba(168,85,247,.07)",borderBottom:"1px solid rgba(168,85,247,.18)",flexShrink:0}}>
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <div onClick={closeAnim} style={{width:13,height:13,borderRadius:"50%",background:"#ff5f57",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#6b0000",fontWeight:900}} onMouseEnter={e=>e.currentTarget.innerText='✕'} onMouseLeave={e=>e.currentTarget.innerText=''}>　</div>
+              <div style={{width:13,height:13,borderRadius:"50%",background:"#febc2e",cursor:"pointer"}}/>
+              <div onClick={goFull} style={{width:13,height:13,borderRadius:"50%",background:"#28c840",cursor:"pointer"}} title="Tam Ekran"/>
+            </div>
+            <div style={{flex:1,fontSize:12,fontWeight:700,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginLeft:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sel.t}</div>
+            <span style={{fontSize:9,color:audioOn?"#34d399":"#475569",flexShrink:0}}>{audioOn?"🎵 Ses Açık":"🔇 Ses Yok"}</span>
+            <button onClick={goFull} style={{padding:"3px 11px",border:"1px solid rgba(0,220,255,.35)",borderRadius:7,background:"rgba(0,220,255,.08)",color:"#00dcff",fontSize:10,cursor:"pointer",fontFamily:"monospace",fontWeight:700,flexShrink:0}}>⛶ Tam</button>
           </div>
-          {/* 16:9 canvas area */}
-          <div style={{position:"relative",paddingTop:"56.25%",background:"#030609"}}>
+          {/* Canvas - 16:9 fixed height */}
+          <div style={{position:"relative",width:"100%",height:0,paddingTop:"56.25%",background:"#020609",flexShrink:0}}>
             <div style={{position:"absolute",inset:0}}>
               <Safe><AnimComp/></Safe>
             </div>
           </div>
-          {/* Mini footer - prev/next + dots */}
-          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"rgba(0,0,0,.5)"}}>
-            <button onClick={prevAnim} style={{padding:"5px 12px",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,background:"rgba(255,255,255,.04)",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"monospace"}}>← Önceki</button>
-            <div style={{flex:1,display:"flex",justifyContent:"center",gap:4,flexWrap:"wrap"}}>
-              {ANIMS.map(a=><div key={a.id} onClick={()=>{setSel(a);playAudio(a.id);}} style={{width:7,height:7,borderRadius:"50%",cursor:"pointer",background:a.id===sel.id?"#a855f7":"rgba(255,255,255,.18)",transition:"all .2s",transform:a.id===sel.id?"scale(1.4)":"scale(1)"}}/>)}
+          {/* Bottom nav */}
+          <div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:"rgba(0,0,0,.6)",flexShrink:0}}>
+            <button onClick={prevAnim} style={{padding:"4px 11px",border:"1px solid rgba(255,255,255,.1)",borderRadius:7,background:"transparent",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"monospace",flexShrink:0}}>← Önceki</button>
+            <div style={{flex:1,display:"flex",justifyContent:"center",gap:3,flexWrap:"wrap",padding:"0 4px"}}>
+              {ANIMS.map(a=><div key={a.id} onClick={()=>{setSel(a);tryPlayAudio(a.id);}} title={a.t} style={{width:7,height:7,borderRadius:"50%",cursor:"pointer",flexShrink:0,background:a.id===sel.id?"#a855f7":"rgba(255,255,255,.2)",transition:"all .15s",transform:a.id===sel.id?"scale(1.5)":"scale(1)"}}/>)}
             </div>
-            <button onClick={nextAnim} style={{padding:"5px 12px",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,background:"rgba(255,255,255,.04)",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"monospace"}}>Sonraki →</button>
+            <button onClick={nextAnim} style={{padding:"4px 11px",border:"1px solid rgba(255,255,255,.1)",borderRadius:7,background:"transparent",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"monospace",flexShrink:0}}>Sonraki →</button>
           </div>
         </div>
       </div>
     );
   }
 
-  // ── TAM EKRAN (TV modu) ─────────────────────────
+// ── TAM EKRAN (TV modu) ─────────────────────────
   if(sel&&viewMode==='full'){
     const AnimFull=sel.Comp;
     return(
@@ -4112,7 +4203,7 @@ function AnimasyonPage(){
         <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.85))",padding:"20px 16px 14px",display:"flex",alignItems:"center",gap:8}}>
           <button onClick={prevAnim} style={{padding:"7px 18px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>← Önceki</button>
           <div style={{flex:1,display:"flex",justifyContent:"center",gap:5}}>
-            {ANIMS.map(a=><div key={a.id} onClick={()=>{setSel(a);playAudio(a.id);}} style={{width:9,height:9,borderRadius:"50%",cursor:"pointer",background:a.id===sel.id?"#a855f7":"rgba(255,255,255,.2)",transition:"all .2s",transform:a.id===sel.id?"scale(1.5)":"scale(1)"}}/>)}
+            {ANIMS.map(a=><div key={a.id} onClick={()=>{setSel(a);tryPlayAudio(a.id);}} style={{width:9,height:9,borderRadius:"50%",cursor:"pointer",background:a.id===sel.id?"#a855f7":"rgba(255,255,255,.2)",transition:"all .2s",transform:a.id===sel.id?"scale(1.5)":"scale(1)"}}/>)}
           </div>
           <button onClick={nextAnim} style={{padding:"7px 18px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>Sonraki →</button>
         </div>
