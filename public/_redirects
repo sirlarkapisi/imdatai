@@ -1,12 +1,8 @@
-# Cloudflare Pages _redirects
-# Place this file in: public/_redirects
-# IMPORTANT: Static files in dist/ always override these rules
+# Cloudflare Workers _redirects
+# NOT_FOUND_HANDLING: single-page-application zaten SPA yönlendirmesini yapıyor
+# Bu yüzden /* /index.html 200 SATIRI YOK — infinite loop yapıyor!
 
-# Explicit static files (served directly, not via SPA)
+# Sadece statik dosyaları açıkça belirt
 /sitemap.xml    /sitemap.xml    200
 /robots.txt     /robots.txt     200
 /logo.png       /logo.png       200
-/imdatlogo.mp4  /imdatlogo.mp4  200
-
-# SPA fallback - MUST be last
-/*  /index.html  200
