@@ -1,0 +1,12 @@
+# Cloudflare Pages _redirects
+# Place this file in: public/_redirects
+# IMPORTANT: Static files in dist/ always override these rules
+
+# Explicit static files (served directly, not via SPA)
+/sitemap.xml    /sitemap.xml    200
+/robots.txt     /robots.txt     200
+/logo.png       /logo.png       200
+/imdatlogo.mp4  /imdatlogo.mp4  200
+
+# SPA fallback - MUST be last
+/*  /index.html  200
