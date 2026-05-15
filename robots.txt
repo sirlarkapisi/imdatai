@@ -1,0 +1,116 @@
+# IMDATAI.COM — robots.txt
+# Türkiye'nin AI Hub'ı — https://imdatai.com
+# Güncelleme: 2026-05-15
+
+# ══════════════════════════════════════
+# TÜM BOTLARA İZİN
+# ══════════════════════════════════════
+User-agent: *
+Allow: /
+Allow: /#
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Crawl-delay: 2
+
+# ══════════════════════════════════════
+# GOOGLE
+# ══════════════════════════════════════
+User-agent: Googlebot
+Allow: /
+Allow: /*.js$
+Allow: /*.css$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.svg$
+Allow: /*.mp4$
+Crawl-delay: 1
+
+User-agent: Googlebot-Image
+Allow: /
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.svg$
+
+User-agent: Googlebot-Video
+Allow: /
+Allow: /*.mp4$
+
+# ══════════════════════════════════════
+# BING / MICROSOFT
+# ══════════════════════════════════════
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+User-agent: MSNBot
+Allow: /
+Crawl-delay: 2
+
+# ══════════════════════════════════════
+# YANDEX
+# ══════════════════════════════════════
+User-agent: Yandex
+Allow: /
+Crawl-delay: 3
+
+User-agent: YandexImages
+Allow: /
+
+# ══════════════════════════════════════
+# DİĞER ARAMA MOTORLARI
+# ══════════════════════════════════════
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 5
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 3
+
+User-agent: AhrefsBot
+Allow: /
+Crawl-delay: 5
+
+User-agent: SemrushBot
+Allow: /
+Crawl-delay: 5
+
+# ══════════════════════════════════════
+# AI EĞİTİM BOTLARINı ENGELLE
+# (İsteğe bağlı — kaldırmak isterseniz silin)
+# ══════════════════════════════════════
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# ══════════════════════════════════════
+# SİTEMAP
+# ══════════════════════════════════════
+Sitemap: https://imdatai.com/sitemap.xml
+
+# ══════════════════════════════════════
+# LOGO & OG IMAGE NOTU
+# ══════════════════════════════════════
+# /logo.png     → Ana logo (SVG/PNG, min 512x512)
+# /og-image.png → Sosyal medya paylaşım görseli (1200x630px)
+#                 Bu dosyayı oluşturmanız gerekiyor!
+# /imdatlogo.mp4 → Video logo intro (1040x896, 5sn)
