@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Component } from "react";
+import React, { useState, useEffect, useRef, useMemo, Component } from "react";
 
 // ── CHATBOT — Gemini API ──────────────────────────────────
 const WORKER_URL = "https://imdatai-gemini.imdatuysal.workers.dev"; // Worker kurulunca bu URL aktif olur
@@ -2630,7 +2630,31 @@ const PROMPTS_DATA = [
     {title:"Egzersiz Programı",kotu:"Spor programı yap",iyi:"Kişisel antrenör olarak [hedef: kas/zayıflama/dayanıklılık] için [haftalık gün sayısı] günlük egzersiz programı. Ekipman: [mevcut ekipman]. Seviye: [başlangıç/orta/ileri]. Her gün: ısınma + ana antrenman + soğuma + süre tahmini. İlerleme takvimi (6 hafta). Hata yapılmaması gereken teknik noktalar.",note:"Teknik hatalar bölümü iste — sakatlık önlemek için şart"},
     {title:"Stres Yönetimi Planı",kotu:"Stres azalt",iyi:"Stres yönetimi koçu olarak benim için kişiselleştirilmiş plan yap. Durumum: [stres kaynakları, semptomlar, mevcut başa çıkma yöntemleri]. 1)Ani stres için 5 dakikalık teknikler 2)Günlük önleyici pratikler 3)Stres tetikleyicileri azaltma stratejileri 4)Uyku kalitesini artırma 5)Haftalık recovery ritüeller. Kanıta dayalı teknikler kullan.",note:"Tetikleyiciler bölümü iste — belirtiyi değil nedeni tedavi et"},
     {title:"Uyku Optimizasyonu",kotu:"Nasıl daha iyi uyurum",iyi:"Uyku uzmanı olarak benim uyku sorunlarımı çöz. Sorunum: [uyku güçlüğü/çok uyuma/kalitesiz uyku]. Mevcut alışkanlıklar: [uyku saati, ekran süresi, kafein, egzersiz]. 1)Kişisel sirkadiyen ritim optimizasyonu 2)Yatak odası ortamı düzenlemeleri 3)Uyku öncesi 60 dakika rutini 4)Uyanma protokolü 5)1 haftalık adaptasyon planı. Bilimsel referanslar ekle.",note:"Bilimsel referans iste — kanıta dayalı tavsiye al"},
+  ]},,
+  {cat:"🎓 Eğitim & Öğrenme",color:"#34d399",icon:"🎓",items:[
+    {title:"Ders Planı Oluştur",kotu:"Matematik dersi planla",iyi:"Lise 10. sınıf için limit konusunu 45 dakikalık ders planı hazırla. Giriş aktivitesi, ana anlatım, grup çalışması ve değerlendirme bölümleri olsun. Her bölüme süre ver."},
+    {title:"Konuyu Basitleştir",kotu:"Kuantum fiziğini anlat",iyi:"Kuantum dolanıklığını 12 yaşındaki bir çocuğa analoji kullanarak açıkla. LEGO veya oyun benzetmesi yap. Sonunda 3 soru sor."},
+    {title:"Quiz & Soru Seti",kotu:"Tarih soruları yaz",iyi:"Osmanlı İmparatorluğu'nun yükselme dönemi için 10 çoktan seçmeli soru hazırla. Her soruya cevap anahtarı ve açıklaması ekle. Zorluk: Orta."},
+    {title:"Öğrenme Yol Haritası",kotu:"Python öğrenmek istiyorum",iyi:"Python sıfırdan ileri seviyeye 3 aylık öğrenme planı hazırla. Haftalık konular, kaynak önerileri ve mini projeler ekle. Ben [meslep] olarak çalışıyorum."},
+    {title:"Akıl Haritası Oluştur",kotu:"Yapay zeka haritası yap",iyi:"'Makine Öğrenmesi' konusu için görsel akıl haritası yapısı oluştur. Markdown veya metin formatında, ana dal ve alt dallarla. Mutlaka örnekler ekle."},
+    {title:"Flashcard Seti",kotu:"İngilizce kelimeler",iyi:"B2 seviyesi İngilizce için 20 kelime kartı oluştur. Format: Kelime | Türkçe | Cümle örneği. Akademik ve iş hayatında sık kullanılanları seç."},
   ]},
+  {cat:"💡 Yaratıcı & Sanat",color:"#f472b6",icon:"💡",items:[
+    {title:"Roman / Hikaye Taslağı",kotu:"Hikaye yaz",iyi:"Distopik bir Türkiye'de geçen, yapay zekanın insanların duygularını yönettiği bir roman için 5 bölümlük taslak oluştur. Her bölüm için sahne özeti, karakter gelişimi ve çatışma noktası belirt."},
+    {title:"Şiir Yaz",kotu:"Yapay zeka şiiri yaz",iyi:"Serbest nazımda, 3 kıtalık, 'dijital yalnızlık' temalı çağdaş Türkçe şiir yaz. Metafor ve imgelem ağırlıklı olsun. Okuyucuyu 1990'ların nostaljisine taşı."},
+    {title:"Midjourney Prompt",kotu:"Güzel manzara istiyorum",iyi:"Cyberpunk İstanbul gecesi, Boğaz köprüsü hologramlarla kaplı, 2077 yılı, sinematik 85mm, anamorfik lens, neon ışıkları, yağmurlu, fotogerçekçi, 8K --ar 16:9 --style raw --v 6"},
+    {title:"Karakter Tasarımı",kotu:"Oyun karakteri yap",iyi:"Türk mitolojisinden ilham alan, yapay zeka asistanı rolündeki bir NPC karakteri için detaylı karakter dokümanı hazırla. Görünüm, kişilik, yetenekler, zayıf noktalar ve backstory ekle."},
+    {title:"Senaryo Özeti",kotu:"Film senaryosu yaz",iyi:"60 dakikalık Netflix dizisi için 1. bölüm senaryosu özeti yaz. [Konu], [Ana karakter], [Yan karakterler] bilgilerini kullan. Hook, artan gerilim ve cliffhanger içermeli."},
+    {title:"Sosyal Medya İçerik Takvimi",kotu:"Instagram için içerik",iyi:"[Marka/Konu] için 1 aylık Instagram içerik takvimi oluştur. 30 post fikri, her biri için caption taslağı, hashtag seti ve en iyi paylaşım saatleri. Carousel, Reels ve Story dengeli dağıt."},
+  ]},
+  {cat:"🔧 Teknik & Kod",color:"#00dcff",icon:"🔧",items:[
+    {title:"Kod İncele & Düzelt",kotu:"Bu kodu düzelt",iyi:"Aşağıdaki [Python/JavaScript/...] kodunu incele: [KOD]. Hataları listele, açıkla ve düzeltilmiş versiyonu yaz. Ayrıca performans iyileştirme önerileri sun."},
+    {title:"API Dokümantasyonu",kotu:"API dökümantasyonu yaz",iyi:"REST API endpoint'i için Swagger/OpenAPI formatında dökümantasyon yaz. Endpoint: [URL]. Method: [GET/POST]. Request/Response örnekleri, hata kodları ve rate limit bilgilerini ekle."},
+    {title:"Regex Pattern",kotu:"Türk telefon numarası regex",iyi:"Türkiye telefon numarasını doğrulayan regex yaz: 05XX XXX XX XX formatı. Testable regex, açıklaması ve 5 test vakası ekle. Hem JavaScript hem Python versiyonu ver."},
+    {title:"Database Tasarımı",kotu:"E-ticaret veritabanı tasarla",iyi:"E-ticaret sitesi için PostgreSQL şeması tasarla: Kullanıcılar, Ürünler, Siparişler, Kategoriler tabloları. İlişkiler, indeksler ve örnek INSERT sorguları ekle. Normalize et."},
+    {title:"Test Senaryoları",kotu:"Test yaz",iyi:"Login fonksiyonu için kapsamlı test senaryoları yaz. Happy path, edge cases, güvenlik testleri (SQL injection, XSS). Jest formatında, her test için gerekçe ekle."},
+    {title:"Architecture Review",kotu:"Microservice mimarisi",iyi:"100K günlük kullanıcılı bir SaaS uygulaması için microservice mimarisi öner. Her servis için sorumluluklar, iletişim protokolleri (REST/gRPC/event), teknoloji seçimleri ve ölçekleme stratejisi."},
+  ]}
 ];
 
 const MYTHS_DATA = [
@@ -3561,6 +3585,7 @@ function ShareButton({title,text,size="normal"}){
 // LOADING EKRANI
 // ══════════════════════════════════════════════════════════
 function LoadingScreen({onDone}){
+  const vidRef=useRef(null);const[vidMuted,setVidMuted]=useState(false);
   const[chars,setChars]=useState(()=>{const CH="IMDATAI01CLAUDE10GPT01GEMINI10NEURAL01";return Array.from({length:28*16},(_,i)=>({id:i,ch:CH[i%CH.length],sp:i%7===0,op:.4+Math.random()*.5,br:i%11===0}));});
   const[phase,setPhase]=useState(0);
   const[tLines,setTLines]=useState([]);
@@ -3638,11 +3663,17 @@ function LoadingScreen({onDone}){
               <div style={{position:"absolute",inset:-20,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,220,255,0.18),transparent 65%)",animation:"glow 2s ease-in-out infinite"}}/>
               <div style={{position:"absolute",inset:-10,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(0,255,136,0.12),transparent 65%)",animation:"glow 2.5s ease-in-out infinite reverse"}}/>
               {/* Video logo (if available) - priority over img */}
-              <video src="/imdatlogo.mp4" autoPlay muted loop playsInline
-                style={{width:112,height:112,objectFit:"contain",borderRadius:16,position:"relative",zIndex:1,
-                  filter:"drop-shadow(0 0 20px rgba(0,220,255,0.9)) drop-shadow(0 0 40px rgba(0,255,136,0.4)) brightness(1.2)",
-                  animation:"logoPulse 2.5s ease-in-out infinite"}}
-                onError={e=>{e.target.style.display="none";const img=document.createElement("img");img.src="/logo.png";img.style.cssText="width:112px;height:112px;object-fit:contain;border-radius:16px;position:relative;z-index:1;filter:drop-shadow(0 0 20px rgba(0,220,255,0.9)) brightness(1.2);animation:logoPulse 2.5s ease-in-out infinite";img.onError=()=>{img.style.display="none";const d=document.createElement("div");d.innerHTML="⬡";d.style.cssText="font-size:80px;color:#00dcff;filter:drop-shadow(0 0 24px #00dcff)";e.target.parentElement.appendChild(d);};e.target.parentElement.appendChild(img);}}/>
+              <div style={{position:"relative",display:"inline-block"}}>
+                <video ref={vidRef} src="/imdatlogo.mp4" autoPlay loop playsInline
+                  style={{width:"clamp(200px,42vw,380px)",height:"auto",objectFit:"contain",
+                    filter:"drop-shadow(0 0 20px rgba(0,220,255,0.9)) drop-shadow(0 0 40px rgba(0,255,136,0.4)) brightness(1.2)",
+                    animation:"logoPulse 2.5s ease-in-out infinite",borderRadius:12,display:"block"}}
+                  onError={e=>{e.target.style.display="none";}}/>
+                {/* Mute toggle */}
+                <button onClick={e=>{e.stopPropagation();const v=vidRef.current;if(v){v.muted=!v.muted;setVidMuted(v.muted);}}} style={{position:"absolute",top:6,right:6,width:26,height:26,borderRadius:"50%",background:"rgba(0,0,0,.7)",border:"1px solid rgba(0,220,255,.4)",color:"#00dcff",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>
+                  {vidMuted?"🔇":"🔊"}
+                </button>
+              </div>
           </div>
           {[0,51,102,153,204,255,306].map((deg,i)=><div key={i} style={{position:"absolute",width:i%2===0?6:4,height:i%2===0?6:4,borderRadius:"50%",top:"50%",left:"50%",background:["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i],boxShadow:`0 0 ${i%2===0?10:7}px ${["#00ff88","#00dcff","#a855f7","#f472b6","#fbbf24","#34d399","#fb923c"][i]}`,transform:`rotate(${deg}deg) translateX(52px) translateY(-50%)`,animation:`spin ${3.5+i*.35}s linear infinite`}}/>)}
         </div>
@@ -3929,6 +3960,39 @@ function AnimGlobe(){
   return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;
 }
 
+// ══ Animasyon Ses Dosyaları — Her animasyon için ayrı mp3 ekleyebilirsiniz ══
+const ANIM_AUDIO = {
+  particle:     '/sounds/particle.mp3',
+  neural:       '/sounds/neural.mp3',
+  dna:          '/sounds/dna.mp3',
+  wave:         '/sounds/wave.mp3',
+  globe:        '/sounds/globe.mp3',
+  matrix:       '/sounds/matrix.mp3',
+  fireworks:    '/sounds/fireworks.mp3',
+  blackhole:    '/sounds/blackhole.mp3',
+  nebula:       '/sounds/nebula.mp3',
+  heartbeat:    '/sounds/heartbeat.mp3',
+  boids:        '/sounds/boids.mp3',
+  spiral:       '/sounds/spiral.mp3',
+  constellation:'/sounds/constellation.mp3',
+  pulsar:       '/sounds/pulsar.mp3',
+  audio:        '/sounds/audio.mp3',
+  gameoflife:   '/sounds/gameoflife.mp3',
+  crystal:      '/sounds/crystal.mp3',
+  metaballs:    '/sounds/metaballs.mp3',
+  geometry:     '/sounds/geometry.mp3',
+  clock:        '/sounds/clock.mp3',
+  tunnel:       '/sounds/tunnel.mp3',
+  plasma:       '/sounds/plasma.mp3',
+  fractal:      '/sounds/fractal.mp3',
+  // Hepsi şimdilik aynı dosyayı kullanıyor:
+  _default:     '/imdataiwebses.mp3',
+};
+function getAnimAudio(id){
+  // Ses dosyası varsa kullan, yoksa default
+  return ANIM_AUDIO[id] || ANIM_AUDIO._default;
+}
+
 const ANIMS=[
   {id:"particle",t:"🌌 Parçacık Evreni",d:"500 parçacık + ağ",Comp:AnimParticle},
   {id:"neural",t:"🧠 Nöral Ağ",d:"Sinir ağı görsel",Comp:NeuralNetSim},
@@ -3938,7 +4002,6 @@ const ANIMS=[
   {id:"matrix",t:"🔢 Matrix",d:"Kod yağmuru",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cols=Math.floor(c.width/14);const drops=Array(cols).fill(0);const CH="IMDATAI01MLAI10";const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.07)";ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle="#00ff88";ctx.font="12px monospace";drops.forEach((y,i)=>{ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*14,y*14);if(y*14>c.height&&Math.random()>.97)drops[i]=0;drops[i]++;});},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"fireworks",t:"🎆 Havai Fişek",d:"Renkli patlamalar",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const ps=[];function ex(x,y){const h=Math.random()*360;for(let i=0;i<50;i++)ps.push({x,y,vx:(Math.random()-.5)*7,vy:(Math.random()-.5)*7,life:1,h});}let t=0;const iv=setInterval(()=>{t++;ctx.fillStyle="rgba(2,5,10,0.2)";ctx.fillRect(0,0,c.width,c.height);if(t%70===0)ex(Math.random()*c.width,Math.random()*c.height*0.7);for(let i=ps.length-1;i>=0;i--){const p=ps[i];ctx.fillStyle=`hsl(${p.h},100%,60%)`;ctx.globalAlpha=p.life;ctx.fillRect(p.x,p.y,3,3);p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.018;if(p.life<=0)ps.splice(i,1);}ctx.globalAlpha=1;},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"blackhole",t:"⚫ Kara Delik",d:"Spiral çekim",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cx=c.width/2,cy=c.height/2;const pts=Array.from({length:200},()=>({a:Math.random()*Math.PI*2,rr:50+Math.random()*120,sp:0.005+Math.random()*0.02,h:220+Math.random()*60}));const iv=setInterval(()=>{ctx.fillStyle="rgba(0,0,0,0.15)";ctx.fillRect(0,0,c.width,c.height);pts.forEach(p=>{p.a+=p.sp;p.rr=Math.max(5,p.rr-0.1);const x=cx+p.rr*Math.cos(p.a),y=cy+p.rr*Math.sin(p.a);ctx.fillStyle=`hsl(${p.h},80%,55%)`;ctx.fillRect(x,y,2,2);if(p.rr<8)p.rr=50+Math.random()*120;});},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"lightning",t:"⚡ Şimşek",d:"Elektrik efekti",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");function bolt(x1,y1,x2,y2,d){if(d<=0){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();return;}const mx=(x1+x2)/2+(Math.random()-.5)*d*2,my=(y1+y2)/2+(Math.random()-.5)*d*2;bolt(x1,y1,mx,my,d/2);bolt(mx,my,x2,y2,d/2);}const iv=setInterval(()=>{ctx.fillStyle="rgba(2,5,15,0.35)";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle=`hsl(${200+Math.random()*60},100%,70%)`;ctx.lineWidth=Math.random()*2+0.5;ctx.shadowBlur=12;ctx.shadowColor="#00dcff";if(Math.random()>.5)bolt(c.width/2,0,c.width/2+(Math.random()-.5)*c.width,c.height,60);ctx.shadowBlur=0;},120);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"nebula",t:"🌠 Nebula",d:"Uzay bulutu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const stars=Array.from({length:120},()=>({x:Math.random()*c.width,y:Math.random()*c.height,rr:Math.random()*1.5,b:Math.random()}));const iv=setInterval(()=>{ctx.fillStyle="rgba(2,4,12,0.06)";ctx.fillRect(0,0,c.width,c.height);stars.forEach(s=>{s.b+=0.01;ctx.fillStyle=`rgba(255,255,255,${0.3+Math.sin(s.b)*0.4})`;ctx.beginPath();ctx.arc(s.x,s.y,s.rr,0,Math.PI*2);ctx.fill();});},60);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"heartbeat",t:"❤️ Kalp Atışı",d:"EKG ritmi",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const pts=[];let x=0;const iv=setInterval(()=>{x=(x+3)%c.width;const cy2=c.height/2;const t2=x/c.width*Math.PI*8;let y=cy2;if(Math.sin(t2)>0.8)y=cy2-80*Math.sin(t2*3);else y=cy2+Math.sin(t2)*8;pts.push({x,y});if(pts.length>100)pts.shift();ctx.fillStyle="rgba(10,2,4,0.3)";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#ff4466";ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor="#ff4466";ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();ctx.shadowBlur=0;},20);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"boids",t:"🐦 Sürü",d:"Yapay zeka sürüsü",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const B=Array.from({length:60},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.15)";ctx.fillRect(0,0,c.width,c.height);B.forEach(b=>{let ax=0,ay=0,n=0;B.forEach(o=>{if(o===b)return;const dx=o.x-b.x,dy=o.y-b.y,d=Math.sqrt(dx*dx+dy*dy);if(d<60){ax+=o.vx;ay+=o.vy;n++;}if(d<20){ax-=dx*0.1;ay-=dy*0.1;}});if(n>0){b.vx+=(ax/n-b.vx)*0.05;b.vy+=(ay/n-b.vy)*0.05;}const sp=Math.sqrt(b.vx*b.vx+b.vy*b.vy);if(sp>3){b.vx=b.vx/sp*3;b.vy=b.vy/sp*3;}b.x=(b.x+b.vx+c.width)%c.width;b.y=(b.y+b.vy+c.height)%c.height;ctx.fillStyle="#00dcff";ctx.fillRect(b.x,b.y,3,3);});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
@@ -3950,8 +4013,13 @@ const ANIMS=[
   {id:"crystal",t:"💎 Kristal",d:"Büyüyen yapı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const pts=[{x:c.width/2,y:c.height/2,size:2}];let t=0;const iv=setInterval(()=>{t++;ctx.fillStyle="rgba(4,8,20,0.05)";ctx.fillRect(0,0,c.width,c.height);if(t%5===0&&pts.length<200){const base=pts[Math.floor(Math.random()*pts.length)];const a=Math.random()*Math.PI*2,d=8+Math.random()*8;pts.push({x:base.x+Math.cos(a)*d,y:base.y+Math.sin(a)*d,size:Math.max(0.5,base.size*0.95)});}pts.forEach(p=>{ctx.fillStyle=`hsla(${(p.x+p.y+t)%360},70%,60%,.8)`;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"metaballs",t:"🫧 Metaballs",d:"Organik damlalar",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const balls=Array.from({length:6},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,rr:30+Math.random()*30,h:Math.random()*360}));const iv=setInterval(()=>{ctx.fillStyle="rgba(4,8,20,0.3)";ctx.fillRect(0,0,c.width,c.height);balls.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(b.x<b.rr||b.x>c.width-b.rr)b.vx*=-1;if(b.y<b.rr||b.y>c.height-b.rr)b.vy*=-1;const g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.rr);g.addColorStop(0,`hsla(${b.h},90%,65%,.9)`);g.addColorStop(1,`hsla(${b.h},90%,65%,0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(b.x,b.y,b.rr,0,Math.PI*2);ctx.fill();});},40);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"geometry",t:"📐 Geometri",d:"Dönen şekiller",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.02;ctx.fillStyle="rgba(4,8,20,0.1)";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;[3,4,5,6,8].forEach((sides,i)=>{ctx.save();ctx.translate(cx,cy);ctx.rotate(t*(i%2===0?1:-1)*(0.5+i*0.2));const rr=30+i*22;ctx.strokeStyle=`hsl(${i*40+t*20},80%,60%)`;ctx.lineWidth=1.5;ctx.beginPath();for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2;j===0?ctx.moveTo(rr*Math.cos(a),rr*Math.sin(a)):ctx.lineTo(rr*Math.cos(a),rr*Math.sin(a));}ctx.closePath();ctx.stroke();ctx.restore();});},30);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"clock",t:"🕐 Sanat Saati",d:"Canlı analog",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cx=c.width/2,cy=c.height/2,rad=Math.min(c.width,c.height)/2-20;const iv=setInterval(()=>{const now=new Date();ctx.fillStyle="#030609";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#00dcff";ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor="#00dcff";ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const x1=cx+(rad-8)*Math.cos(a-Math.PI/2),y1=cy+(rad-8)*Math.sin(a-Math.PI/2),x2=cx+(rad-18)*Math.cos(a-Math.PI/2),y2=cy+(rad-18)*Math.sin(a-Math.PI/2);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}[[now.getHours()%12/12,"#a855f7",rad*.5,4],[now.getMinutes()/60,"#00dcff",rad*.7,2],[now.getSeconds()/60,"#ff4466",rad*.85,1]].forEach(([frac,col,len,lw])=>{const a=frac*Math.PI*2-Math.PI/2;ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+len*Math.cos(a),cy+len*Math.sin(a));ctx.stroke();});},1000);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"clock",t:"🕐 Sanat Saati",d:"Canlı analog",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const cx=c.width/2,cy=c.height/2,rad=Math.min(c.width,c.height)/2-20;const iv=setInterval(()=>{const now=new Date();ctx.fillStyle="#030609";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#00dcff";ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor="#00dcff";ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const x1=cx+(rad-8)*Math.cos(a-Math.PI/2),y1=cy+(rad-8)*Math.sin(a-Math.PI/2),x2=cx+(rad-18)*Math.cos(a-Math.PI/2),y2=cy+(rad-18)*Math.sin(a-Math.PI/2);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}[[now.getHours()%12/12,"#a855f7",rad*.5,4],[now.getMinutes()/60,"#00dcff",rad*.7,2],[now.getSeconds()/60,"#ff4466",rad*.85,1]].forEach(([frac,col,len,lw])=>{const a=frac*Math.PI*2-Math.PI/2;ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+len*Math.cos(a),cy+len*Math.sin(a));ctx.stroke();});},1000);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },  {id:"tunnel",t:"🚇 Tünel",d:"Sonsuz hipnotik tünel",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.035;ctx.fillStyle="#010408";ctx.fillRect(0,0,c.width,c.height);const cx=c.width/2,cy=c.height/2;for(let i=20;i>0;i--){const rr=i*15*(1+Math.sin(t)*0.12);const hue=(t*40+i*20)%360;ctx.strokeStyle=`hsla(${hue},90%,60%,${i/22})`;ctx.lineWidth=1.2;ctx.beginPath();for(let j=0;j<=8;j++){const a=j/8*Math.PI*2+t*(i%2===0?.3:-.3);const x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a)*.65;j===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.closePath();ctx.stroke();}},33);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"plasma",t:"⚗️ Plazma",d:"Sıvı renkli plazma akışı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.04;const img=ctx.createImageData(c.width,c.height);const d=img.data;for(let y=0;y<c.height;y+=2)for(let x=0;x<c.width;x+=2){const v=Math.sin(x/30+t)+Math.sin(y/30+t)+Math.sin((x+y)/40+t)+Math.sin(Math.sqrt(x*x+y*y)/25+t);const r2=Math.floor((Math.sin(v*Math.PI)+1)*127.5);const g2=Math.floor((Math.sin(v*Math.PI+2.1)+1)*127.5);const b2=Math.floor((Math.sin(v*Math.PI+4.2)+1)*127.5);const i=(y*c.width+x)*4;d[i]=r2;d[i+1]=g2;d[i+2]=b2;d[i+3]=220;if(x+1<c.width){d[i+4]=r2;d[i+5]=g2;d[i+6]=b2;d[i+7]=220;}if(y+1<c.height){const i2=((y+1)*c.width+x)*4;d[i2]=r2;d[i2+1]=g2;d[i2+2]=b2;d[i2+3]=220;}}ctx.putImageData(img,0,0);},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"fractal",t:"🌿 Fraktal Ağaç",d:"Özyinelemeli fraktal büyüme",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;function branch(x,y,len,angle,depth){if(depth<=0||len<2)return;const x2=x+Math.cos(angle)*len,y2=y+Math.sin(angle)*len;const hue=(t*30+depth*25)%360;ctx.strokeStyle=`hsla(${hue},80%,${40+depth*8}%,${depth/8})`;ctx.lineWidth=depth*0.8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();const spread=0.4+Math.sin(t+depth)*0.15;branch(x2,y2,len*.68,angle-spread,depth-1);branch(x2,y2,len*.68,angle+spread,depth-1);}const iv=setInterval(()=>{t+=0.025;ctx.fillStyle="rgba(3,6,9,.35)";ctx.fillRect(0,0,c.width,c.height);branch(c.width/2,c.height,80,-Math.PI/2,7);},60);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"lissajous",t:"〰️ Lissajous",d:"Harmonik eğri izleri",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const pts=[];const iv=setInterval(()=>{t+=0.018;const A=c.width*.38,B=c.height*.38,a=3,b=2;const px=c.width/2+A*Math.sin(a*t+Math.PI/4),py=c.height/2+B*Math.sin(b*t);pts.push({x:px,y:py,age:0});if(pts.length>350)pts.shift();ctx.fillStyle="rgba(3,6,9,.18)";ctx.fillRect(0,0,c.width,c.height);pts.forEach((p,i)=>{p.age++;const ratio=i/pts.length;const hue=(t*60+i*1.2)%360;ctx.fillStyle=`hsla(${hue},90%,65%,${ratio*.9})`;ctx.beginPath();ctx.arc(p.x,p.y,ratio*3.5+.5,0,Math.PI*2);ctx.fill();});},22);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"sandpile",t:"🏖️ Kum Fırtınası",d:"Parçacık akış simülasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const ps=Array.from({length:180},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,h:Math.random()*360,size:1.5+Math.random()*2.5,life:Math.random()}));let t=0;const iv=setInterval(()=>{t+=.025;ctx.fillStyle="rgba(4,8,20,.2)";ctx.fillRect(0,0,c.width,c.height);ps.forEach(p=>{const windX=Math.sin(t+p.y*.008)*1.2,windY=Math.cos(t*.7+p.x*.006)*.8;p.vx=p.vx*.96+windX*.08;p.vy=p.vy*.96+windY*.08+.04;p.x+=p.vx;p.y+=p.vy;p.life+=.01;if(p.x<0||p.x>c.width||p.y>c.height){p.x=Math.random()*c.width;p.y=-5;p.vx=(Math.random()-.5)*2;p.vy=Math.random()*.5;p.life=0;}if(p.x>c.width)p.x=0;const al=Math.sin(p.life*Math.PI)*.85;ctx.fillStyle=`hsla(${p.h},80%,65%,${al})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});},35);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
 ];
+
 
 class ErrorBoundary extends Component{
   constructor(props){super(props);this.state={err:false};}
@@ -3963,86 +4031,116 @@ function Safe({children}){return <ErrorBoundary>{children}</ErrorBoundary>;}
 
 function AnimasyonPage(){
   const[sel,setSel]=useState(null);
-  const[fullscreen,setFullscreen]=useState(false);
-  const[audioCtx,setAudioCtx]=useState(null);
+  const[viewMode,setViewMode]=useState('mini'); // 'mini' | 'full'
+  const audioRef=useRef(null);
+  const audioElemRef=useRef(null);
 
-  function startMusic(id){
+  const EMOJIS=["🌌","🧠","🧬","🌊","🌐","🔢","⬡","🎆","⚫","🌠","❤️","🐦","🌀","✨","📡","🎵","🔲","💎","🫧","📐","🕐","🚇","⚗️","🌿","〰️","🏖️"];
+
+  function playAudio(id){
     try{
-      if(audioCtx)audioCtx.close();
-      const AC=window.AudioContext||window.webkitAudioContext;
-      if(!AC)return;
-      const ctx=new AC();
-      const T=ctx.currentTime;
-      const osc=(f,g,s,e,t='sine')=>{const o=ctx.createOscillator(),gn=ctx.createGain();o.type=t;o.frequency.value=f;gn.gain.setValueAtTime(0,T+s);gn.gain.linearRampToValueAtTime(g,T+s+.4);gn.gain.linearRampToValueAtTime(0,T+e);o.connect(gn);gn.connect(ctx.destination);o.start(T+s);o.stop(T+e+.1);};
-      if(id==='heartbeat'){osc(60,.12,0,30);osc(120,.04,0,30,'square');}
-      else if(id==='lightning'||id==='fireworks'){osc(80,.09,0,30,'sawtooth');osc(160,.05,0,30);}
-      else if(id==='audio'){[261,329,392,523,659].forEach((f,i)=>osc(f,.04,i*.5,i*.5+5));}
-      else if(id==='pulsar'){osc(40,.12,0,30);osc(80,.06,0,30);}
-      else if(id==='nebula'||id==='constellation'){osc(220,.04,0,30);osc(330,.03,0,30);osc(440,.02,0,30);}
-      else{osc(40,.07,0,30,'sawtooth');osc(220,.03,0,30);}
-      setAudioCtx(ctx);
+      if(audioElemRef.current){audioElemRef.current.pause();audioElemRef.current=null;}
+      const audio=new Audio(getAnimAudio(id));
+      audio.volume=0.4;audio.loop=true;
+      audio.play().catch(()=>{});
+      audioElemRef.current=audio;
     }catch(e){}
   }
+  function stopAudio(){
+    try{if(audioElemRef.current){audioElemRef.current.pause();audioElemRef.current=null;}}catch(e){}
+  }
 
-  function openAnim(anim){
-    setSel(anim);
-    startMusic(anim.id);
+  function openAnim(anim){setSel(anim);setViewMode('mini');playAudio(anim.id);}
+  function closeAnim(){stopAudio();setSel(null);}
+  function goFull(){
+    setViewMode('full');
     try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}catch(e){}
   }
-
-  function closeAnim(){
-    try{audioCtx&&audioCtx.close();}catch(e){}
-    setAudioCtx(null);
-    setSel(null);
+  function exitFull(){
+    setViewMode('mini');
     try{document.fullscreenElement&&document.exitFullscreen();}catch(e){}
   }
+  function prevAnim(){const i=ANIMS.findIndex(a=>a.id===sel.id);const p=ANIMS[(i-1+ANIMS.length)%ANIMS.length];setSel(p);playAudio(p.id);}
+  function nextAnim(){const i=ANIMS.findIndex(a=>a.id===sel.id);const n=ANIMS[(i+1)%ANIMS.length];setSel(n);playAudio(n.id);}
 
-  // Fullscreen mode
-  if(sel){
-    const AnimFull=sel.Comp;
-    return (
-      <div style={{position:"fixed",inset:0,zIndex:99999,background:"#000",display:"flex",flexDirection:"column",fontFamily:"monospace"}}>
-        {/* Top bar */}
-        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"linear-gradient(rgba(0,0,0,.95),transparent)",position:"absolute",top:0,left:0,right:0,zIndex:1}}>
-          <button onClick={closeAnim} style={{padding:"7px 16px",border:"1px solid rgba(0,220,255,.5)",borderRadius:20,background:"rgba(0,0,0,.8)",color:"#00dcff",fontSize:13,cursor:"pointer",fontWeight:700,fontFamily:"monospace",flexShrink:0}}>✕ Kapat</button>
-          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:800,color:"#fff",fontFamily:"Space Grotesk,sans-serif"}}>{sel.t}</div><div style={{fontSize:10,color:"rgba(255,255,255,.4)"}}>{sel.d} · Tam Ekran · 🎵 Müzik Aktif</div></div>
-          <button onClick={()=>startMusic(sel.id)} style={{padding:"7px 14px",border:"1px solid rgba(168,85,247,.4)",borderRadius:16,background:"rgba(168,85,247,.1)",color:"#a855f7",fontSize:11,cursor:"pointer",fontFamily:"monospace",flexShrink:0}}>🔄 Müzik</button>
-        </div>
-        {/* Full canvas */}
-        <div style={{flex:1,overflow:"hidden"}}>
-          <Safe><AnimFull/></Safe>
-        </div>
-        {/* Bottom nav - prev/next */}
-        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.9))",padding:"20px 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
-          <button onClick={()=>{const i=ANIMS.findIndex(a=>a.id===sel.id);const prev=ANIMS[(i-1+ANIMS.length)%ANIMS.length];setSel(prev);startMusic(prev.id);}} style={{padding:"8px 20px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>← Önceki</button>
-          <div style={{display:"flex",gap:5}}>{ANIMS.map((a,i)=><div key={a.id} onClick={()=>{setSel(a);startMusic(a.id);}} style={{width:8,height:8,borderRadius:"50%",cursor:"pointer",background:a.id===sel.id?"#00dcff":"rgba(255,255,255,.2)",transition:"all .2s"}}/>)}</div>
-          <button onClick={()=>{const i=ANIMS.findIndex(a=>a.id===sel.id);const next=ANIMS[(i+1)%ANIMS.length];setSel(next);startMusic(next.id);}} style={{padding:"8px 20px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>Sonraki →</button>
+  // ── MINI WINDOW ──────────────────────────────────
+  if(sel&&viewMode==='mini'){
+    const AnimComp=sel.Comp;
+    return(
+      <div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.75)",backdropFilter:"blur(4px)"}}>
+        <div style={{background:"#040810",border:"1.5px solid rgba(168,85,247,.5)",borderRadius:14,overflow:"hidden",boxShadow:"0 20px 80px rgba(0,0,0,.9),0 0 40px rgba(168,85,247,.15)",width:"min(700px,94vw)",maxWidth:"700px"}}>
+          {/* Mini header */}
+          <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"rgba(168,85,247,.06)",borderBottom:"1px solid rgba(168,85,247,.15)"}}>
+            <button onClick={closeAnim} style={{width:22,height:22,borderRadius:"50%",background:"#ff5f57",border:"none",cursor:"pointer",flexShrink:0,fontSize:10,color:"rgba(0,0,0,.6)",fontWeight:900}}>✕</button>
+            <button onClick={exitFull} style={{width:22,height:22,borderRadius:"50%",background:"#febc2e",border:"none",cursor:"pointer",flexShrink:0}}/>
+            <button onClick={goFull} style={{width:22,height:22,borderRadius:"50%",background:"#28c840",border:"none",cursor:"pointer",flexShrink:0}}/>
+            <div style={{flex:1,fontSize:12,fontWeight:700,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginLeft:4}}>{sel.t}</div>
+            <div style={{fontSize:10,color:"rgba(168,85,247,.7)"}}>🎵 Müzik Aktif</div>
+            <button onClick={goFull} style={{padding:"4px 12px",border:"1px solid rgba(0,220,255,.35)",borderRadius:8,background:"rgba(0,220,255,.08)",color:"#00dcff",fontSize:10,cursor:"pointer",fontFamily:"monospace",fontWeight:700}}>⛶ Tam Ekran</button>
+          </div>
+          {/* 16:9 canvas area */}
+          <div style={{position:"relative",paddingTop:"56.25%",background:"#030609"}}>
+            <div style={{position:"absolute",inset:0}}>
+              <Safe><AnimComp/></Safe>
+            </div>
+          </div>
+          {/* Mini footer - prev/next + dots */}
+          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"rgba(0,0,0,.5)"}}>
+            <button onClick={prevAnim} style={{padding:"5px 12px",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,background:"rgba(255,255,255,.04)",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"monospace"}}>← Önceki</button>
+            <div style={{flex:1,display:"flex",justifyContent:"center",gap:4,flexWrap:"wrap"}}>
+              {ANIMS.map(a=><div key={a.id} onClick={()=>{setSel(a);playAudio(a.id);}} style={{width:7,height:7,borderRadius:"50%",cursor:"pointer",background:a.id===sel.id?"#a855f7":"rgba(255,255,255,.18)",transition:"all .2s",transform:a.id===sel.id?"scale(1.4)":"scale(1)"}}/>)}
+            </div>
+            <button onClick={nextAnim} style={{padding:"5px 12px",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,background:"rgba(255,255,255,.04)",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"monospace"}}>Sonraki →</button>
+          </div>
         </div>
       </div>
     );
   }
 
-  return (
+  // ── TAM EKRAN (TV modu) ─────────────────────────
+  if(sel&&viewMode==='full'){
+    const AnimFull=sel.Comp;
+    return(
+      <div style={{position:"fixed",inset:0,zIndex:99999,background:"#000",display:"flex",flexDirection:"column",fontFamily:"monospace"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:1,background:"linear-gradient(rgba(0,0,0,.92),transparent)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
+          <button onClick={closeAnim} style={{padding:"6px 14px",border:"1px solid rgba(255,80,80,.4)",borderRadius:16,background:"rgba(255,50,50,.08)",color:"#ff8080",fontSize:12,cursor:"pointer",fontWeight:700}}>✕ Kapat</button>
+          <button onClick={exitFull} style={{padding:"6px 12px",border:"1px solid rgba(255,255,255,.2)",borderRadius:16,background:"rgba(255,255,255,.04)",color:"#94a3b8",fontSize:11,cursor:"pointer"}}>↙ Küçült</button>
+          <div style={{flex:1,fontSize:16,fontWeight:800,color:"#fff",fontFamily:"Space Grotesk,sans-serif"}}>{sel.t} <span style={{fontSize:10,color:"rgba(255,255,255,.4)"}}>· {sel.d}</span></div>
+          <span style={{fontSize:10,color:"rgba(168,85,247,.7)"}}>🎵 {sel.id}</span>
+        </div>
+        <div style={{flex:1,overflow:"hidden"}}><Safe><AnimFull/></Safe></div>
+        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.85))",padding:"20px 16px 14px",display:"flex",alignItems:"center",gap:8}}>
+          <button onClick={prevAnim} style={{padding:"7px 18px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>← Önceki</button>
+          <div style={{flex:1,display:"flex",justifyContent:"center",gap:5}}>
+            {ANIMS.map(a=><div key={a.id} onClick={()=>{setSel(a);playAudio(a.id);}} style={{width:9,height:9,borderRadius:"50%",cursor:"pointer",background:a.id===sel.id?"#a855f7":"rgba(255,255,255,.2)",transition:"all .2s",transform:a.id===sel.id?"scale(1.5)":"scale(1)"}}/>)}
+          </div>
+          <button onClick={nextAnim} style={{padding:"7px 18px",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,background:"rgba(0,0,0,.7)",color:"#e2e8f0",fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>Sonraki →</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── GALERİ (ana görünüm) ──────────────────────────
+  return(
     <div style={{padding:"24px 16px",maxWidth:1200,margin:"0 auto"}}>
       <div style={{marginBottom:22}}>
         <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:4}}>GÖRSEL ŞOV</div>
         <div style={{fontSize:22,fontWeight:900,color:"#e2e8f0",fontFamily:"Space Grotesk,sans-serif",marginBottom:6}}>🎬 AI Animasyon Galerisi</div>
-        <div style={{fontSize:12,color:"#64748b"}}>{ANIMS.length} animasyon · Tıkla → Tam ekran + müzik · ← → Gezin</div>
+        <div style={{fontSize:12,color:"#64748b"}}>{ANIMS.length} animasyon · Tıkla → Ufak pencere → ⛶ Tam ekran (TV modu) · 🎵 Müzikli</div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))",gap:12}}>
-        {ANIMS.map(function(anim){
-          return (
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))",gap:12}}>
+        {ANIMS.map(function(anim,idx){
+          return(
             <div key={anim.id} onClick={()=>openAnim(anim)}
-              style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:"1px solid rgba(168,85,247,0.2)",background:"rgba(168,85,247,0.04)",transition:"transform .2s,box-shadow .2s,border-color .2s"}}
-              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 16px 40px rgba(168,85,247,.3)";e.currentTarget.style.borderColor="rgba(168,85,247,.6)";}}
-              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";e.currentTarget.style.borderColor="rgba(168,85,247,0.2)";}}>
-              {/* Static preview - NO live canvas to prevent freeze */}
-              <div style={{height:115,background:"linear-gradient(135deg,#030609,#0d1b2a)",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <div style={{fontSize:42}}>{["🌌","🧠","🧬","🌊","🌐","🔢","⬡","🎆","⚫","⚡","🌠","❤️","🐦","🌀","✨","📡","🎵","🔲","💎","🫧","📐","🕐"][ANIMS.indexOf(anim)]||"✨"}</div>
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .2s"}} className="play-overlay">
-                  <div style={{width:48,height:48,borderRadius:"50%",background:"rgba(168,85,247,.9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,color:"#fff"}}>▶</div>
+              style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:"1px solid rgba(168,85,247,.2)",background:"rgba(168,85,247,.04)",transition:"transform .2s,box-shadow .2s,border-color .2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 14px 36px rgba(168,85,247,.28)";e.currentTarget.style.borderColor="rgba(168,85,247,.55)";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";e.currentTarget.style.borderColor="rgba(168,85,247,.2)";}}>
+              <div style={{height:118,background:"linear-gradient(135deg,#030609,#0d1525)",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <span style={{fontSize:46}}>{EMOJIS[idx]||"✨"}</span>
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .2s"}} onMouseEnter={e=>{e.currentTarget.style.opacity=1;}} onMouseLeave={e=>{e.currentTarget.style.opacity=0;}}>
+                  <div style={{width:50,height:50,borderRadius:"50%",background:"rgba(168,85,247,.88)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,color:"#fff"}}>▶</div>
                 </div>
-                <div style={{position:"absolute",bottom:6,right:8,fontSize:8,color:"rgba(168,85,247,.7)",background:"rgba(0,0,0,.6)",padding:"2px 6px",borderRadius:4}}>TAM EKRAN</div>
+                <div style={{position:"absolute",bottom:6,right:8,fontSize:8,color:"rgba(168,85,247,.7)",background:"rgba(0,0,0,.7)",padding:"2px 6px",borderRadius:4,fontFamily:"monospace"}}>🎵 + ⛶</div>
               </div>
               <div style={{padding:"9px 11px"}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#e2e8f0",marginBottom:2,fontFamily:"Space Grotesk,sans-serif"}}>{anim.t}</div>
@@ -4052,7 +4150,6 @@ function AnimasyonPage(){
           );
         })}
       </div>
-      <style>{`.play-overlay{opacity:0!important}div:hover>.play-overlay{opacity:1!important}`}</style>
     </div>
   );
 }
@@ -5220,34 +5317,135 @@ function NavSearchBar({nav}){
   const[open,setOpen]=useState(false);
   const[q,setQ]=useState('');
   const ref=useRef();
-  const PAGES=[
-    {p:'home',t:'Ana Sayfa',e:'🏠'},{p:'haberler',t:'Haberler',e:'📰'},{p:'blog',t:'Blog',e:'✍️'},
-    {p:'claude',t:'Claude',e:'🧠'},{p:'chatgpt',t:'ChatGPT',e:'🤖'},{p:'gemini',t:'Gemini',e:'🌟'},
-    {p:'tools',t:'Tools',e:'🛠️'},{p:'animasyon',t:'Animasyonlar',e:'🎬'},{p:'oyunlar',t:'Oyunlar',e:'🎮'},
-    {p:'prompt',t:'Prompt Rehberi',e:'💡'},{p:'sozluk',t:'Sözlük',e:'📖'},{p:'para',t:'Para Kazan',e:'💰'},
-    {p:'trivia',t:'AI Trivia',e:'🎯'},{p:'iqtest',t:'IQ Testi',e:'🧠'},{p:'kariyer',t:'Kariyer',e:'💼'},
-    {p:'ogrenme',t:'Öğren',e:'🎓'},{p:'sertifika',t:'Sertifika',e:'🏆'},{p:'wizard',t:'Sihirbaz',e:'🔮'},
-  ];
-  const results=q.length>1?PAGES.filter(p=>p.t.toLowerCase().includes(q.toLowerCase())).slice(0,8):[];
+
+  // Build search index from ALL data sources
+  const INDEX=useMemo(()=>{
+    const items=[];
+    // Pages
+    const PAGES=[
+      {p:'home',t:'Ana Sayfa',e:'🏠',cat:'Sayfa'},
+      {p:'haberler',t:'Haberler',e:'📰',cat:'Sayfa'},
+      {p:'blog',t:'Blog',e:'✍️',cat:'Sayfa'},
+      {p:'claude',t:'Claude AI',e:'🧠',cat:'Model'},
+      {p:'chatgpt',t:'ChatGPT',e:'🤖',cat:'Model'},
+      {p:'gemini',t:'Gemini AI',e:'🌟',cat:'Model'},
+      {p:'grok',t:'Grok AI',e:'⚡',cat:'Model'},
+      {p:'deepseek',t:'DeepSeek',e:'🔬',cat:'Model'},
+      {p:'mistral',t:'Mistral AI',e:'🌊',cat:'Model'},
+      {p:'llama',t:'Meta Llama',e:'🦙',cat:'Model'},
+      {p:'karsilastirma',t:'AI Karşılaştır',e:'🆚',cat:'Araç'},
+      {p:'tools',t:'Tools Dizini',e:'🛠️',cat:'Sayfa'},
+      {p:'animasyon',t:'Animasyon Galerisi',e:'🎬',cat:'Sayfa'},
+      {p:'oyunlar',t:'Oyunlar',e:'🎮',cat:'Oyun'},
+      {p:'trivia',t:'AI Trivia',e:'🎯',cat:'Oyun'},
+      {p:'iqtest',t:'IQ Testi',e:'🧠',cat:'Oyun'},
+      {p:'prompt',t:'Prompt Rehberi',e:'💡',cat:'Öğren'},
+      {p:'sozluk',t:'AI Sözlük',e:'📖',cat:'Öğren'},
+      {p:'ogrenme',t:'AI Öğren',e:'🎓',cat:'Öğren'},
+      {p:'para',t:'Para Kazan',e:'💰',cat:'Kariyer'},
+      {p:'kariyer',t:'Kariyer',e:'💼',cat:'Kariyer'},
+      {p:'isborsasi',t:'İş Borsası',e:'👔',cat:'Kariyer'},
+      {p:'videorehber',t:'Video Rehberi',e:'📺',cat:'Sayfa'},
+      {p:'kisilik',t:'Kişilik Testi',e:'🧪',cat:'Test'},
+      {p:'sertifika',t:'AI Sertifika',e:'🏆',cat:'Test'},
+      {p:'wizard',t:'AI Sihirbazı',e:'🔮',cat:'Araç'},
+      {p:'kehanet',t:'AI Kehanet',e:'🔮',cat:'Araç'},
+      {p:'sablonlar',t:'Şablon Kütüphanesi',e:'📋',cat:'Araç'},
+      {p:'gunlukezet',t:'Günlük Özet',e:'📰',cat:'Sayfa'},
+      {p:'mitler',t:'AI Mitleri',e:'💡',cat:'Öğren'},
+      {p:'flashcard',t:'AI Flashcard',e:'🃏',cat:'Öğren'},
+      {p:'zaman',t:'Zaman Hesapla',e:'⏱️',cat:'Araç'},
+      {p:'maliyet',t:'Maliyet Hesapla',e:'💲',cat:'Araç'},
+      {p:'aistatus',t:'AI Durum',e:'🟢',cat:'Araç'},
+      {p:'galeri',t:'AI Galeri',e:'🖼️',cat:'Sayfa'},
+      {p:'topluluk',t:'Topluluk',e:'👥',cat:'Sayfa'},
+      {p:'dizin',t:'Araç Dizini',e:'📋',cat:'Araç'},
+    ];
+    items.push(...PAGES);
+
+    // GLOSSARY terms
+    if(typeof GLOSSARY_DATA!=='undefined'){
+      GLOSSARY_DATA.slice(0,30).forEach(g=>{
+        items.push({p:'sozluk',t:g.term+(g.en?' ('+g.en+')':''),e:'📖',cat:'Sözlük',sub:g.def?.slice(0,60)+'...'});
+      });
+    }
+    // PROMPTS
+    if(typeof PROMPTS_DATA!=='undefined'){
+      PROMPTS_DATA.forEach(cat=>{
+        (cat.items||[]).slice(0,5).forEach(p=>{
+          items.push({p:'prompt',t:p.title,e:'💡',cat:'Prompt',sub:cat.cat});
+        });
+      });
+    }
+    // ALL_TOOLS
+    if(typeof ALL_TOOLS!=='undefined'){
+      ALL_TOOLS.forEach(cat=>{
+        (cat.tools||[]).forEach(t=>{
+          items.push({p:'tools',t:t.n,e:'🛠️',cat:'Araç',sub:t.d?.slice(0,50)});
+        });
+      });
+    }
+    // NEWS
+    if(typeof NEWS!=='undefined'){
+      NEWS.slice(0,10).forEach(n=>{
+        items.push({p:'haberler',t:n.title||n.t,e:'📰',cat:'Haber'});
+      });
+    }
+    // TRIVIA topics
+    if(typeof TRIVIA_Q!=='undefined'){
+      TRIVIA_Q.slice(0,15).forEach(q=>{
+        items.push({p:'trivia',t:q.q?.slice(0,50)+'...',e:'🎯',cat:'Trivia'});
+      });
+    }
+    return items;
+  },[]);
+
+  const results=q.length>1?INDEX.filter(item=>{
+    const s=q.toLowerCase();
+    return (item.t||'').toLowerCase().includes(s)||
+           (item.sub||'').toLowerCase().includes(s)||
+           (item.cat||'').toLowerCase().includes(s);
+  }).slice(0,10):[];
+
   useEffect(()=>{
     if(!open)return;
     const h=e=>{if(ref.current&&!ref.current.contains(e.target)){setOpen(false);setQ('');}};
     document.addEventListener('mousedown',h);
     return()=>document.removeEventListener('mousedown',h);
   },[open]);
+
+  const catColor={Model:'#a855f7',Araç:'#00dcff',Oyun:'#f472b6',Öğren:'#34d399',Kariyer:'#fbbf24',Sözlük:'#60a5fa',Prompt:'#fb923c',Haber:'#ff4444',Trivia:'#f472b6',Test:'#fbbf24',Sayfa:'#475569'};
+
   return <div ref={ref} style={{position:'relative',flexShrink:0}}>
-    <button onClick={()=>setOpen(o=>!o)} style={{width:34,height:34,border:'1px solid rgba(0,220,255,0.2)',borderRadius:8,background:open?'rgba(0,220,255,0.1)':'transparent',color:'#64748b',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}} title="Ara">🔍</button>
-    {open&&<div style={{position:'fixed',top:52,right:50,zIndex:99999,width:260,background:'rgba(4,8,20,0.99)',border:'1px solid rgba(0,220,255,0.3)',borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,0.9)',overflow:'hidden'}}>
-      <div style={{padding:'10px 12px',borderBottom:'1px solid rgba(0,220,255,0.1)',display:'flex',alignItems:'center',gap:8}}>
-        <span style={{color:'#334155',fontSize:14}}>🔍</span>
-        <input autoFocus value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==='Escape'&&(setOpen(false)||setQ(''))} placeholder='Ara...' style={{flex:1,background:'none',border:'none',outline:'none',color:'#e2e8f0',fontSize:12,fontFamily:'inherit'}}/>
-        {q&&<button onClick={()=>setQ('')} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:12}}>✕</button>}
+    <button onClick={()=>setOpen(o=>!o)} style={{width:34,height:34,border:'1px solid rgba(0,220,255,.2)',borderRadius:8,background:open?'rgba(0,220,255,.1)':'transparent',color:'#64748b',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>🔍</button>
+    {open&&<div style={{position:'fixed',top:52,right:50,zIndex:99999,width:'min(300px,90vw)',background:'rgba(4,8,20,.99)',border:'1px solid rgba(0,220,255,.3)',borderRadius:14,boxShadow:'0 24px 80px rgba(0,0,0,.95)',overflow:'hidden'}}>
+      <div style={{padding:'10px 14px',borderBottom:'1px solid rgba(0,220,255,.1)',display:'flex',alignItems:'center',gap:8,background:'rgba(0,220,255,.03)'}}>
+        <span style={{color:'#334155',fontSize:14,flexShrink:0}}>🔍</span>
+        <input autoFocus value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);setQ('');}}} placeholder='Sayfa, araç, prompt, sözlük...' style={{flex:1,background:'none',border:'none',outline:'none',color:'#e2e8f0',fontSize:12,fontFamily:'inherit'}}/>
+        {q&&<button onClick={()=>setQ('')} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>}
       </div>
-      <div style={{maxHeight:280,overflowY:'auto'}}>
-        {results.length>0
-          ?results.map(r=><div key={r.p} onClick={()=>{nav(r.p);setOpen(false);setQ('');}} style={{display:'flex',gap:10,alignItems:'center',padding:'8px 12px',cursor:'pointer',fontSize:11,color:'#e2e8f0',transition:'background .1s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,0.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}><span style={{fontSize:14}}>{r.e}</span><span>{r.t}</span></div>)
-          :<div style={{padding:'10px 12px'}}>{PAGES.slice(0,6).map(r=><div key={r.p} onClick={()=>{nav(r.p);setOpen(false);}} style={{display:'flex',gap:10,alignItems:'center',padding:'6px 8px',borderRadius:8,cursor:'pointer',fontSize:11,color:'#64748b'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,0.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}><span style={{fontSize:13}}>{r.e}</span><span>{r.t}</span></div>)}</div>}
+      <div style={{maxHeight:320,overflowY:'auto'}}>
+        {q.length>1&&results.length===0&&<div style={{padding:'18px',textAlign:'center',fontSize:11,color:'#475569'}}>Sonuç bulunamadı: "{q}"</div>}
+        {q.length<=1&&<>
+          <div style={{padding:'8px 14px 4px',fontSize:8,color:'#334155',letterSpacing:'.1em',fontWeight:700}}>HIZLI ERİŞİM</div>
+          {[{p:'prompt',t:'Prompt Rehberi',e:'💡',cat:'Öğren'},{p:'tools',t:'Tools Dizini',e:'🛠️',cat:'Araç'},{p:'sozluk',t:'AI Sözlük',e:'📖',cat:'Öğren'},{p:'trivia',t:'AI Trivia',e:'🎯',cat:'Oyun'},{p:'animasyon',t:'Animasyonlar',e:'🎬',cat:'Sayfa'},{p:'haberler',t:'Haberler',e:'📰',cat:'Haber'}].map(r=>(
+            <div key={r.p} onClick={()=>{nav(r.p);setOpen(false);setQ('');}} style={{display:'flex',gap:10,alignItems:'center',padding:'8px 14px',cursor:'pointer',fontSize:12,color:'#94a3b8',transition:'background .1s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+              <span style={{fontSize:15}}>{r.e}</span><span style={{flex:1}}>{r.t}</span><span style={{fontSize:8,color:catColor[r.cat]||'#475569',background:(catColor[r.cat]||'#475569')+'15',padding:'1px 5px',borderRadius:3}}>{r.cat}</span>
+            </div>
+          ))}
+        </>}
+        {results.map((r,i)=>(
+          <div key={i} onClick={()=>{nav(r.p);setOpen(false);setQ('');}} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'8px 14px',cursor:'pointer',fontSize:11,color:'#e2e8f0',borderTop:'1px solid rgba(255,255,255,.04)',transition:'background .1s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+            <span style={{fontSize:14,flexShrink:0}}>{r.e}</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:11,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.t}</div>
+              {r.sub&&<div style={{fontSize:9,color:'#475569',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.sub}</div>}
+            </div>
+            <span style={{fontSize:8,color:catColor[r.cat]||'#475569',background:(catColor[r.cat]||'#475569')+'15',padding:'1px 5px',borderRadius:3,flexShrink:0,whiteSpace:'nowrap'}}>{r.cat}</span>
+          </div>
+        ))}
       </div>
+      {q.length>1&&results.length>0&&<div style={{padding:'6px 14px',borderTop:'1px solid rgba(255,255,255,.05)',fontSize:9,color:'#334155',textAlign:'right'}}>{results.length} sonuç</div>}
     </div>}
   </div>;
 }
