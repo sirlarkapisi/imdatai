@@ -1,0 +1,9 @@
+# Cloudflare Pages - Redirect Rules
+# Bu dosyayı public/ klasörüne koyun
+
+# Static dosyaları SPA'ya yönlendirme
+/sitemap.xml  /sitemap.xml  200
+/robots.txt   /robots.txt   200
+
+# SPA fallback - tüm diğer rotalar index.html'e
+/*  /index.html  200
