@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>IMDATAI — Türkiye'nin AI Hub'ı</title>
+    <link>https://imdatai.com</link>
+    <description>ChatGPT, Claude, Gemini rehberleri, AI araçları, Türkçe prompt şablonları ve güncel AI haberleri.</description>
+    <language>tr</language>
+    <lastBuildDate>2026-05-15</lastBuildDate>
+    <atom:link href="https://imdatai.com/rss.xml" rel="self" type="application/rss+xml"/>
+    <image>
+      <url>https://imdatai.com/logo.png</url>
+      <title>IMDATAI</title>
+      <link>https://imdatai.com</link>
+    </image>
+
+    <item>
+      <title>Claude AI Türkçe Rehberi 2026</title>
+      <link>https://imdatai.com/#claude</link>
+      <description>Anthropic Claude modelleri, Constitutional AI, 1M token ve canlı API testi.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#claude</guid>
+    </item>
+    <item>
+      <title>DeepSeek Nedir? GPT-4'ü Ücretsiz Geçiyor mu?</title>
+      <link>https://imdatai.com/#deepseek</link>
+      <description>DeepSeek V3 ve R1 modelleri — GPT-4 kalitesi, 1/10 maliyet.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#deepseek</guid>
+    </item>
+    <item>
+      <title>113+ Türkçe AI Prompt Şablonu</title>
+      <link>https://imdatai.com/#prompt</link>
+      <description>İş, eğitim, kod, finans, yaratıcı — tüm kategorilerde hazır promptlar.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#prompt</guid>
+    </item>
+    <item>
+      <title>AI Görsel Üretimi Rehberi — Midjourney, DALL-E 3, Stable Diffusion</title>
+      <link>https://imdatai.com/#gorselai</link>
+      <description>6 görsel AI aracı karşılaştırması, prompt teknikleri ve örnekler.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#gorselai</guid>
+    </item>
+    <item>
+      <title>AI Güvenlik Rehberi — Deepfake ve Dolandırıcılık</title>
+      <link>https://imdatai.com/#guvenlik</link>
+      <description>Ses klonlama, deepfake tespiti ve AI phishing'den korunma yolları.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#guvenlik</guid>
+    </item>
+    <item>
+      <title>AI Fiyat Karşılaştırma 2026 — 10 Model</title>
+      <link>https://imdatai.com/#aifiyat</link>
+      <description>Claude, GPT-4o, Gemini, DeepSeek — API fiyatları 1M token başına.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#aifiyat</guid>
+    </item>
+    <item>
+      <title>Mesleklere Göre AI Rehberi</title>
+      <link>https://imdatai.com/#meslekAI</link>
+      <description>8 meslek için AI araç seti ve hazır promptlar — yazılım, tasarım, hukuk, sağlık.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#meslekAI</guid>
+    </item>
+    <item>
+      <title>AI ile Para Kazan — 2026 Rehberi</title>
+      <link>https://imdatai.com/#para</link>
+      <description>Freelance AI, prompt satışı, danışmanlık — gelir fırsatları.</description>
+      <pubDate>2026-05-15</pubDate>
+      <guid>https://imdatai.com/#para</guid>
+    </item>
+  </channel>
+</rss>

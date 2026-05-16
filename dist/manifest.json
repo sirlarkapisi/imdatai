@@ -1,0 +1,20 @@
+{
+  "name": "IMDATAI — Türkiye'nin AI Hub'ı",
+  "short_name": "IMDATAI",
+  "description": "ChatGPT, Claude, Gemini rehberleri, AI araçları ve Türkçe AI içerikleri",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060a14",
+  "theme_color": "#00dcff",
+  "orientation": "portrait",
+  "icons": [
+    {"src": "/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ],
+  "screenshots": [
+    {"src": "/logo.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide"}
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "tr",
+  "dir": "ltr"
+}
