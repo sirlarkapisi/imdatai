@@ -1,5 +1,32 @@
 import React, { useState, useEffect, useRef, useMemo, Component } from "react";
 
+// ── Global Audio Guard - sadece user gesture sonrası çalışır ──────────
+let _userGestureFired = false;
+let _pendingAudioCtx = null;
+
+function ensureAudioAllowed() {
+  // AudioContext sadece kullanıcı etkileşimi sonrası oluşturulabilir
+  if (!_userGestureFired) return false;
+  return true;
+}
+
+// İlk tıklamada işaretle
+if (typeof window !== 'undefined') {
+  const markGesture = () => {
+    _userGestureFired = true;
+    // Varsa askıdaki AudioContext'i resume et
+    if (_pendingAudioCtx && _pendingAudioCtx.state === 'suspended') {
+      _pendingAudioCtx.resume().catch(() => {});
+    }
+    document.removeEventListener('click', markGesture);
+    document.removeEventListener('touchstart', markGesture);
+    document.removeEventListener('keydown', markGesture);
+  };
+  document.addEventListener('click', markGesture, { once: true });
+  document.addEventListener('touchstart', markGesture, { once: true });
+  document.addEventListener('keydown', markGesture, { once: true });
+}
+
 // ── CHATBOT — Gemini API ──────────────────────────────────
 const WORKER_URL = "https://imdatai-gemini.imdatuysal.workers.dev"; // Worker kurulunca bu URL aktif olur
 
@@ -22,159 +49,216 @@ async function askGemini(msg, history=[]){
   }
 }
 
-function SocialMediaSection({setPage=()=>{}}){
+function SocialMediaSection({setPage}){
+  const[playing,setPlaying]=useState(null);
 
-  // Gerçek SVG İkonlar
-  const YTIcon=()=><svg width="28" height="20" viewBox="0 0 28 20"><rect width="28" height="20" rx="4" fill="#FF0000"/><polygon points="11,4 11,16 21,10" fill="#fff"/></svg>;
-  const TTIcon=()=><svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="6" fill="#010101"/><text x="5" y="19" fontSize="14" fontWeight="900" fontFamily="Arial" fill="#ff0050">♪</text><circle cx="21" cy="7" r="3.5" fill="none" stroke="#00f2ea" strokeWidth="1.8"/><circle cx="21" cy="7" r="1.3" fill="#00f2ea"/></svg>;
-  const IGIcon=()=><svg width="26" height="26" viewBox="0 0 26 26"><defs><linearGradient id="ig2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f09433"/><stop offset="50%" stopColor="#dc2743"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><rect width="26" height="26" rx="7" fill="url(#ig2)"/><rect x="5" y="5" width="16" height="16" rx="4" fill="none" stroke="#fff" strokeWidth="1.6"/><circle cx="13" cy="13" r="4" fill="none" stroke="#fff" strokeWidth="1.6"/><circle cx="19" cy="7" r="1.2" fill="#fff"/></svg>;
-  const ShortsIcon=()=><svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="6" fill="#FF0000"/><polygon points="9,7 9,19 20,13" fill="#fff"/><rect x="5" y="18" width="16" height="3" rx="1" fill="rgba(255,255,255,0.4)"/><text x="6" y="21" fontSize="3.5" fill="#fff" fontFamily="Arial" fontWeight="900">SHORTS</text></svg>;
-
-  // ───── VİDEO İÇERİKLERİ ─────
+  // Gerçek video bilgileri
   const VIDEOS=[
     {
-      Icon:YTIcon,platform:"YouTube",dur:"18:42",views:"124K",
-      channel:"https://youtube.com/@imdatai",
-      title:"ChatGPT vs Claude vs Gemini 2026 — Hangisi Daha İyi?",
-      desc:"Türkiye'nin en kapsamlı AI karşılaştırması. 10 test kategorisinde hangi model kazanıyor? Kod, yaratıcı yazı, analiz ve daha fazlası.",
-      tags:["Karşılaştırma","Güncel","Türkçe"],
-      thumb:"https://img.youtube.com/vi/ZKOKP9jfAMg/maxresdefault.jpg",
-      thumbFb:"https://img.youtube.com/vi/ZKOKP9jfAMg/mqdefault.jpg",
-      url:"https://youtu.be/ZKOKP9jfAMg",
-      color:"#ff4444", ratio:"16/9", wide:true
+      id:"yt1",
+      platform:"YouTube",
+      icon:"▶",
+      platformColor:"#ff4444",
+      // YouTube embed için video ID
+      youtubeId:"ZKOKP9jfAMg",
+      title:"ChatGPT vs Claude vs Gemini 2026",
+      desc:"IMDATAI",
+      tags:["Karşılaştırma","Türkçe","2026"],
+      followUrl:"https://youtube.com/@imdatai",
+      followLabel:"YouTube'da Takip Et",
+      color:"#ff4444",
+      wide:true,
     },
     {
-      Icon:ShortsIcon,platform:"Shorts",dur:"0:45",views:"48K",
-      title:"AI ile 30 Saniyede Profesyonel Email",
-      desc:"Claude ile saniyeler içinde iş emaili yazın.",
-      tags:["İpucu","Hızlı"],
-      thumb:"https://img.youtube.com/vi/5UgwO4rbfNM/maxresdefault.jpg",
-      thumbFb:"https://img.youtube.com/vi/5UgwO4rbfNM/mqdefault.jpg",
-      url:"https://youtube.com/shorts/5UgwO4rbfNM",
-      color:"#ff6b6b", ratio:"9/16"
+      id:"yt2",
+      platform:"YouTube Shorts",
+      icon:"▶",
+      platformColor:"#ff6b6b",
+      youtubeId:"5UgwO4rbfNM",
+      title:"AI ile 30sn'de Profesyonel Email",
+      desc:"IMDATAI",
+      tags:["Kısa İpucu"],
+      followUrl:"https://youtube.com/@imdatai",
+      followLabel:"Abone Ol",
+      color:"#ff6b6b",
+      wide:false,
     },
     {
-      Icon:TTIcon,platform:"TikTok",dur:"1:12",views:"87K",
+      id:"tt1",
+      platform:"TikTok",
+      icon:"♪",
+      platformColor:"#00f2ea",
+      tiktokUrl:"https://vt.tiktok.com/ZS9oTcvee/",
       title:"Claude ile İçerik Üretimi",
-      desc:"AI ile viral içerik sırrı.",
-      tags:["Tutorial","Viral"],
-      url:"https://vt.tiktok.com/ZS9oTcvee/",
-      color:"#00f2ea", ratio:"9/16",
-      emoji:"🎵"
+      desc:"IMDATAI",
+      tags:["Tutorial","AI"],
+      followUrl:"https://tiktok.com/@imdatai",
+      followLabel:"TikTok'ta Takip Et",
+      color:"#00f2ea",
+      wide:false,
     },
     {
-      Icon:IGIcon,platform:"Instagram Reel",dur:"Reel",views:"62K",
-      title:"2026 AI Araçları İnfografiği",
-      desc:"Bu yılın en iyi araçları tek görselde.",
-      tags:["Görsel","2026"],
-      url:"https://www.instagram.com/reel/DX8i6_wtPxf/",
-      color:"#e1306c", ratio:"9/16",
-      emoji:"📸"
+      id:"ig1",
+      platform:"Instagram",
+      icon:"📸",
+      platformColor:"#e1306c",
+      igUrl:"https://www.instagram.com/reel/DX8i6_wtPxf/",
+      title:"2026 AI Araçları",
+      desc:"IMDATAI",
+      tags:["AI Araçları","2026"],
+      followUrl:"https://instagram.com/imdatai",
+      followLabel:"Instagram'da Takip Et",
+      color:"#e1306c",
+      wide:false,
     },
   ];
 
-  // ───── KONU İÇERİK KARTLARI ─────
   const KONULAR=[
-    {e:"🧠",title:"Claude AI Rehberi",desc:"Constitutional AI, 1M token, dünya #1 kodlama modeli. Türkçe tam rehber.",page:"claude",color:"#a855f7",tag:"Model"},
-    {e:"🤖",title:"ChatGPT Rehberi",desc:"GPT-5.5 tüm özellikler, Türkçe kullanım ipuçları ve prompt şablonları.",page:"chatgpt",color:"#34d399",tag:"Model"},
-    {e:"🌟",title:"Gemini Rehberi",desc:"Google'ın 2M token modeli. Görsel analiz, video ve ses yetenekleri.",page:"gemini",color:"#fbbf24",tag:"Model"},
-    {e:"💡",title:"75+ Türkçe Prompt",desc:"Her kategori için hazır prompt şablonları. Kopyala yapıştır, anında kullan.",page:"prompt",color:"#00dcff",tag:"Öğren"},
-    {e:"🛠️",title:"50+ AI Araç",desc:"Ses, görsel, kod, sunum — tüm kategorilerde ücretsiz ve premium AI araçları.",page:"tools",color:"#fb923c",tag:"Araçlar"},
-    {e:"💰",title:"AI ile Para Kazan",desc:"Freelance AI yazarlık, prompt satışı, AI danışmanlık — 2026 gelir rehberi.",page:"para",color:"#34d399",tag:"Kariyer"},
-    {e:"🎯",title:"AI Trivia — 60 Soru",desc:"Yapay zeka bilgini test et. Streak sistemi, bonus puanlar, liderboard.",page:"trivia",color:"#f472b6",tag:"Oyun"},
-    {e:"🛡️",title:"AI Güvenlik",desc:"Deepfake tespiti, AI dolandırıcılığı ve manipülasyondan korunma rehberi.",page:"guvenlik",color:"#ff4444",tag:"Güvenlik"},
-    {e:"🇹🇷",title:"Türkiye AI Ekosistemi",desc:"250+ startup, üniversite AI merkezleri ve yatırım verileri.",page:"turkiyeai",color:"#00dcff",tag:"Ekosistem"},
-    {e:"⚖️",title:"AI ve Hukuk",desc:"KVKK, telif hakkı ve AB AI Act. Türkiye'de AI kullanımının hukuki boyutu.",page:"hukuk",color:"#fbbf24",tag:"Hukuk"},
-    {e:"🏆",title:"Prompt Yarışması",desc:"Topluluk tarafından seçilen en iyi Türkçe AI promptları. Oy ver ve paylaş.",page:"yarisma",color:"#a855f7",tag:"Topluluk"},
-    {e:"📖",title:"AI Sözlüğü — 80 Terim",desc:"LLM, RAG, LoRA, Constitutional AI... Tüm teknik terimleri Türkçe öğren.",page:"sozluk",color:"#34d399",tag:"Öğren"},
+    {e:"🧠",title:"Claude AI",desc:"Constitutional AI, 1M token, kodlamada #1",page:"claude",color:"#a855f7",tag:"Model"},
+    {e:"🤖",title:"ChatGPT",desc:"GPT-4o, DALL-E 3, Türkçe mükemmel",page:"chatgpt",color:"#34d399",tag:"Model"},
+    {e:"🌟",title:"Gemini AI",desc:"Google 2M token, video analizi",page:"gemini",color:"#fbbf24",tag:"Model"},
+    {e:"🔬",title:"DeepSeek",desc:"Ücretsiz API, GPT-4 kalitesi",page:"deepseek",color:"#00dcff",tag:"Model"},
+    {e:"💡",title:"128+ Prompt",desc:"Her kategori için hazır şablonlar",page:"prompt",color:"#00dcff",tag:"Öğren"},
+    {e:"🛠️",title:"99 AI Araç",desc:"Ses, görsel, kod, sunum kategorileri",page:"tools",color:"#fb923c",tag:"Araçlar"},
+    {e:"💲",title:"AI Fiyat Karşılaştır",desc:"10 model API fiyatı tablosu",page:"aifiyat",color:"#fbbf24",tag:"Araç"},
+    {e:"💰",title:"AI ile Para Kazan",desc:"Freelance, danışmanlık, prompt satışı",page:"para",color:"#34d399",tag:"Kariyer"},
+    {e:"🎯",title:"AI Trivia",desc:"80 soruluk yapay zeka bilgi yarışması",page:"trivia",color:"#f472b6",tag:"Oyun"},
+    {e:"🛡️",title:"AI Güvenlik",desc:"Deepfake, ses klonlama korunma",page:"guvenlik",color:"#ff4444",tag:"Güvenlik"},
+    {e:"🇹🇷",title:"Türkiye AI",desc:"250+ startup, üniversiteler, ekosistem",page:"turkiyeai",color:"#60a5fa",tag:"Ekosistem"},
+    {e:"⚖️",title:"AI Hukuk",desc:"KVKK, telif hakkı, AB AI Act",page:"hukuk",color:"#fbbf24",tag:"Hukuk"},
   ];
 
-  return <section style={{padding:"0 20px 56px",background:"rgba(0,0,0,0.1)"}}>
+  function VideoCard({v}){
+    const isPlaying=playing===v.id;
+    return <div style={{borderRadius:14,overflow:'hidden',background:'rgba(0,0,0,0.4)',
+      border:'1px solid '+v.platformColor+'25',transition:'all .2s',
+      ...(isPlaying?{boxShadow:'0 0 30px '+v.platformColor+'40'}:{})}}>
+
+      {/* Video alanı */}
+      {isPlaying&&v.youtubeId
+        ? <div style={{position:'relative',paddingTop:v.wide?'56.25%':'177.78%'}}>
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${v.youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+              style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none'}}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              title={v.title}/>
+          </div>
+        : <div
+            onClick={()=>{
+              if(v.youtubeId){setPlaying(v.id);}
+              else{window.open(v.tiktokUrl||v.igUrl,'_blank');}
+            }}
+            style={{position:'relative',paddingTop:v.wide?'56.25%':'177.78%',
+              background:'linear-gradient(135deg,'+v.platformColor+'15,rgba(0,0,0,0.7))',
+              cursor:'pointer'}}>
+            {/* Thumbnail */}
+            {v.youtubeId&&<img
+              src={`https://img.youtube.com/vi/${v.youtubeId}/mqdefault.jpg`}
+              alt={v.title}
+              style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover'}}
+              onError={e=>e.target.style.display='none'}/>}
+            {/* Play overlay */}
+            <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',
+              justifyContent:'center',background:'rgba(0,0,0,0.35)'}}>
+              <div style={{width:52,height:52,borderRadius:'50%',
+                background:v.platformColor,display:'flex',alignItems:'center',
+                justifyContent:'center',fontSize:20,color:'#fff',
+                boxShadow:'0 4px 20px '+v.platformColor+'80',
+                transition:'transform .2s'}}>
+                {v.icon}
+              </div>
+            </div>
+            {/* Platform badge */}
+            <div style={{position:'absolute',top:8,left:8,background:'rgba(0,0,0,0.8)',
+              borderRadius:6,padding:'3px 8px',display:'flex',gap:4,alignItems:'center'}}>
+              <span style={{fontSize:9,color:v.platformColor,fontWeight:700}}>{v.platform}</span>
+            </div>
+          </div>}
+
+      {/* Info */}
+      <div style={{padding:'12px'}}>
+        <div style={{fontSize:12,fontWeight:700,color:'#e2e8f0',lineHeight:1.4,marginBottom:4}}>{v.title}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5,marginBottom:8}}>{v.desc}</div>
+        <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:8}}>
+          {v.tags.map(t=><span key={t} style={{fontSize:8,color:v.platformColor,background:v.platformColor+'12',borderRadius:4,padding:'1px 6px',fontWeight:700}}>{t}</span>)}
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          {v.youtubeId&&!isPlaying&&<button onClick={()=>setPlaying(v.id)}
+            style={{flex:1,padding:'6px',border:'1px solid '+v.platformColor+'40',borderRadius:7,
+              background:v.platformColor+'10',color:v.platformColor,fontSize:10,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
+            ▶ Oynat
+          </button>}
+          {isPlaying&&<button onClick={()=>setPlaying(null)}
+            style={{flex:1,padding:'6px',border:'1px solid rgba(255,255,255,0.1)',borderRadius:7,
+              background:'rgba(255,255,255,0.05)',color:'#64748b',fontSize:10,cursor:'pointer',fontFamily:'inherit'}}>
+            ✕ Kapat
+          </button>}
+          <a href={v.followUrl} target="_blank" rel="noopener noreferrer"
+            style={{flex:1,padding:'6px',border:'1px solid '+v.platformColor+'40',borderRadius:7,
+              background:v.platformColor+'10',color:v.platformColor,fontSize:10,
+              textDecoration:'none',textAlign:'center',fontWeight:700,display:'flex',
+              alignItems:'center',justifyContent:'center',gap:4}}>
+            ➕ {v.followLabel}
+          </a>
+        </div>
+      </div>
+    </div>;
+  }
+
+  return <section style={{padding:"0 20px 56px",background:"rgba(0,0,0,0.08)"}}>
     <div style={{maxWidth:1100,margin:"0 auto",paddingTop:36}}>
 
-      {/* ── BAŞLIK ── */}
+      {/* Başlık */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:12}}>
         <div>
-          <div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:4}}>İÇERİK & SOSYAL MEDYA</div>
-          <div style={{fontSize:22,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>📱 IMDATAI İçerikleri</div>
-          <div style={{fontSize:11,color:"#475569",marginTop:3}}>Videolar, rehberler ve güncel AI konuları</div>
+          <div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:4}}>SOSYAL MEDYA & VİDEOLAR</div>
+          <div style={{fontSize:20,fontWeight:800,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>📱 IMDATAI Kanalları</div>
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {[["🎬","YouTube","https://youtube.com/@imdatai","#ff4444"],["🎵","TikTok","https://tiktok.com/@imdatai","#00f2ea"],["📸","Instagram","https://instagram.com/imdatai","#e1306c"]].map(([e,n,u,c])=>(
-            <a key={n} href={u} target="_blank" rel="noopener noreferrer"
-              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:c+"15",border:"1px solid "+c+"35",borderRadius:10,padding:"8px 11px",textDecoration:"none",transition:"all .2s"}}
-              onMouseEnter={e=>e.currentTarget.style.background=c+"28"}
-              onMouseLeave={e=>e.currentTarget.style.background=c+"15"}>
-              <span style={{fontSize:18}}>{e}</span>
-              <span style={{fontSize:8,color:c,fontWeight:700}}>{n}</span>
-              <span style={{fontSize:7,color:c,background:c+"18",borderRadius:4,padding:"1px 6px"}}>Takip Et</span>
+          {[["https://youtube.com/@imdatai","▶","#ff4444","YouTube"],
+            ["https://tiktok.com/@imdatai","♪","#00f2ea","TikTok"],
+            ["https://instagram.com/imdatai","📸","#e1306c","Instagram"]].map(([url,icon,c,name])=>(
+            <a key={name} href={url} target="_blank" rel="noopener noreferrer"
+              style={{display:"flex",alignItems:"center",gap:6,background:c+"15",
+                border:"1px solid "+c+"35",borderRadius:10,padding:"8px 14px",
+                textDecoration:"none",color:c,fontSize:11,fontWeight:700}}>
+              <span>{icon}</span> {name}'da Takip Et
             </a>
           ))}
         </div>
       </div>
 
-      {/* ── VİDEOLAR ── */}
-      <div style={{marginBottom:10}}>
-        <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:16}}>🎬</span> Son Videolar
-          <div style={{height:1,flex:1,background:"rgba(255,255,255,0.06)"}}/>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:14,alignItems:"start"}}>
-          {VIDEOS.map((v)=>{
-            const isV=v.ratio==="9/16";
-            return <a key={v.title} href={v.url} target="_blank" rel="noopener noreferrer"
-              style={{textDecoration:"none",display:"block",borderRadius:13,overflow:"hidden",border:"1px solid "+v.color+"22",background:"rgba(0,0,0,.35)",transition:"all .2s"}}
-              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.borderColor=v.color+"55";e.currentTarget.style.boxShadow="0 10px 30px "+v.color+"18";}}
-              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=v.color+"22";e.currentTarget.style.boxShadow="";}}>
-              <div style={{position:"relative",paddingTop:isV?"177.78%":"56.25%",background:"#020609",overflow:"hidden"}}>
-                {v.thumb
-                  ?<><img src={v.thumb} alt={v.title} loading="lazy" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{if(v.thumbFb&&e.target.src!==v.thumbFb)e.target.src=v.thumbFb;else{e.target.style.display="none";const d=document.createElement('div');d.style.cssText="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px";d.innerHTML="<span style='font-size:36px'>"+v.emoji+"</span><span style='font-size:10px;color:"+v.color+"'>"+v.platform+"</span>";e.target.parentElement.appendChild(d);}}}/>
-                    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.15)"}}>
-                      <div style={{width:42,height:42,borderRadius:"50%",background:"rgba(0,0,0,.75)",border:"2px solid rgba(255,255,255,.8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,color:"#fff"}}>▶</div>
-                    </div></>
-                  :<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,background:"linear-gradient(135deg,"+v.color+"20,rgba(0,0,0,.5))"}}>
-                    <span style={{fontSize:isV?44:32}}>{v.emoji}</span>
-                    <span style={{fontSize:10,color:v.color,fontWeight:700}}>{v.platform}</span>
-                  </div>}
-                <div style={{position:"absolute",top:7,left:7,display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,.8)",borderRadius:5,padding:"3px 7px"}}><v.Icon/></div>
-                <div style={{position:"absolute",bottom:6,right:6,background:"rgba(0,0,0,.85)",color:"#fff",fontSize:9,fontWeight:700,padding:"2px 5px",borderRadius:3,fontFamily:"monospace"}}>{v.dur}</div>
-              </div>
-              <div style={{padding:"10px 11px"}}>
-                <div style={{fontSize:isV?10:12,fontWeight:700,color:"#e2e8f0",lineHeight:1.4,marginBottom:4}}>{v.title}</div>
-                {!isV&&<div style={{fontSize:10,color:"#64748b",lineHeight:1.5,marginBottom:6}}>{v.desc}</div>}
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:4}}>
-                  <div style={{display:"flex",gap:4}}>{v.tags.map(t=><span key={t} style={{fontSize:7,color:v.color,background:v.color+"12",padding:"1px 6px",borderRadius:4,fontWeight:700}}>{t}</span>)}</div>
-                  <span style={{fontSize:8,color:"#334155"}}>👁 {v.views}</span>
-                </div>
-              </div>
-            </a>;
-          })}
-        </div>
+      {/* Video Grid */}
+      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:14,marginBottom:28}}>
+        {VIDEOS.map(v=><VideoCard key={v.id} v={v}/>)}
       </div>
 
-      {/* ── KONU KARTLARI ── */}
-      <div style={{marginTop:28}}>
-        <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:16}}>🗂️</span> Tüm Konular & İçerikler
+      {/* Konu kartları */}
+      <div style={{marginTop:4}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#e2e8f0",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+          <span>🗂️</span> Tüm Konular
           <div style={{height:1,flex:1,background:"rgba(255,255,255,0.06)"}}/>
           <span style={{fontSize:9,color:"#475569"}}>{KONULAR.length} konu</span>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))",gap:10}}>
           {KONULAR.map(k=>(
-            <div key={k.title} style={{background:k.color+"06",border:"1px solid "+k.color+"18",borderRadius:12,padding:"14px",cursor:"pointer",transition:"all .2s"}}
-              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=k.color+"40";e.currentTarget.style.background=k.color+"10";}}
-              onClick={()=>setPage(k.page)} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=k.color+"18";e.currentTarget.style.background=k.color+"06";}}>
+            <div key={k.title} onClick={()=>setPage&&setPage(k.page)}
+              style={{background:k.color+"06",border:"1px solid "+k.color+"18",borderRadius:12,
+                padding:"14px",cursor:"pointer",transition:"all .2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.background=k.color+"12";e.currentTarget.style.borderColor=k.color+"40";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.background=k.color+"06";e.currentTarget.style.borderColor=k.color+"18";}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                <span style={{fontSize:26}}>{k.e}</span>
-                <span style={{fontSize:7,color:k.color,background:k.color+"15",border:"1px solid "+k.color+"25",borderRadius:4,padding:"2px 6px",fontWeight:700}}>{k.tag}</span>
+                <span style={{fontSize:24}}>{k.e}</span>
+                <span style={{fontSize:7,color:k.color,background:k.color+"15",borderRadius:4,padding:"2px 6px",fontWeight:700}}>{k.tag}</span>
               </div>
-              <div style={{fontSize:12,fontWeight:700,color:k.color,marginBottom:5,fontFamily:"'Space Grotesk',sans-serif"}}>{k.title}</div>
+              <div style={{fontSize:12,fontWeight:700,color:k.color,marginBottom:4}}>{k.title}</div>
               <div style={{fontSize:10,color:"#64748b",lineHeight:1.5}}>{k.desc}</div>
             </div>
           ))}
         </div>
       </div>
-
     </div>
   </section>;
 }
@@ -216,7 +300,7 @@ function Chatbot(){
       setTimeout(()=>{
         setMsgs([{
           role:'ai',
-          text:'İMDATAI\'ya Hoşgeldiniz! 🎉\n\nBen IMDATAI AI Asistanıyım. Size yapay zeka, Claude, ChatGPT, Gemini ve Türkiye AI ekosistemi hakkında yardımcı olabilirim.\n\nNe öğrenmek istersiniz?',
+          text:'Merhaba! 👋 Ben IMDATAI\'nın AI asistanıyım.\n\n🧠 Claude, ChatGPT, Gemini gibi modeller\n🛠️ AI araçları ve prompt teknikleri\n🇹🇷 Türkiye AI ekosistemi\n💡 Prompt mühendisliği\n\nhakkında sorularınızı yanıtlarım. Ne merak ediyorsunuz?',
           time:new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})
         }]);
         setTalking(false);
@@ -250,7 +334,7 @@ function Chatbot(){
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           model:'claude-sonnet-4-20250514',max_tokens:400,
-          system:'Sen IMDATAI yapay zeka asistanısın. Türkçe konuş. Claude, ChatGPT, Gemini, AI araçları ve Türkiye AI ekosistemi hakkında kısa net yanıtlar ver. Maksimum 3 cümle.',
+          system:'Sen IMDATAI\'nın yapay zeka asistanısın. imdatai.com Türkiye\'nin AI rehber sitesidir. Türkçe konuş. Claude, ChatGPT, Gemini, DeepSeek, Mistral, Llama, AI araçları, prompt mühendisliği, Obsidian+AI, Cursor IDE, Perplexity, NotebookLM ve Türkiye AI ekosistemi hakkında yardımcı ol. Yanıtlar net ve kısa olsun (max 4 cümle). Kullanıcıyı site sayfalarına yönlendir: örn. "Prompt sayfamızda 128+ şablon var".',
           messages:[...msgs.filter(x=>x.role!=='ai'||msgs.indexOf(x)>0).slice(-6).map(x=>({role:x.role==='ai'?'assistant':'user',content:x.text})),{role:'user',content:m}]
         })
       });
@@ -408,14 +492,14 @@ const NEWS = [
   {id:7,title:"Midjourney v7 Fotorealizmi Geçti",summary:"Yeni Midjourney v7 fotoğraflardan ayırt edilemeyen görseller üretiyor.",tag:"Görsel",color:"#f472b6",date:"2026-05-08",source:"Midjourney"},
   {id:8,title:"Suno v5 Gerçek Enstrüman Sesi Üretiyor",summary:"AI müzik platformu Suno v5 ile artık akustik gitar ve piyano sesleri insan performansından ayırt edilemiyor.",tag:"Müzik",color:"#fb923c",date:"2026-05-07",source:"Suno"},
   {id:9,title:"Meta Llama 4 Ticari Kullanıma Açıldı",summary:"Meta'nın en güçlü açık kaynak modeli ücretsiz ticari lisansla geliştiricilere sunuldu.",tag:"Meta",color:"#60a5fa",date:"2026-05-06",source:"Meta AI"},
-  {id:10,title:"Türk AI Startup'ları 1.2 Milyar TL Yatırım Aldı",summary:"2026 Q1 raporuna göre Türk AI girişimleri rekor yatırım çekti.",tag:"Ekonomi",color:"#34d399",date:"2026-05-05",source:"TÜBİTAK"},
+  {id:10,title:"Türk AI Startup'ları 1.2 Milyar TL Yatırım Aldı",summary:"2026 Q1 raporuna göre Türk AI girişimleri rekor yatırım çekti.",tag:"Ekonomi",color:"#34d399",date:"2026-05-05",source:"Sektör Raporu"},
   {id:11,title:"Cursor AI Türk Geliştiriciler Arasında #1",summary:"Kod yazma AI'ı Cursor, Türkiye'de en çok indirilen geliştirici aracı oldu.",tag:"Araçlar",color:"#00dcff",date:"2026-05-04",source:"Cursor"},
   {id:12,title:"Sora Enterprise Küresel Kullanıma Açıldı",summary:"OpenAI'ın video üretici Sora'sı kurumsal planıyla 150 ülkede kullanılabilir hale geldi.",tag:"Video AI",color:"#ff4444",date:"2026-05-03",source:"OpenAI"},
-  {id:13,title:"AI ile İstihdam: 2026 Türkiye Raporu",summary:"Türkiye'de AI kaynaklı 120.000 yeni iş pozisyonu açıldı, 45.000 pozisyon dönüştürüldü.",tag:"İş",color:"#fbbf24",date:"2026-05-02",source:"McKinsey TR"},
+  {id:13,title:"AI ile İstihdam: 2026 Türkiye Raporu",summary:"Türkiye'de AI kaynaklı 120.000 yeni iş pozisyonu açıldı, 45.000 pozisyon dönüştürüldü.",tag:"İş",color:"#fbbf24",date:"2026-05-02",source:"Araştırma Raporu"},
   {id:14,title:"Google NotebookLM Türkçe Desteği Ekledi",summary:"Belge analizi aracı NotebookLM artık Türkçe içerikleri anlıyor ve podcast üretiyor.",tag:"Google",color:"#34d399",date:"2026-05-01",source:"Google"},
   {id:15,title:"Perplexity AI 50M Kullanıcıya Ulaştı",summary:"Arama motoru AI'ı Perplexity, aylık 50 milyon aktif kullanıcıyla rekora imza attı.",tag:"Arama",color:"#a855f7",date:"2026-04-30",source:"Perplexity"},
   {id:16,title:"Mistral Le Chat Pro Türkiye'de",summary:"Fransız AI şirketi Mistral'ın premium sohbet aracı Le Chat Pro Türkiye pazarına girdi.",tag:"Mistral",color:"#60a5fa",date:"2026-04-29",source:"Mistral AI"},
-  {id:17,title:"BOTAŞ AI Boru Hattı İzleme Sistemi",summary:"Türkiye'nin enerji altyapısı AI ile monitörize edildi. 97.3% arıza tespiti başarısı.",tag:"Türkiye",color:"#fbbf24",date:"2026-04-28",source:"BOTAŞ"},
+  {id:17,title:"Türk Enerji Sektöründe AI Dönüşümü",summary:"Türkiye'nin enerji altyapısı şirketleri AI ile akıllı izleme sistemleri kuruyor.",tag:"Türkiye",color:"#fbbf24",date:"2026",source:"Sektör Haberi"},
   {id:18,title:"Adobe Firefly 4 Türkçe Komut Destekliyor",summary:"Adobe'nin AI grafik aracı artık Türkçe komutlarla görsel ve video oluşturuyor.",tag:"Araçlar",color:"#f472b6",date:"2026-04-27",source:"Adobe"},
   {id:19,title:"Claude ile 1 Saatte Uygulama Geliştirme",summary:"IMDATAI rehberi: Claude kullanarak 1 saatte tam işlevsel web uygulaması nasıl yapılır?",tag:"Rehber",color:"#00dcff",date:"2026-04-26",source:"IMDATAI"},
   {id:20,title:"GPT-4o Ses Özelliği Türkçeye Geldi",summary:"ChatGPT'nin sesli sohbet modu artık Türkçe anlıyor ve konuşuyor.",tag:"Flaş",color:"#ff4444",date:"2026-04-25",source:"OpenAI"}
@@ -987,8 +1071,9 @@ function PBg(){
 // ══════════════════════════════════════════════════════════
 const Sound = {
   ctx: null,
-  init(){try{if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}},
+  init(){if(!_userGestureFired)return;try{if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}},
   play(freq,dur=0.15,type="sine",vol=0.3){
+    if(!_userGestureFired)return;
     try{this.init();const o=this.ctx.createOscillator();const g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);o.frequency.value=freq;o.type=type;g.gain.setValueAtTime(vol,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+dur);o.start();o.stop(this.ctx.currentTime+dur);}catch(e){}
   },
   correct(){this.play(880,0.1);setTimeout(()=>this.play(1100,0.15),100);},
@@ -1008,6 +1093,40 @@ function playSound(type){
   else if(type==="tick")Sound.tick();
   else Sound.click();
 }
+// ── MP3 ses sistemi ─────────────────────────────────────
+const _snd = {
+  _audio: null,
+  _ready: false,
+  init(){
+    if(this._ready)return;
+    try{
+      this._audio = new Audio('/sounds/imdataiwebgiris.mp3');
+      this._audio.volume = 0.4;
+      this._audio.preload = 'auto';
+      this._ready = true;
+    }catch(e){}
+  },
+  play(from=0, to=0.5){
+    if(!_userGestureFired)return;
+    try{
+      this.init();
+      if(!this._audio)return;
+      this._audio.currentTime = from;
+      this._audio.play().catch(()=>{});
+      if(to>0)setTimeout(()=>{try{this._audio.pause();}catch(e){}}, (to-from)*1000);
+    }catch(e){}
+  }
+};
+
+function playClick(type='soft'){
+  if(!_userGestureFired)return;
+  // MP3 dosyasından farklı bölümler çal
+  if(type==='soft')_snd.play(0, 0.3);
+  else if(type==='success')_snd.play(0.5, 1.2);
+  else if(type==='game')_snd.play(1.0, 1.5);
+  else _snd.play(0, 0.3);
+}
+
 
 
 // ══════════════════════════════════════════════════════════
@@ -1183,7 +1302,7 @@ const NAV_TOOLTIPS={
   chatgpt:{icon:"🤖",desc:"Dünyanın en popüler AI'ı · 900M kullanıcı",count:"5 bölüm"},
   gemini:{icon:"🌟",desc:"Google'ın AI'ı · 2M Token dünya rekoru",count:"4 bölüm"},
   ogrenme:{icon:"🎓",desc:"AI nedir, türleri, tarihçe, Türkiye istatistikleri",count:"5 sekme"},
-  prompt:{icon:"💡",desc:"75 prompt örneği · 13 kategori · Kopyalanabilir",count:"75+"},
+  prompt:{icon:"💡",desc:"75 prompt örneği · 13 kategori · Kopyalanabilir",count:"113+"},
   karsilastirma:{icon:"🆚",desc:"5 kategoride AI araç karşılaştırması",count:"5"},
   sozluk:{icon:"📖",desc:"69 AI terimi — Türkçe açıklamalar",count:"69"},
   dizin:{icon:"🌐",desc:"40+ AI aracı · 8 kategori · Detaylı açıklamalar",count:"40+"},
@@ -1266,7 +1385,7 @@ const TRIVIA_Q=[
   {q:"'Zero-shot' prompting ne demektir?",o:["Hızlı prompt","Örnek vermeden yaptırma","Çok kısa prompt","Boş prompt"],a:1,c:"#f472b6",cat:"Prompt"},
   {q:"Runway ML ne tür içerik üretir?",o:["Müzik","Görsel","Video","Ses"],a:2,c:"#60a5fa",cat:"Araç"},
   {q:"'Quantization' ne yapar?",o:["Model küçültür, verimli hale getirir","Model büyütür","Model kopyalar","Model siler"],a:0,c:"#00dcff",cat:"Teknik"},
-  {q:"ChatGPT'nin kaç ülkede kullanıcısı var?",o:["50+","100+","175+","200+"],a:2,c:"#a855f7",cat:"İstatistik"},
+  {q:"ChatGPT'nin kaç ülkede kullanıcısı var?",o:["50+","100+","1113+","200+"],a:2,c:"#a855f7",cat:"İstatistik"},
   {q:"'Agentic AI' ne demektir?",o:["Görsel AI","Otonom görev yapan AI","Sesli AI","Hızlı AI"],a:1,c:"#34d399",cat:"Kavram"},
   {q:"v0.dev ne tür bir AI aracıdır?",o:["Blog yazma","UI/React bileşen üretimi","Ses üretimi","Video üretimi"],a:1,c:"#fb923c",cat:"Araç"},
   {q:"'LoRA' tekniği ne için kullanılır?",o:["Görsel üretim","Verimli fine-tuning","Hızlı inference","Veri temizleme"],a:1,c:"#f472b6",cat:"Teknik"},
@@ -1282,7 +1401,27 @@ const TRIVIA_Q=[
   {q:"Midjourney hangi platformda başladı?",o:["Twitter","Reddit","Discord","Telegram"],a:2,c:"#f472b6",cat:"Araçlar"},
   {q:"DeepSeek hangi ülke kökenlidir?",o:["ABD","Japonya","Çin","Kore"],a:2,c:"#00ff88",cat:"Model"},
   {q:"RLHF açılımı nedir?",o:["Real Learning from Human Feedback","Reinforcement Learning from Human Feedback","Recursive Learning Human Framework","Random Layer Hierarchical Functions"],a:1,c:"#a855f7",cat:"Teknik"},
-  {q:"İlk GPT modeli kaç yılında çıktı?",o:["2017","2018","2019","2020"],a:1,c:"#fbbf24",cat:"Tarih"}
+  {q:"İlk GPT modeli kaç yılında çıktı?",o:["2017","2018","2019","2020"],a:1,c:"#fbbf24",cat:"Tarih"},
+  {q:"Claude'u geliştiren şirketin adı nedir?",a:["OpenAI","Google","Anthropic","Meta"],c:2,e:"🧠",tag:"Model"},
+  {q:"DeepSeek V3 kaç parametreli bir modeldir?",a:["7B","70B","671B","13B"],c:2,e:"🔬",tag:"Model"},
+  {q:"Hangi AI modeli Constitutional AI yöntemiyle eğitildi?",a:["GPT-4","Gemini","Claude","LLaMA"],c:2,e:"📜",tag:"Teknik"},
+  {q:"'Vibe Coding' terimini kim ortaya attı?",a:["Sam Altman","Andrej Karpathy","Yann LeCun","Elon Musk"],c:1,e:"💻",tag:"Kültür"},
+  {q:"Gemini 2.5 Pro'nun context window'u ne kadar?",a:["128K","200K","1M","2M"],c:3,e:"🌟",tag:"Model"},
+  {q:"AI hallucination ne demektir?",a:["Modelin uyuması","Yanlış bilgi üretmesi","Çok yavaş yanıt","Türkçe sorunu"],c:1,e:"🌀",tag:"Temel"},
+  {q:"Hangi AI aracı toplantıları otomatik transkript eder?",a:["Midjourney","Otter.ai","Suno","Julius AI"],c:1,e:"🎙️",tag:"Araç"},
+  {q:"LLM açılımı nedir?",a:["Large Language Model","Low Level Machine","Linear Logic Method","Layered Learning Module"],c:0,e:"📚",tag:"Temel"},
+  {q:"RAG ne işe yarar?",a:["Ses üretir","Harici bilgiyi modele ekler","Görsel üretir","Kod çalıştırır"],c:1,e:"🔍",tag:"Teknik"},
+  {q:"Mistral AI hangi ülkede kuruldu?",a:["ABD","İngiltere","Fransa","Almanya"],c:2,e:"🇫🇷",tag:"Model"},
+  {q:"GitHub Copilot hangi şirket tarafından geliştirildi?",a:["Google","Microsoft","Meta","Amazon"],c:1,e:"💻",tag:"Araç"},
+  {q:"ElevenLabs'ın ana ürünü nedir?",a:["Görsel üretimi","Ses klonlama","Kod yazma","Çeviri"],c:1,e:"🎤",tag:"Araç"},
+  {q:"Fine-tuning ne anlama gelir?",a:["Modeli sıfırdan eğitmek","Modeli belirli görev için özelleştirmek","Modeli silmek","Modeli küçültmek"],c:1,e:"🎯",tag:"Teknik"},
+  {q:"Türkiye'de kaç aktif AI startup var? (2026)",a:["50+","100+","250+","500+"],c:2,e:"🇹🇷",tag:"Türkiye"},
+  {q:"Hangi AI aracı açık kaynak değildir?",a:["Llama","Mistral 7B","GPT-4","Stable Diffusion"],c:2,e:"🔒",tag:"Model"},
+  {q:"Cursor ne tür bir araçtır?",a:["Görsel üretici","AI kod editörü","Ses asistanı","Çeviri aracı"],c:1,e:"⌨️",tag:"Araç"},
+  {q:"RLHF açılımı nedir?",a:["Real Learning Human Feedback","Reinforcement Learning from Human Feedback","Rapid Language Human Framework","Regular LLM Human Fine-tuning"],c:1,e:"🎓",tag:"Teknik"},
+  {q:"Suno AI ne üretir?",a:["Görsel","Video","Müzik","Kod"],c:2,e:"🎵",tag:"Araç"},
+  {q:"OpenAI'ın 2024'teki değerlemesi yaklaşık ne kadardır?",a:["$10 milyar","$50 milyar","$157 milyar","$500 milyar"],c:2,e:"💰",tag:"İş"},
+  {q:"'AI Slop' ne anlama gelir?",a:["Hızlı AI","Kalitesiz AI içeriği","Pahalı AI","Türkçe AI"],c:1,e:"🗑️",tag:"Kültür"}
 ];
 
 // PROMPT ROULETTE — 40 görev
@@ -1751,67 +1890,70 @@ function KariyerSim(){
 // ══ AI FACTS ══
 const AI_FACTS = [
   "ChatGPT ilk 5 günde 1 milyon kullanıcıya ulaştı — Netflix buna 3.5 yıl harcadı! 🚀",
-  "GPT-4, tüm dünya bilgisinin yaklaşık %0.1'ini 'biliyor' — yine de bar sınavını geçiyor! ⚖️",
-  "Claude'un context window'u 1 milyon token: yaklaşık 750.000 kelime veya 10 roman! 📚",
-  "Google'ın ilk AI arama deneyi 1998'de başladı — 25 yıl sonra Gemini 2M token işliyor 🌟",
-  "Bir yapay zeka modeli eğitmek için gereken elektrik, 300 evin yıllık tüketimine eşit! ⚡",
-  "Dünya'nın en hızlı süper bilgisayarı saniyede 1.1 kentilyon işlem yapıyor — bir insan beyninin 30 katı 🧠",
-  "DeepSeek R1, OpenAI'ın o1 modelinin 1/30 maliyetiyle eğitildi ve aynı performansı gösterdi 💸",
-  "Midjourney v7 ile üretilen görsellerin %94'ü uzmanlar tarafından fotoğraftan ayırt edilemiyor 📸",
-  "Türkiye, AI araçlarına erişimde dünyada #1 — tüm web trafiğinin %94.49'u AI platformları! 🇹🇷",
-  "ChatGPT şu anda günde 100 milyon aktif kullanıcıya hizmet veriyor 🌍",
-  "İlk yapay sinir ağı 1943'te Warren McCulloch ve Walter Pitts tarafından tasarlandı 🕰️",
-  "AlphaFold, 200 milyon protein yapısını çözdü — biyoloji tarihinin en büyük atılımı 🧬",
-  "Bir LLM'nin 'düşünmesi' sırasında saniyede 50 milyar matematiksel işlem gerçekleşiyor 🔢",
-  "AI destekli ilaç keşfinde başarı oranı geleneksel yöntemlere göre 10 kat daha yüksek 💊",
-  "2025'te yazılan kodun %40'ı AI tarafından üretildi — 2027'de %80 olması bekleniyor 💻",
-  "Suno ile 1 dakikada üretilen müzik, profesyonel bir stüdyo kaydıyla karıştırılabiliyor 🎵",
-  "GPT-4o'nun ses modu, konuşmacının duygusal durumunu %89 doğrulukla tespit ediyor 😮",
-  "Meta'nın Llama 4, hafızası olmayan modeller arasında 1 milyon token işleyebilen ilk açık kaynak model! 🦙",
-  "AI destekli hava durumu tahminleri artık 10 günü %90 doğrulukla öngörebiliyor ⛅",
-  "Google DeepMind, nükleer füzyon plazmasını kontrol etmek için AI kullandı 🔥",
-  "Bir insan beyninde 86 milyar nöron var — GPT-4'ün 1.76 trilyon parametresi bunun 20 katı! 🧠",
-  "AI okuma hızı: Claude saniyede ~2000 token okur — ortalama insan saniyede 4 kelime okur 📖",
-  "Waymo'nun otonom araçları 2024'te 1 milyon sürücüsüz kilometre geçti 🚗",
-  "Yapay zeka patentleri 2020-2025 arasında 5 kat arttı — Çin ve ABD başı çekiyor 📋",
-  "ElevenLabs ile sadece 3 dakikalık ses kaydından tam klon ses üretebilirsiniz 🎙️",
-  "AI destekli kanser teşhisinde yanlış pozitif oranı radyologlardan %11 daha düşük 🏥",
-  "ChatGPT'nin eğitim verisi kesim tarihi 2021 — ama internet hakkında 'hafıza' açısından zamanda donmuş 🧊",
-  "Perplexity AI günde 15 milyon sorgu işliyor ve gerçek kaynaklarla yanıt veriyor 🔍",
-  "Microsoft, Copilot için yıllık 10 milyar dolar yatırım yapıyor 💰",
-  "AI fotoğraf düzenleme: Adobe Firefly 2026'da 10 milyar görsel üretti 🖼️",
-  "Türkiye'de AI girişim ekosistemi 2026'da 250+ aktif startup ile Avrupa'nın en hızlı büyüyeni 🌱",
-  "Claude Constitutional AI ile eğitildi — her karar için etik ilkeler listesi kontrol edilir ⚖️",
-  "Gemini 1.5 Pro, 1 saatlik videoyu 56 dilde tek seferde analiz edip özetleyebiliyor 📹",
-  "Bir AI modelinin 'halüsinasyon' üretme oranı %3-8 arasında — insan hafızasından düşük! 👁️",
-  "Grok 3, Twitter/X verisiyle eğitildi — gerçek zamanlı güncel bilgiye erişimi var ⚡",
-  "AI müzik piyasası 2030'da 3 milyar dolara ulaşması bekleniyor 🎶",
-  "OpenAI'ın değerlemesi 2024'te 157 milyar dolara çıktı — Türkiye'nin GSYH'sının yarısı! 💵",
-  "AutoGPT, insan müdahalesi olmadan 48 saat boyunca bir iş planı hazırlayabildi 📊",
-  "AI destekli hukuk analizi, bir dava dosyasını 10 saatte değil 4 dakikada inceliyor ⚡",
-  "Stable Diffusion modeli açık kaynak yayınlandıktan 3 gün sonra 1 milyon görseli aşmıştı 🎨",
-  "İnsan ile AI'ın birlikte çalıştığı 'augmented' çalışma modeli verimliliği %40 artırıyor 🤝",
-  "ChatGPT Türkçe'de İngilizce'den sonra en çok kullanılan 2. dil! 🌐",
-  "Anthropic'in değerlemesi 18 ay içinde 4 milyardan 61 milyar dolara çıktı 📈",
-  "AI ile yazılan akademik makalelerin oranı 2024'te %17'ye ulaştı 📝",
-  "Bir transformer modelindeki attention mekanizması her token için tüm diğer tokenlara bakıyor 🔍",
-  "AI rüzgar türbini optimizasyonu enerji üretimini %20 artırıyor 🌬️",
-  "NotebookLM, 50 sayfalık dokümanı 2 dakikada podcast'e dönüştürebiliyor 🎙️",
-  "Cursor AI ile ortalama geliştirici günde 45 dakika kod yazma süresi kazanıyor ⌨️",
-  "Yapay zeka, satranç dünya şampiyonunu 1997'de, Go şampiyonunu 2016'da yendi ♟️",
-  "Meta'nın Segment Anything modeli herhangi bir görseldeki nesneyi 1 tıkla seçiyor ✂️",
-  "AI destekli tarım sulama tasarrufu: %30-50 su tasarrufu sağlıyor 🌾",
-  "Runway Gen-3 ile 10 saniyelik profesyonel kalite video üretmek artık $0.10'a mal oluyor 🎬",
-  "Türkiye'de her 3 üniversite öğrencisinden 1'i AI araçlarını düzenli kullanıyor 🎓",
-  "LLM'ler 'in-context learning' yapabilir: hiç eğitim görmeden örneklerden öğrenebilir 🔬",
-  "AI tutarlılık testi: Claude aynı soruya 100 kez sorulduğunda 97 kez tutarlı yanıt veriyor ✅",
-  "BioGPT, yayınlanmamış ilaç-protein etkileşimlerini %81 doğrulukla tahmin ediyor 🧪",
-  "Bir insan parmak izi ile AI sahteciliği artık %99.9 engellenebiliyor 🔏",
-  "Midjourney kullanıcıları günde 2.6 milyon görsel üretiyor — Shutterstock'un yıllık stokunu 3 günde geçiyor 📷",
-  "AI çevirisi artık 100 dil çiftinde insandan daha yüksek BLEU skoru alıyor 🌍",
-  "Neural Radiance Fields (NeRF) ile tek fotoğraftan 3D model oluşturmak artık 10 saniye sürüyor 🏗️",
-  "GPT-4 Türkiye Tıp Sınavı sorularında %78 başarı gösterdi — geçme notu 65! 👨‍⚕️",
+  "GPT-4, tüm bar sınavını geçiyor — üstelik insan avukatların %90'ından daha iyi skor alıyor! ⚖️",
+  "Claude'un context window'u (1M token) yaklaşık 750 sayfalık roman okuyabilir — tek seferde! 📚",
+  "DeepSeek V3, GPT-4o'yu matematik olimpiyatlarında %97.3 başarıyla geçti — ücretsiz! 🔬",
+  "Dünya genelinde her gün 100 milyondan fazla kişi ChatGPT kullanıyor! 🌍",
+  "Bir yapay zeka modeli eğitmek, 5 yıl boyunca bir insanın yaydığı CO₂'ye eşdeğer enerji harcıyor! ♻️",
+  "Google Translate, yapay zeka geçişinin ardından çeviri kalitesini bir yılda %60 artırdı! 🌐",
+  "AI, meme kanseri teşhisinde radyologları %20 geride bırakıyor! 🏥",
+  "Bir AI sistemi 2023'te insan satrancının 300 yıllık teorisini 4 saatte yeniden keşfetti! ♟️",
+  "Türkiye'de AI startup sayısı 2024-2026 arasında 3 katına çıkarak 250'yi aştı! 🇹🇷",
+  "Midjourney'in en pahalı aboneliği aylık $600 — ama sınırsız görsel üretiliyor! 🎨",
+  "GPT-3 modelini eğitmek 4.6 milyon dolar maliyeti vardı — GPT-4 için bu çok daha fazla! 💸",
+  "Yapay zeka 2030'a kadar 800 milyon iş kolunu dönüştürecek (McKinsey raporu) 🤖",
+  "Stack Overflow'a sorulan soruların %25'i artık AI ile yanıtlanıyor! 💻",
+  "DALL-E 3, 'ünlü ressamlar tarzında' bir görsel 3 saniyede üretiyor! 🖼️",
+  "GitHub Copilot kullanan geliştiriciler %55 daha hızlı kod yazıyor! ⚡",
+  "Anthropic, Claude'u 'anayasa' ile eğitti — modele etik ilkeler öğretti! 📜",
+  "Meta'nın Llama modeli tamamen açık kaynak — kendi bilgisayarında çalıştırabilirsin! 🦙",
+  "Türkçe, yapay zekaların en iyi anladığı 10 dil arasında! 🇹🇷",
+  "AI müzik üreteci Suno, bir şarkıyı 30 saniyede besteleyip sözleriyle sunuyor! 🎵",
+  "Runway Gen-3 ile 4 saniyelik video üretimi artık 5 saniyede mümkün! 🎬",
+  "Stanford üniversitesi AI'ın IQ testinde ortalama insanı geçtiğini doğruladı (2024)! 🧠",
+  "Bir prompt mühendisi Upwork'te saatlik $150+ kazanabiliyor — en hızlı büyüyen meslek! 💰",
+  "WhatsApp'taki Meta AI, 3 milyardan fazla kullanıcıya ulaştı! 📱",
+  "AI destekli ilaç keşfi, geleneksel yöntemlere göre 10x daha hızlı! 💊",
+  "OpenAI'ın değerlemesi 2024'te $157 milyara ulaştı — Türkiye GSYH'sının %20'si! 💹",
+  "Google'ın NotebookLM uygulaması, yüklediğin belgeyi podcast'e dönüştürüyor! 🎙️",
+  "Yapay zeka, Beethoven'ın yarım bıraktığı 10. senfonisini tamamladı! 🎼",
+  "Claude, tek bir promptta 100.000 satır kodu analiz edebiliyor! 💻",
+  "Dünya'nın en büyük AI çipi olan NVIDIA H100, 80 milyar transistör içeriyor! 🔧",
+  "Microsoft, OpenAI'a toplamda $13 milyar yatırım yaptı! 💼",
+  "AI destekli hukuk araştırması, avukatların çalışma süresini %60 azalttı! ⚖️",
+  "Gemini 2.5 Pro'nun context window'u (2M token) 10 roman okuyabilir! 📖",
+  "Türk girişimciler AI alanında 2025'te 500+ milyon TL yatırım topladı! 🚀",
+  "Perplexity AI, Google aramalarına ciddi rakip — günlük 10M+ sorgu! 🔍",
+  "Midjourney'in kurucu ekibinde sadece 11 kişi var — aylık $100M+ gelir! 💰",
+  "AI hastanenin randevu sistemini yöneterek bekleme sürelerini %40 düşürdü! 🏥",
+  "Siri'nin AI altyapısı 2024'te tamamen yenilendi — Apple Intelligence geldi! 🍎",
+  "Yapay zeka, 2026'da tüm dünyada yazılan kodun %30'unu üretiyor! 💻",
+  "ChatGPT'ye günlük 10 milyon görsel yükleniyor ve analiz ediliyor! 🖼️",
+  "Grok 3, Twitter/X verilerine gerçek zamanlı erişimle rakiplerinden öne çıkıyor! ⚡",
+  "Mistral AI kurulduğu yılda 6 milyar Euro değerlemeye ulaştı — rekor! 🇫🇷",
+  "AI destekli satış araçları kullanan şirketler %25 daha fazla gelir elde ediyor! 📈",
+  "Yapay zeka artık olimpiyat fizik sorularının %70'ini doğru çözüyor! 🏆",
+  "ElevenLabs ses klonlama teknolojisi 3 saniyelik ses kaydıyla klon üretiyor! 🎤",
+  "Cursor AI kullanan yazılımcılar günde ortalama 2 saat tasarruf ediyor! ⏱️",
+  "AI, moda endüstrisinde 10.000 tasarım alternatifi üretiyor — saniyeler içinde! 👗",
+  "Duolingo, AI ile 148 yeni dil kursu oluşturdu — 5 yılda yapılacak iş! 🌍",
+  "Claude API'nin Türkiye'deki kullanım oranı 2025'te 5 katına çıktı! 🇹🇷",
+  "Yapay zeka destekli finansal danışmanlık uygulamaları 50M+ kullanıcıya ulaştı! 💳",
+  "Google DeepMind'ın AlphaFold3'ü tüm proteinlerin 3D yapısını tahmin edebiliyor! 🧬",
+  "AI ile oluşturulan sahte görsel sayısı 2024'te gerçek fotoğraf sayısını geçti! 📸",
+  "NotebookLM'in 'podcast modu' ile 2 saatlik belge 15 dakikada anlaşılıyor! 🎧",
+  "Yapay zeka, Türkçe dilek cümlelerini %92 doğrulukla İngilizce'ye çeviriyor! 🔤",
+  "AI destekli müşteri hizmetleri, şikayetleri %70 daha hızlı çözüyor! 📞",
+  "OpenAI o3 modeli, IQ testlerinde 120+ puan alıyor — üst %10'a giriyor! 🧠",
+  "Hugging Face'de 1 milyondan fazla açık kaynak AI modeli var! 🤗",
+  "Yapay zeka çevirisi artık BM tercümanlarının kalitesiyle yarışıyor! 🌐",
+  "İlk AI bestesine Grammy ödülü 2025'te verildi — tartışmalar hâlâ sürüyor! 🏆",
+  "Google'ın Veo 2 modeli 2 dakikalık 4K video üretebiliyor! 🎬",
+  "Türkiye, AB AI Kanunu'na uyum için 2025'ten itibaren düzenleme çalışmalarına başladı! ⚖️",
+  "AI destekli öğretim platformları öğrencilerin %40'ının notunu yükseltti! 🎓",
+  "Claude'u yaratan Anthropic ekibinin %30'u eski OpenAI çalışanlarından oluşuyor! 🤯",
 ];
+
 
 
 // ══ AI FACTS ══
@@ -1833,7 +1975,7 @@ function HomePage({setPage,user,setUser}){
   const wi=useRef(0),ci=useRef(0),del=useRef(false);
   useEffect(()=>{const t=setInterval(()=>{const w=words[wi.current];if(!del.current){if(ci.current<=w.length){setTyped(w.slice(0,ci.current));ci.current++;}else setTimeout(()=>{del.current=true;},1400);}else{if(ci.current>0){ci.current--;setTyped(w.slice(0,ci.current));}else{del.current=false;wi.current=(wi.current+1)%words.length;}}},70);return()=>clearInterval(t);},[]);
   const[email,setEmail]=useState("");const[sent,setSent]=useState(false);
-  const[level,setLevel]=useState(null);const[fact,setFact]=useState(null);
+  const[level,setLevel]=useState(null);const[fact,setFact]=useState(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)]);
   const[showExit,setShowExit]=useState(false);const[exitShown,setExitShown]=useState(false);
   const[counts,setCounts]=useState({a:0,b:0,c:0,d:0});
   const counterRef=useRef();
@@ -1885,11 +2027,19 @@ function HomePage({setPage,user,setUser}){
           <button onClick={()=>{setPage("claude");playClick('soft');}} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(168,85,247,0.4)",background:"rgba(168,85,247,0.08)",color:"#a855f7",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🧠 Claude</button>
           <button onClick={()=>{setFact(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)]);playClick('success');}} style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(251,146,60,0.4)",background:"rgba(251,146,60,0.08)",color:"#fb923c",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🤯 Şaşırt!</button>
           <button onClick={()=>{setPage("animasyon");playClick('soft');}} style={{padding:"11px 20px",fontSize:12,borderRadius:10,fontFamily:"inherit",fontWeight:700,border:"none",cursor:"pointer",color:"#fff",background:"linear-gradient(135deg,#a855f7,#7c3aed)",boxShadow:"0 4px 16px rgba(168,85,247,0.3)",transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>🎬 Animasyonlar</button>
+          <button onClick={()=>{setPage("prompt");playClick('soft');}}
+            style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(0,220,255,0.4)",background:"rgba(0,220,255,0.08)",color:"#00dcff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,transition:"all .2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,220,255,0.18)";e.currentTarget.style.transform="translateY(-2px)";}}
+            onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,220,255,0.08)";e.currentTarget.style.transform="";}}
+          >💡 Prompt Rehberi</button>
+          <button onClick={()=>{const el=document.getElementById('obsidian-section');el&&el.scrollIntoView({behavior:'smooth'});}}
+            style={{padding:"12px 18px",fontSize:13,borderRadius:11,border:"1px solid rgba(251,191,36,0.4)",background:"rgba(251,191,36,0.08)",color:"#fbbf24",cursor:"pointer",fontFamily:"inherit",fontWeight:700,transition:"all .2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.background="rgba(251,191,36,0.18)";e.currentTarget.style.transform="translateY(-2px)";}}
+            onMouseLeave={e=>{e.currentTarget.style.background="rgba(251,191,36,0.08)";e.currentTarget.style.transform="";}}
+          >💎 Obsidian + AI</button>
         </div>
-        {fact&&<div style={{background:"rgba(251,146,60,0.08)",border:"1px solid rgba(251,146,60,0.22)",borderRadius:14,padding:"14px 18px",maxWidth:520,margin:"0 auto 20px",animation:"fadeIn .3s ease"}}>
-          <div style={{fontSize:24,marginBottom:6}}>{fact.e}</div>
-          <div style={{fontSize:13,color:"#e2e8f0",lineHeight:1.7}}>{fact.f}</div>
-          <button onClick={()=>setFact(AI_FACTS[Math.floor(Math.random()*AI_FACTS.length)])} style={{marginTop:8,fontSize:10,color:"#fb923c",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Bir daha →</button>
+        {fact&&<div style={{background:"rgba(251,146,60,0.1)",border:"2px solid rgba(251,146,60,0.5)",borderRadius:14,padding:"18px 22px",maxWidth:580,margin:"16px auto",position:"relative",zIndex:10,boxShadow:"0 4px 24px rgba(251,146,60,0.2)"}}>
+          <div style={{fontSize:13,color:"#fb923c",lineHeight:1.7,fontWeight:600,textAlign:"center"}}>{typeof fact==="string"?fact:(fact.e+" "+fact.t)}</div>
         </div>}
         <div ref={counterRef} style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,maxWidth:440,margin:"0 auto"}}>
           {[[counts.a+"%","TR #1","#00dcff"],[counts.b+"+","Prompt","#a855f7"],[counts.c,"Oyun","#34d399"],[counts.d,"AI Terimi","#fb923c"]].map(([n,l,c])=>(
@@ -2073,7 +2223,131 @@ ${todayTip.tip}`} size="small"/>
       </div>
     </section>
 
-    <SocialMediaSection setPage={setPage}/>
+    
+      {/* ── PROMPT MÜHENDİSLİĞİ BÖLÜMÜ ─────────────────── */}
+      <section style={{padding:"32px 20px",background:"linear-gradient(135deg,rgba(0,220,255,0.04),rgba(168,85,247,0.04))"}}>
+        <div style={{maxWidth:1100,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12,marginBottom:20}}>
+            <div>
+              <div style={{fontSize:9,letterSpacing:".2em",color:"#00dcff",marginBottom:4}}>128+ ŞABLON</div>
+              <h2 style={{margin:0,fontSize:"clamp(18px,3vw,26px)",fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>💡 Prompt Mühendisliği</h2>
+              <p style={{fontSize:11,color:"#64748b",margin:"4px 0 0"}}>Hazır Türkçe şablonlar · Her kategori · Kopyala ve kullan</p>
+            </div>
+            <button onClick={()=>setPage("prompt")} style={{padding:"9px 20px",border:"1px solid rgba(0,220,255,0.4)",borderRadius:10,background:"rgba(0,220,255,0.08)",color:"#00dcff",fontSize:11,cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>Tüm Promptlar →</button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
+            {[["💼","İş & Kariyer","Maaş müzakeresi, LinkedIn profil, iş başvurusu","#00dcff"],
+              ["✍️","İçerik & Blog","SEO yazısı, sosyal medya, bülten taslağı","#a855f7"],
+              ["💻","Kod & Teknik","Debug, kod inceleme, mimari tasarım","#34d399"],
+              ["📊","Analiz & Rapor","Veri analizi, SWOT, piyasa araştırması","#fbbf24"],
+              ["🎨","Yaratıcı Yazarlık","Hikaye, senaryo, şiir, reklam metni","#f472b6"],
+              ["📧","E-posta & İletişim","Resmi yazı, teklifler, müşteri iletişimi","#fb923c"],
+              ["🎓","Eğitim & Öğrenme","Ders planı, konu özeti, quiz hazırlama","#60a5fa"],
+              ["🔬","Araştırma","Kaynak analizi, literatür tarama, hipotez","#e879f9"],
+            ].map(([e,t,d,c])=><div key={t} onClick={()=>setPage("prompt")}
+              style={{background:c+"07",border:"1px solid "+c+"18",borderRadius:12,padding:"14px",cursor:"pointer",transition:"all .2s"}}
+              onMouseEnter={ev=>{ev.currentTarget.style.transform="translateY(-2px)";ev.currentTarget.style.borderColor=c+"40";}}
+              onMouseLeave={ev=>{ev.currentTarget.style.transform="";ev.currentTarget.style.borderColor=c+"18";}}>
+              <div style={{fontSize:22,marginBottom:6}}>{e}</div>
+              <div style={{fontSize:11,fontWeight:700,color:c,marginBottom:4}}>{t}</div>
+              <div style={{fontSize:9,color:"#475569",lineHeight:1.4}}>{d}</div>
+            </div>)}
+          </div>
+          {/* Top prompts önizleme */}
+          <div style={{marginTop:14,display:"flex",gap:8,flexWrap:"wrap"}}>
+            {["Maaş müzakeresi emaili yaz","LinkedIn profili optimize et","Python kodunu debug et","SEO blog yazısı oluştur","SWOT analizi yap","Rakip analizi hazırla"].map(p=><button key={p} onClick={()=>setPage("prompt")} style={{fontSize:10,color:"#64748b",border:"1px solid rgba(255,255,255,0.07)",borderRadius:20,padding:"4px 12px",background:"rgba(255,255,255,0.02)",cursor:"pointer",fontFamily:"inherit",transition:"all .2s"}}
+              onMouseEnter={ev=>{ev.currentTarget.style.color="#00dcff";ev.currentTarget.style.borderColor="rgba(0,220,255,0.3)";}}
+              onMouseLeave={ev=>{ev.currentTarget.style.color="#64748b";ev.currentTarget.style.borderColor="rgba(255,255,255,0.07)";}}>
+              "{p}"</button>)}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CLAUDE KAPSAMLI BÖLÜM ─────────────────── */}
+      <section style={{padding:"32px 20px",background:"rgba(168,85,247,0.03)"}}>
+        <div style={{maxWidth:1100,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12,marginBottom:20}}>
+            <div>
+              <div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:4}}>ANTHROPIC · CONSTITUTIONAL AI</div>
+              <h2 style={{margin:0,fontSize:"clamp(18px,3vw,26px)",fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>🧠 Claude AI — Kapsamlı Rehber</h2>
+              <p style={{fontSize:11,color:"#64748b",margin:"4px 0 0"}}>Kodlamada dünya #1 · 200K token · Constitutional AI · Güvenli ve şeffaf</p>
+            </div>
+            <button onClick={()=>setPage("claude")} style={{padding:"9px 20px",border:"1px solid rgba(168,85,247,0.4)",borderRadius:10,background:"rgba(168,85,247,0.08)",color:"#a855f7",fontSize:11,cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>Claude Sayfası →</button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:12,marginBottom:16}}>
+            {[["⚖️","Constitutional AI Nedir?","Anthropic, Claude'a bir 'anayasa' verdi — etik ilkeler listesi. Claude kendi yanıtlarını bu ilkelere göre değerlendirip düzeltiyor. Sonuç: en güvenilir AI.","#a855f7"],
+              ["💻","Kodlamada #1","SWE-bench'te %72.5 başarı oranı. Gerçek GitHub pull request'lerini çözüyor. Cursor editöründe varsayılan model. Python, JS, Rust, Go desteği.","#34d399"],
+              ["📖","200K Token Context","Tek promptta 150.000 kelime — yaklaşık 500 sayfa. Tüm kod tabanını, uzun sözleşmeyi, kitabı analiz edebilir. Gemini'den sonra en büyük context.","#00dcff"],
+              ["🎯","Kullanım Alanları","Kod yazma ve debug · Uzun döküman analizi · Akademik araştırma · Yaratıcı yazarlık · Veri analizi · Müzakere stratejisi","#fbbf24"],
+              ["⚡","Hız Karşılaştırma","Sonnet 4.5: saniyede 100+ token. Haiku: en hızlı, en ucuz. Opus: en güçlü, en derin analiz. Hangi göreve hangi model?","#f472b6"],
+              ["🔌","API Entegrasyonu","Python ve JS SDK'lar mevcut. OpenAI uyumlu format. Araç kullanımı (tool use), görsel analiz, ses transkripti.","#60a5fa"],
+            ].map(([e,t,d,c])=><div key={t} onClick={()=>setPage("claude")}
+              style={{background:c+"07",border:"1px solid "+c+"18",borderRadius:12,padding:"16px",cursor:"pointer",transition:"all .2s"}}
+              onMouseEnter={ev=>{ev.currentTarget.style.transform="translateY(-2px)";ev.currentTarget.style.borderColor=c+"40";}}
+              onMouseLeave={ev=>{ev.currentTarget.style.transform="";ev.currentTarget.style.borderColor=c+"18";}}>
+              <div style={{fontSize:20,marginBottom:8}}>{e}</div>
+              <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:6}}>{t}</div>
+              <div style={{fontSize:10,color:"#64748b",lineHeight:1.5}}>{d}</div>
+            </div>)}
+          </div>
+          {/* Claude vs rakipler hızlı tablo */}
+          <div style={{background:"rgba(168,85,247,0.05)",border:"1px solid rgba(168,85,247,0.15)",borderRadius:12,padding:"14px",overflowX:"auto"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#a855f7",marginBottom:10}}>Claude Sonnet 4.5 vs Rakipler — Hızlı Skor</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {[["Kodlama","92","90","87"],["Türkçe","88","95","88"],["Güvenlik","98","85","87"],["Context","200K","128K","2M"],["Fiyat","$$","$$","$"]].map(([m,c,g,gm])=><div key={m} style={{flex:"1 1 80px",minWidth:80,background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"8px",textAlign:"center"}}>
+                <div style={{fontSize:9,color:"#475569",marginBottom:4}}>{m}</div>
+                <div style={{fontSize:13,fontWeight:900,color:"#a855f7"}}>{c}</div>
+                <div style={{fontSize:8,color:"#334155"}}>GPT: {g} | Gem: {gm}</div>
+              </div>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── OBSİDİAN + PKM BÖLÜMÜ ─────────────────── */}
+      <section id="obsidian-section" style={{padding:"32px 20px"}}>
+        <div style={{maxWidth:1100,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12,marginBottom:20}}>
+            <div>
+              <div style={{fontSize:9,letterSpacing:".2em",color:"#fbbf24",marginBottom:4}}>KİŞİSEL BİLGİ YÖNETİMİ</div>
+              <h2 style={{margin:0,fontSize:"clamp(18px,3vw,26px)",fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif"}}>💎 Obsidian + AI: İkinci Beyin</h2>
+              <p style={{fontSize:11,color:"#64748b",margin:"4px 0 0"}}>Not alma + AI entegrasyonu · Markdown tabanlı · Offline çalışır · Ücretsiz</p>
+            </div>
+            <a href="https://obsidian.md" target="_blank" rel="noopener noreferrer" style={{padding:"9px 20px",border:"1px solid rgba(251,191,36,0.4)",borderRadius:10,background:"rgba(251,191,36,0.08)",color:"#fbbf24",fontSize:11,fontWeight:700,textDecoration:"none"}}>obsidian.md →</a>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12,marginBottom:16}}>
+            {[["💎","Obsidian Nedir?","Yerel Markdown dosyalarıyla çalışan not alma uygulaması. Verileriniz bilgisayarınızda, tamamen offline. Graph View ile notlar arasındaki bağlantıları görselleştirin.","#fbbf24"],
+              ["🤖","AI Plugin: Smart Composer","Obsidian'a Claude/ChatGPT entegrasyonu. Notlarınız bağlamında AI ile konuşun. Vault'unuzdaki bilgiyi AI ile işleyin.","#a855f7"],
+              ["🔗","Zettelkasten Yöntemi","Her fikri küçük notlara böl, birbirine bağla. AI ile: 'Bu notla ilgili başka hangi notlarım var?' sorusu saniyeler içinde yanıtlanıyor.","#00dcff"],
+              ["📝","Daily Notes + AI","Günlük not şablonunuzu AI ile otomatik doldurun. Toplantı özetleri, karar günlükleri, öğrenme notları AI ile zenginleştirilir.","#34d399"],
+              ["🔍","Semantic Search","AI ile anlam tabanlı arama. 'Geçen ay not aldığım proje yönetimi fikirleri' gibi doğal dil araması.","#fb923c"],
+              ["📊","Dataview + AI","Obsidian Dataview plugin ile notlarınızı veritabanı gibi sorgulayın. AI ile karmaşık sorgular oluşturun.","#f472b6"],
+            ].map(([e,t,d,c])=><div key={t} style={{background:c+"07",border:"1px solid "+c+"18",borderRadius:12,padding:"14px",transition:"all .2s"}}
+              onMouseEnter={ev=>{ev.currentTarget.style.borderColor=c+"40";}}
+              onMouseLeave={ev=>{ev.currentTarget.style.borderColor=c+"18";}}>
+              <div style={{fontSize:20,marginBottom:8}}>{e}</div>
+              <div style={{fontSize:11,fontWeight:700,color:c,marginBottom:6}}>{t}</div>
+              <div style={{fontSize:10,color:"#64748b",lineHeight:1.5}}>{d}</div>
+            </div>)}
+          </div>
+          {/* Obsidian + AI pratik kullanım örnekleri */}
+          <div style={{background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.15)",borderRadius:12,padding:"14px"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#fbbf24",marginBottom:10}}>⚡ Pratik Kullanım Senaryoları</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:8}}>
+              {[["📚","Kitap Özeti","Kitabı Claude ile özetle → Obsidian notuna yapıştır → Dataview ile tüm kitap özetlerini görüntüle"],
+                ["🎯","Proje Yönetimi","Meeting notları → AI ile aksiyon maddeleri çıkar → Obsidian Tasks ile takip et"],
+                ["🧠","Fikir Geliştirme","Ham fikri Obsidian'a yaz → Claude ile genişlet → Graph View'de ilgili fikirleri bul"],
+                ["📰","İçerik Üretimi","Web makaleleri → Obsidian Clipper ile kaydet → AI ile blog yazısına dönüştür"],
+              ].map(([e,t,d])=><div key={t} style={{padding:"10px",background:"rgba(0,0,0,0.2)",borderRadius:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#fbbf24",marginBottom:4}}>{e} {t}</div>
+                <div style={{fontSize:9,color:"#64748b",lineHeight:1.5}}>{d}</div>
+              </div>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <SocialMediaSection setPage={setPage}/>
 
         {/* ═══ AI ALARM + TRENDING ═══ */}
     <section style={{padding:"0 20px 48px"}}>
@@ -2106,570 +2380,700 @@ ${todayTip.tip}`} size="small"/>
 }
 
 
-function BlogPage({setPage}){
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{marginBottom:22}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>BLOG</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>✍️ AI Rehberleri & Analizler</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>Kapsamlı Türkçe AI içerikleri — araştırılmış, güncel</div></div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:13}}>
-      {BLOG_POSTS.map(p=>(
-        <Card key={p.id} color={p.color} style={{padding:"18px"}} onClick={()=>setPage(`blog-${p.id}`)}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><Tag text={p.tag} color={p.color}/><span style={{fontSize:9,color:"#334155"}}>{p.date} · {p.readTime}</span></div>
-          <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:7,lineHeight:1.4}}>{p.title}</div>
-          <div style={{fontSize:12,color:"#475569",lineHeight:1.65,marginBottom:11}}>{p.summary}</div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#334155"}}>
-            <span>{p.date}</span><span style={{color:p.color}}>Oku →</span>
-          </div>
-        </Card>
-      ))}
-    </div>
-  </div>;
-}
+function HaberlerPage({setPage}){
+  const[tab,setTab]=useState('hepsi');
+  const[likes,setLikes]=useState(()=>{try{return JSON.parse(localStorage.getItem('imdatai_hlikes')||'{}');}catch(e){return {};}});
+  function toggleLike(id){const n={...likes,[id]:!likes[id]};setLikes(n);try{localStorage.setItem('imdatai_hlikes',JSON.stringify(n));}catch(e){}}
 
-// 3. BLOG YAZISI SAYFASI
-function BlogPostPage({postId,setPage}){
-  const post=BLOG_POSTS.find(p=>p.id===postId);
-  if(!post) return <div style={{padding:"60px 20px",textAlign:"center",color:"#475569"}}>Yazı bulunamadı.</div>;
-  return <div style={{padding:"28px 20px",maxWidth:720,margin:"0 auto"}}>
-    <button onClick={()=>setPage("blog")} style={{fontSize:11,color:"#475569",background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:7,padding:"6px 12px",cursor:"pointer",fontFamily:"inherit",marginBottom:20}}>← Blog'a Dön</button>
-    <div style={{marginBottom:16}}>
-      <Tag text={post.tag} color={post.color}/>
-      <div style={{fontSize:9,color:"#475569",marginTop:6}}>{post.date} · {post.readTime} okuma</div>
-    </div>
-    <h1 style={{fontSize:"clamp(20px,4vw,32px)",fontWeight:900,color:"#e2e8f0",marginBottom:12,lineHeight:1.3}}>{post.title}</h1>
-    <div style={{fontSize:14,color:"#a855f7",fontStyle:"italic",marginBottom:24,padding:"12px 16px",background:"rgba(168,85,247,0.06)",borderLeft:"3px solid #a855f7",borderRadius:"0 9px 9px 0"}}>{post.summary}</div>
-    <div style={{fontSize:13,color:"#94a3b8",lineHeight:2,whiteSpace:"pre-line"}}>
-      {post.content.split('\n').map((line,i)=>{
-        if(line.startsWith('## ')) return <h2 key={i} style={{fontSize:18,fontWeight:800,color:"#e2e8f0",margin:"24px 0 12px"}}>{line.slice(3)}</h2>;
-        if(line.startsWith('**') && line.endsWith('**')) return <div key={i} style={{fontWeight:700,color:"#e2e8f0",margin:"14px 0 6px"}}>{line.slice(2,-2)}</div>;
-        if(line.startsWith('- ')) return <div key={i} style={{paddingLeft:16,borderLeft:"2px solid rgba(0,220,255,0.3)",margin:"4px 0",fontSize:12,color:"#64748b"}}>{line.slice(2)}</div>;
-        if(line.trim()==="") return <br key={i}/>;
-        return <div key={i} style={{marginBottom:4}}>{line}</div>;
-      })}
-    </div>
-    <div style={{marginTop:28,borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:16}}>
-      <div style={{fontSize:11,color:"#475569",marginBottom:8}}>Bu yazıyı faydalı buldun mu?</div>
-      <div style={{display:"flex",gap:8}}>
-        <button style={{padding:"8px 16px",borderRadius:8,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.06)",color:"#34d399",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>👍 Faydalı</button>
-        <button onClick={()=>setPage("blog")} style={{padding:"8px 16px",borderRadius:8,border:"1px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.03)",color:"#475569",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>← Diğer Yazılar</button>
-      </div>
-    </div>
-  </div>;
-}
+  const NEWS=[
+    {id:1,icon:"🧠",source:"Anthropic",color:"#a855f7",cat:"Anthropic",date:"Mayıs 2026",
+     title:"Claude Sonnet 4.5: Yeni Nesil AI Asistan",
+     desc:"Anthropic, Claude Sonnet 4.5 modelini tanıttı. 200K token context, gelişmiş kod analizi ve %40 hız artışı. Pro kullanıcılara ücretsiz.",
+     url:"https://www.anthropic.com/news"},
+    {id:2,icon:"🤖",source:"OpenAI",color:"#34d399",cat:"OpenAI",date:"Mayıs 2026",
+     title:"GPT-5 Yolda: OpenAI Yeni Modeli Duyurdu",
+     desc:"OpenAI, GPT-5'in eğitim sürecinin tamamlandığını açıkladı. Çok modlu anlayış ve gerçek zamanlı ses özellikleri ön plana çıkıyor.",
+     url:"https://openai.com/blog"},
+    {id:3,icon:"🌟",source:"Google DeepMind",color:"#fbbf24",cat:"Google",date:"Mayıs 2026",
+     title:"Gemini 2.5 Pro: 2 Milyon Token ile Rekor",
+     desc:"Google'ın yeni modeli 2M token ile endüstri rekoru kırdı. Video anlama, uzun döküman analizi ve çok dilli destek öne çıkıyor.",
+     url:"https://blog.google/technology/google-deepmind/"},
+    {id:4,icon:"🔬",source:"DeepSeek",color:"#00dcff",cat:"Model",date:"Mayıs 2026",
+     title:"DeepSeek R2: Matematik ve Kodda Yeni Standart",
+     desc:"Çin yapımı DeepSeek'in R2 modeli olimpiyat matematik problemlerinde %97.3 başarı. Tamamen açık kaynak ve ücretsiz API sunuyor.",
+     url:"https://www.deepseek.com"},
+    {id:5,icon:"📰",source:"TechCrunch",color:"#ff4444",cat:"Teknoloji",date:"Mayıs 2026",
+     title:"AI Pazarı 500 Milyar Doları Aştı",
+     desc:"Yapay zeka şirketlerinin toplam piyasa değeri 500 milyar doları geçti. Anthropic, OpenAI ve Google'ın rekabeti kızışıyor.",
+     url:"https://techcrunch.com/category/artificial-intelligence/"},
+    {id:6,icon:"🎓",source:"MIT Tech Review",color:"#fb923c",cat:"Araştırma",date:"Mayıs 2026",
+     title:"LLM'lerin Sınırları: 2026 Araştırma Özeti",
+     desc:"MIT araştırmacıları büyük dil modellerinin gerçek anlayışı mı yoksa istatistiksel örüntü eşleştirme mi yaptığını sorguluyor.",
+     url:"https://www.technologyreview.com/topic/artificial-intelligence/"},
+    {id:7,icon:"🇹🇷",source:"Türkiye AI",color:"#60a5fa",cat:"Türkiye",date:"Mayıs 2026",
+     title:"Türkiye AI Ekosistemi 2026 Raporu",
+     desc:"Türkiye'deki AI yatırımları 3 katına çıktı. 250+ aktif startup, üniversite-sanayi iş birlikleri ve yerli LLM projeleri hızlanıyor.",
+     url:"https://www.tubitak.gov.tr"},
+    {id:8,icon:"💼",source:"VentureBeat",color:"#f472b6",cat:"Kariyer",date:"Nisan 2026",
+     title:"AI Mühendisi Maaşları Türkiye'de ₺80K'ya Çıktı",
+     desc:"Türkiye'de AI/ML pozisyonlarında maaşlar %60 arttı. Prompt mühendisliği en hızlı büyüyen kariyer. Uzaktan çalışma olanakları artıyor.",
+     url:"https://venturebeat.com/category/ai/"},
+    {id:9,icon:"🛡️",source:"Wired",color:"#e879f9",cat:"Güvenlik",date:"Nisan 2026",
+     title:"AI Deepfake Saldırıları %400 Arttı",
+     desc:"2026'nın ilk çeyreğinde AI destekli dolandırıcılık vakalarında rekor artış. Ses klonlama ve video deepfake teknikleri daha erişilebilir hale geldi.",
+     url:"https://www.wired.com/tag/artificial-intelligence/"},
+    {id:10,icon:"⚡",source:"The Verge",color:"#a855f7",cat:"Teknoloji",date:"Nisan 2026",
+     title:"Meta Llama 4: Açık Kaynak AI'ın Yeni Lideri",
+     desc:"Meta'nın Llama 4 modeli kapalı kaynak rakiplerine yakın benchmark sonuçları gösteriyor. Self-hosting topluluğu hızla büyüyor.",
+     url:"https://www.theverge.com/ai-artificial-intelligence"},
+    {id:11,icon:"🤗",source:"Hugging Face",color:"#fbbf24",cat:"Araştırma",date:"Nisan 2026",
+     title:"Hugging Face'de 1 Milyon Açık Kaynak Model",
+     desc:"Hugging Face platformu 1 milyon açık kaynak AI modelini geçti. Mistral, Llama ve Phi serisi en popüler modeller arasında.",
+     url:"https://huggingface.co/blog"},
+    {id:12,icon:"🎵",source:"AI Weekly",color:"#34d399",cat:"Araştırma",date:"Mart 2026",
+     title:"Suno ve Udio: AI Müziği Ana Akıma Girdi",
+     desc:"AI müzik üretim platformları aylık 50 milyon kullanıcıya ulaştı. Müzik endüstrisi telif hukuku tartışmaları devam ediyor.",
+     url:"https://www.technologyreview.com/topic/artificial-intelligence/"},
+    {id:13,icon:"💻",source:"GitHub Blog",color:"#475569",cat:"Geliştirici",date:"Mart 2026",
+     title:"GitHub Copilot Yeni Özellikler: Multi-File Editing",
+     desc:"GitHub Copilot artık aynı anda birden fazla dosyayı düzenleyebiliyor. Claude Sonnet 4.5 entegrasyonu mevcut.",
+     url:"https://github.blog/"},
+    {id:14,icon:"⚖️",source:"Euronews",color:"#ff4444",cat:"Hukuk",date:"Mart 2026",
+     title:"AB AI Kanunu Yürürlükte: Şirketler Hazırlanıyor",
+     desc:"Avrupa Birliği'nin AI Kanunu tam anlamıyla yürürlüğe girdi. Türk şirketleri AB pazarı için uyum sürecini başlattı.",
+     url:"https://www.euronews.com/tech"},
+    {id:15,icon:"🎨",source:"Adobe Blog",color:"#ff6b6b",cat:"Araçlar",date:"Şubat 2026",
+     title:"Adobe Firefly 3: Photoshop'ta AI Devrimi",
+     desc:"Adobe Firefly 3 ile Photoshop'ta nesneler silinebiliyor, arka planlar değiştirilebiliyor. Telif güvenli görseller.",
+     url:"https://blog.adobe.com/"},
+  ];
 
-// 4. ARAÇ DETAY SAYFASI
-function ToolDetailPage({toolKey,setPage}){
-  const t=TOOL_DETAILS[toolKey];
-  if(!t) return <div style={{padding:"60px 20px",textAlign:"center",color:"#475569"}}>Araç bulunamadı.</div>;
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <button onClick={()=>setPage("dizin")} style={{fontSize:11,color:"#475569",background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:7,padding:"6px 12px",cursor:"pointer",fontFamily:"inherit",marginBottom:20}}>← Araç Dizinine Dön</button>
-    {/* Header */}
-    <div style={{background:`linear-gradient(135deg,${t.color}08,transparent)`,border:`1px solid ${t.color}22`,borderRadius:18,padding:"26px",marginBottom:20}}>
-      <div style={{display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
-        <div style={{fontSize:52}}>{t.icon}</div>
-        <div style={{flex:1}}>
-          <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:6,flexWrap:"wrap"}}>
-            <div style={{fontSize:22,fontWeight:900,color:t.color}}>{t.name}</div>
-            <Tag text={t.tag} color={t.color}/>{t.sponsor&&<Tag text="⭐ Sponsorlu" color="#fb923c"/>}
-          </div>
-          <div style={{fontSize:13,color:"#94a3b8",marginBottom:10}}>{t.tagline}</div>
-          <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-            {[[t.users,"Kullanıcı"],[t.price,"Fiyat"],[t.free?"Ücretsiz plan":"Ücretli","Plan"]].map(([v,l])=>(
-              <div key={l}><div style={{fontSize:9,color:"#475569"}}>{l}</div><div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{v}</div></div>
-            ))}
-            <div style={{fontSize:11,fontWeight:700,color:t.color,display:"flex",alignItems:"center"}}>★ {t.score}/100</div>
-          </div>
-        </div>
-        <a href={t.url} target="_blank" rel="noopener noreferrer" style={{padding:"12px 24px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${t.color},${t.color}88)`,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",textDecoration:"none",whiteSpace:"nowrap"}}>Hemen Dene →</a>
-      </div>
-      <div style={{marginTop:14,fontSize:12,color:"#64748b",lineHeight:1.7}}>{t.desc}</div>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14,marginBottom:20}}>
-      {/* Özellikler */}
-      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>⚡ Öne Çıkan Özellikler</div>
-        {t.features.map(f=><div key={f} style={{display:"flex",gap:8,fontSize:12,color:"#94a3b8",marginBottom:7}}><span style={{color:t.color,flexShrink:0}}>✓</span>{f}</div>)}
-      </div>
-      {/* Pros & Cons */}
-      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#34d399",marginBottom:10}}>✅ Güçlü Yönler</div>
-        {t.pros.map(p=><div key={p} style={{display:"flex",gap:8,fontSize:11,color:"#94a3b8",marginBottom:6}}><span style={{color:"#34d399",flexShrink:0}}>+</span>{p}</div>)}
-        <div style={{height:1,background:"rgba(255,255,255,0.06)",margin:"12px 0"}}/>
-        <div style={{fontSize:13,fontWeight:700,color:"#f472b6",marginBottom:10}}>❌ Zayıf Yönler</div>
-        {t.cons.map(c=><div key={c} style={{display:"flex",gap:8,fontSize:11,color:"#94a3b8",marginBottom:6}}><span style={{color:"#f472b6",flexShrink:0}}>–</span>{c}</div>)}
-      </div>
-    </div>
-    {/* Nasıl Kullanılır */}
-    <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px",marginBottom:16}}>
-      <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>📋 Nasıl Kullanılır?</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
-        {t.howto.map((h,i)=>(
-          <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-            <div style={{width:20,height:20,borderRadius:"50%",background:`${t.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:t.color,flexShrink:0,fontWeight:700,marginTop:1}}>{i+1}</div>
-            <span style={{fontSize:11,color:"#94a3b8",lineHeight:1.5}}>{h}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-    {/* Prompt örnekleri */}
-    <div style={{background:`${t.color}06`,border:`1px solid ${t.color}18`,borderRadius:14,padding:"18px",marginBottom:16}}>
-      <div style={{fontSize:13,fontWeight:700,color:t.color,marginBottom:12}}>💡 Hazır Prompt Örnekleri</div>
-      {t.prompts.map((p,i)=>(
-        <div key={i} style={{background:"rgba(0,0,0,0.35)",borderRadius:9,padding:"10px 12px",marginBottom:8,fontSize:11,color:"#94a3b8",fontStyle:"italic",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
-          <span style={{lineHeight:1.6}}>"{p}"</span>
-          <button onClick={()=>navigator.clipboard?.writeText(p)} style={{flexShrink:0,padding:"3px 8px",borderRadius:5,border:"none",background:t.color+"22",color:t.color,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>Kopyala</button>
-        </div>
-      ))}
-    </div>
-    {/* Alternatifler & Affiliate */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"16px"}}>
-        <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:10}}>🔄 Alternatifler</div>
-        {t.alternatives.map(a=><div key={a} style={{fontSize:11,color:"#64748b",marginBottom:6,padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{a}</div>)}
-      </div>
-      <div style={{background:`${t.color}06`,border:`1px solid ${t.color}18`,borderRadius:12,padding:"16px"}}>
-        <div style={{fontSize:12,fontWeight:700,color:t.color,marginBottom:8}}>💰 Fiyat Notu</div>
-        <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:12}}>{t.affiliateNote}</div>
-        <a href={t.url} target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"10px",borderRadius:8,border:"none",background:`linear-gradient(135deg,${t.color},${t.color}88)`,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",textDecoration:"none",textAlign:"center"}}>Ücretsiz Dene →</a>
-      </div>
-    </div>
-  </div>;
-}
+  const cats=['hepsi',...new Set(NEWS.map(n=>n.cat))];
+  const filtered=tab==='hepsi'?NEWS:NEWS.filter(n=>n.cat===tab);
 
-// 5. GALERİ SAYFASI
-function GaleriPage(){
-  const[filter,setFilter]=useState("Tümü");
-  const cats=["Tümü",...[...new Set(GALLERY.map(g=>g.cat))]];
-  const filtered=GALLERY.filter(g=>filter==="Tümü"||g.cat===filter);
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>GALERİ</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🎨 AI Görsel Galerisi</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>Gerçek AI çıktıları — prompt'ları ile birlikte. Türkçe ile de deneyin!</div></div>
-    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
-      {cats.map(c=><button key={c} onClick={()=>setFilter(c)} style={{padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontFamily:"inherit",background:filter===c?"rgba(244,114,182,0.15)":"rgba(255,255,255,0.04)",color:filter===c?"#f472b6":"#475569"}}>{c}</button>)}
+  return <div style={{maxWidth:1000,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#ff4444',marginBottom:4}}>AI HABER MERKEZİ — SEÇİLMİŞ İÇERİKLER</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 6px'}}>📰 AI Haberleri</h1>
+      <p style={{fontSize:12,color:'#64748b',margin:'0 0 10px'}}>Anthropic · OpenAI · Google · TechCrunch · MIT Tech Review · Wired — seçilmiş AI gündemi</p>
+      <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+        {[...new Set(NEWS.map(n=>n.source))].slice(0,8).map(s=>{
+          const item=NEWS.find(n=>n.source===s);
+          return <a key={s} href={item.url} target="_blank" rel="noopener noreferrer"
+            style={{fontSize:9,color:item.color,background:item.color+'12',border:'1px solid '+item.color+'25',borderRadius:4,padding:'2px 7px',textDecoration:'none',fontWeight:600}}>{item.icon} {s}</a>;
+        })}
+      </div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14}}>
-      {filtered.map((g,i)=>(
-        <div key={i} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${g.color}18`,borderRadius:14,overflow:"hidden"}}>
-          <div style={{background:`linear-gradient(135deg,${g.color}25,rgba(0,0,0,0.6))`,paddingTop:"70%",position:"relative"}}>
-            <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:60}}>{g.emoji}</div>
-            <div style={{position:"absolute",top:8,left:8}}><Tag text={g.cat} color={g.color} size={8}/></div>
-            <div style={{position:"absolute",bottom:8,right:8}}><Tag text={g.tool} color="#475569" size={8}/></div>
-          </div>
-          <div style={{padding:"14px"}}>
-            <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>{g.title}</div>
-            <div style={{fontSize:11,color:"#64748b",lineHeight:1.6,marginBottom:10}}>{g.desc}</div>
-            <div style={{background:"rgba(0,0,0,0.4)",borderRadius:8,padding:"9px 10px"}}>
-              <div style={{fontSize:9,color:"#475569",marginBottom:4,letterSpacing:".08em"}}>PROMPT:</div>
-              <div style={{fontSize:10,color:"#94a3b8",lineHeight:1.5,fontFamily:"monospace"}}>{g.prompt}</div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-    <div style={{marginTop:24,background:"rgba(244,114,182,0.06)",border:"1px solid rgba(244,114,182,0.2)",borderRadius:14,padding:"18px",textAlign:"center"}}>
-      <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>🎨 Kendi AI Görselini Paylaş</div>
-      <div style={{fontSize:12,color:"#64748b",marginBottom:12}}>Midjourney, DALL-E veya başka AI araçlarıyla yaptığın görseli Instagram'da @imdatai etiketle. En iyiler galeride yayınlanır!</div>
-      <a href="https://instagram.com/imdatai" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"9px 20px",borderRadius:9,border:"none",background:"linear-gradient(135deg,#f09433,#dc2743,#bc1888)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",textDecoration:"none"}}>
-        <IG/>&nbsp; @imdatai'yi Takip Et
-      </a>
-    </div>
-  </div>;
-}
 
-// 6. TOPLULUK / PROMPT PAYLAŞIM
-function ToplulukPage(){
-  const[prompts,setPrompts]=useState(COMMUNITY_PROMPTS);
-  const[liked,setLiked]=useState({});
-  const[newP,setNewP]=useState({title:"",cat:"Kod",prompt:""});
-  const[submitted,setSubmitted]=useState(false);
-  function like(i){if(liked[i])return;setLiked(l=>({...l,[i]:true}));setPrompts(ps=>ps.map((p,idx)=>idx===i?{...p,likes:p.likes+1}:p));}
-  function submit(){if(newP.title&&newP.prompt){setPrompts(ps=>[{user:"Sen",avatar:"⭐",cat:newP.cat,title:newP.title,prompt:newP.prompt,likes:0,uses:0,date:"Az önce"},...ps]);setSubmitted(true);setNewP({title:"",cat:"Kod",prompt:""}); setTimeout(()=>setSubmitted(false),3000);}}
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{marginBottom:22}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>TOPLULUK</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>💬 Prompt Kütüphanesi</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>Topluluktan en iyi promptlar — paylaş, beğen, kullan</div></div>
-    {/* Prompt ekle */}
-    <div style={{background:"rgba(52,211,153,0.06)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:16,padding:"20px",marginBottom:24}}>
-      <div style={{fontSize:13,fontWeight:700,color:"#34d399",marginBottom:14}}>➕ Yeni Prompt Paylaş</div>
-      {submitted?<div style={{fontSize:13,color:"#34d399",fontWeight:600,textAlign:"center",padding:"10px"}}>✅ Promptun eklendi! Teşekkürler.</div>:(
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:10}}>
-            <input style={{background:"rgba(0,0,0,0.4)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:8,color:"#e2e8f0",padding:"9px 12px",fontSize:12,fontFamily:"inherit",outline:"none"}} placeholder="Prompt başlığı..." value={newP.title} onChange={e=>setNewP(p=>({...p,title:e.target.value}))}/>
-            <select style={{background:"rgba(0,0,0,0.4)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:8,color:"#e2e8f0",padding:"9px 12px",fontFamily:"inherit",fontSize:12,outline:"none"}} value={newP.cat} onChange={e=>setNewP(p=>({...p,cat:e.target.value}))}>
-              {["Kod","İçerik","İş","Araştırma","Eğitim","Yazarlık","Verimlilik"].map(c=><option key={c}>{c}</option>)}
-            </select>
-          </div>
-          <textarea style={{width:"100%",minHeight:80,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:8,color:"#e2e8f0",padding:"9px 12px",fontSize:12,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box"}} placeholder="Prompt metnini yaz... (Köşeli parantez [] içine değiştirilebilir alanları yaz)" value={newP.prompt} onChange={e=>setNewP(p=>({...p,prompt:e.target.value}))}/>
-          <button onClick={submit} disabled={!newP.title||!newP.prompt} style={{padding:"10px 22px",borderRadius:9,border:"none",background:!newP.title||!newP.prompt?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#34d399,#059669)",color:"#fff",fontSize:12,fontWeight:700,cursor:!newP.title||!newP.prompt?"not-allowed":"pointer",fontFamily:"inherit",width:"fit-content"}}>Paylaş →</button>
-        </div>
-      )}
+    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
+      {cats.map(c=><button key={c} onClick={()=>setTab(c)}
+        style={{padding:'5px 12px',borderRadius:7,border:'1px solid '+(tab===c?'rgba(255,68,68,0.4)':'rgba(255,255,255,0.07)'),
+          background:tab===c?'rgba(255,68,68,0.1)':'transparent',
+          color:tab===c?'#ff4444':'#64748b',fontSize:10,cursor:'pointer',fontFamily:'inherit'}}>
+        {c}
+      </button>)}
     </div>
-    {/* Prompt listesi */}
-    <div style={{display:"flex",flexDirection:"column",gap:12}}>
-      {prompts.map((p,i)=>(
-        <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <span style={{fontSize:18}}>{p.avatar}</span>
-              <div><div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{p.title}</div><div style={{fontSize:10,color:"#475569"}}>{p.user} · {p.date}</div></div>
-            </div>
-            <Tag text={p.cat} color="#34d399" size={9}/>
+
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))',gap:14}}>
+      {filtered.map(item=><div key={item.id}
+        style={{background:item.color+'06',border:'1px solid '+item.color+'18',borderRadius:13,overflow:'hidden',transition:'all .2s'}}
+        onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.borderColor=item.color+'40';}}
+        onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.borderColor=item.color+'18';}}>
+        <div style={{height:4,background:'linear-gradient(90deg,'+item.color+',transparent)'}}/>
+        <div style={{padding:'14px'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+            <span style={{fontSize:9,color:item.color,background:item.color+'15',borderRadius:4,padding:'2px 8px',fontWeight:700}}>{item.icon} {item.source}</span>
+            <span style={{fontSize:9,color:'#334155'}}>{item.date}</span>
           </div>
-          <div style={{background:"rgba(0,0,0,0.35)",borderRadius:9,padding:"10px 12px",fontSize:12,color:"#94a3b8",lineHeight:1.6,marginBottom:10,fontStyle:"italic",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
-            <span>"{p.prompt}"</span>
-            <button onClick={()=>navigator.clipboard?.writeText(p.prompt)} style={{flexShrink:0,padding:"3px 8px",borderRadius:5,border:"none",background:"rgba(52,211,153,0.15)",color:"#34d399",fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>Kopyala</button>
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div style={{fontSize:11,color:"#475569"}}>{p.date}</div>
-            <button onClick={()=>like(i)} style={{padding:"5px 12px",borderRadius:7,border:`1px solid rgba(244,114,182,${liked[i]?0.5:0.2})`,background:liked[i]?"rgba(244,114,182,0.12)":"transparent",color:liked[i]?"#f472b6":"#475569",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
-              ❤️{liked[i]?" ✓":""}
+          <div style={{fontSize:13,fontWeight:700,color:'#e2e8f0',lineHeight:1.4,marginBottom:8}}>{item.title}</div>
+          <div style={{fontSize:11,color:'#64748b',lineHeight:1.6,marginBottom:12}}>{item.desc}</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <a href={item.url} target="_blank" rel="noopener noreferrer"
+              style={{fontSize:10,color:item.color,textDecoration:'none',fontWeight:700}}>Kaynağa Git →</a>
+            <button onClick={()=>toggleLike(item.id)}
+              style={{background:'none',border:'1px solid '+(likes[item.id]?item.color+'60':'rgba(255,255,255,0.08)'),
+                borderRadius:8,padding:'4px 12px',cursor:'pointer',
+                color:likes[item.id]?item.color:'#475569',fontSize:12,transition:'all .2s'}}>
+              {likes[item.id]?'❤️':'🤍'}
             </button>
           </div>
         </div>
-      ))}
-    </div>
-  </div>;
-}
-
-// 7. QUIZ SAYFASI
-function QuizPage(){
-  const[idx,setIdx]=useState(0);const[sel,setSel]=useState(null);const[score,setScore]=useState(0);const[done,setDone]=useState(false);const[answers,setAnswers]=useState([]);
-  function choose(i){if(sel!==null)return;setSel(i);const correct=i===QUIZ_DATA[idx].ans;if(correct)setScore(s=>s+1);setAnswers(a=>[...a,{q:QUIZ_DATA[idx].q,correct,chosen:i,right:QUIZ_DATA[idx].ans}]);}
-  function next(){if(idx+1>=QUIZ_DATA.length)setDone(true);else{setIdx(i=>i+1);setSel(null);}}
-  function restart(){setIdx(0);setSel(null);setScore(0);setDone(false);setAnswers([]);}
-  const q=QUIZ_DATA[idx];
-  if(done) return <div style={{padding:"40px 20px",maxWidth:600,margin:"0 auto",textAlign:"center"}}>
-    <div style={{fontSize:48,marginBottom:12}}>{score>=5?"🏆":score>=3?"😊":"📚"}</div>
-    <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",marginBottom:8}}>{score}/{QUIZ_DATA.length} Doğru!</div>
-    <div style={{fontSize:13,color:"#64748b",marginBottom:20,lineHeight:1.7}}>{score>=5?"Mükemmel! AI konusunda gerçek bir uzman sayılırsın.":score>=3?"İyi gidiyorsun. Sözlük ve blog yazılarımızla bilgini derinleştir.":"AI dünyası hızlı değişiyor. Öğrenme merkezimize göz at!"}</div>
-    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
-      {answers.map((a,i)=><div key={i} style={{background:a.correct?"rgba(52,211,153,0.08)":"rgba(244,114,182,0.08)",border:`1px solid ${a.correct?"rgba(52,211,153,0.2)":"rgba(244,114,182,0.2)"}`,borderRadius:10,padding:"10px 14px",textAlign:"left",fontSize:11,color:"#94a3b8"}}>{a.correct?"✅":"❌"} {a.q}</div>)}
-    </div>
-    <button onClick={restart} style={{padding:"12px 28px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Tekrar Dene</button>
-  </div>;
-  return <div style={{padding:"28px 20px",maxWidth:620,margin:"0 auto"}}>
-    <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>AI QUIZ</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🧠 AI Bilgi Testi</div></div>
-    <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}>
-      <Tag text={`Soru ${idx+1}/${QUIZ_DATA.length}`} color="#00dcff"/>
-      <div style={{display:"flex",gap:4}}>{QUIZ_DATA.map((_,i)=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:i<idx?"#34d399":i===idx?"#00dcff":"rgba(255,255,255,0.1)"}}/>)}</div>
-      <Tag text={`${score} doğru`} color="#34d399"/>
-    </div>
-    <div style={{background:"rgba(0,220,255,0.04)",border:"1px solid rgba(0,220,255,0.15)",borderRadius:14,padding:"20px",marginBottom:16}}>
-      <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",lineHeight:1.5}}>{q.q}</div>
-    </div>
-    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-      {q.opts.map((o,i)=>{
-        const isCorrect=i===q.ans; const isChosen=i===sel;
-        let bg="rgba(255,255,255,0.03)"; let border="rgba(255,255,255,0.1)"; let color="#94a3b8";
-        if(sel!==null){if(isCorrect){bg="rgba(52,211,153,0.1)";border="#34d399";color="#34d399";}else if(isChosen&&!isCorrect){bg="rgba(244,114,182,0.1)";border="#f472b6";color="#f472b6";}}
-        return <button key={i} onClick={()=>choose(i)} disabled={sel!==null} style={{padding:"13px 16px",borderRadius:10,border:`1px solid ${border}`,background:bg,color,fontSize:13,cursor:sel!==null?"default":"pointer",fontFamily:"inherit",textAlign:"left",transition:"all .15s",fontWeight:isChosen||isCorrect?700:400}}>
-          {sel!==null&&isCorrect?"✅ ":sel!==null&&isChosen&&!isCorrect?"❌ ":""}{String.fromCharCode(65+i)}. {o}
-        </button>;
-      })}
-    </div>
-    {sel!==null&&<div style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:14}}>
-      <div style={{fontSize:11,color:"#a855f7",fontWeight:700,marginBottom:4}}>💡 Açıklama</div>
-      <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6}}>{q.exp}</div>
-    </div>}
-    {sel!==null&&<button onClick={next} style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{idx+1>=QUIZ_DATA.length?"Sonuçları Gör":"Sonraki Soru →"}</button>}
-  </div>;
-}
-
-// 8. ARAÇ DİZİNİ (affiliate + sponsor rozetli)
-function DizinPage({setPage}){
-  const[ac,setAc]=useState("cursor");const[s,setS]=useState("");
-  const tools=Object.values(TOOL_DETAILS);
-  const filtered=s?tools.filter(t=>t.name.toLowerCase().includes(s.toLowerCase())):tools;
-  const allCats=[{id:"sohbet",icon:"💬",label:"Sohbet AI",color:"#00dcff",tools:["ChatGPT","Claude","Gemini","Grok","Perplexity","DeepSeek"]},{id:"gorsel",icon:"🎨",label:"Görsel AI",color:"#f472b6",tools:["Midjourney","DALL-E 3","Firefly","Stable Diffusion"]},{id:"video",icon:"🎬",label:"Video AI",color:"#a855f7",tools:["Sora","HeyGen","Runway","Pika","Kling"]},{id:"ses",icon:"🔊",label:"Ses AI",color:"#34d399",tools:["ElevenLabs","Suno","Udio","Murf"]},{id:"kod",icon:"💻",label:"Kod AI",color:"#fb923c",tools:["Cursor","Copilot","Claude Code","Replit","v0"]},{id:"sunum",icon:"📊",label:"Sunum AI",color:"#60a5fa",tools:["Gamma","Canva AI","Beautiful.ai","Tome"]},{id:"arastirma",icon:"📚",label:"Araştırma",color:"#00dcff",tools:["Perplexity","NotebookLM","Elicit","Consensus"]},{id:"otomasyon",icon:"⚙️",label:"Otomasyon",color:"#a855f7",tools:["n8n","Make","Zapier","AutoGPT"]}];
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>ARAÇ DİZİNİ</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🌐 AI Araç Dizini</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>Detaylı sayfalar · Affiliate linkler · Sponsor içerikler</div></div>
-    {/* Detaylı araçlar */}
-    <div style={{marginBottom:24}}>
-      <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>⭐ Detaylı İncelenen Araçlar</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
-        {Object.entries(TOOL_DETAILS).map(([key,t])=>(
-          <div key={key} onClick={()=>setPage(`tool-${key}`)} style={{background:`${t.color}06`,border:`1px solid ${t.color}18`,borderRadius:13,padding:"14px",cursor:"pointer",transition:"all .15s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:22}}>{t.icon}</span><div style={{display:"flex",gap:3,flexWrap:"wrap",justifyContent:"flex-end"}}>{t.sponsor&&<Tag text="Sponsorlu" color="#fb923c" size={8}/>}<Tag text={`★ ${t.score}`} color={t.color} size={8}/></div></div>
-            <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:2}}>{t.name}</div>
-            <div style={{fontSize:10,color:"#475569",marginBottom:6}}>{t.tag}</div>
-            <div style={{fontSize:10,color:t.free?"#34d399":"#fb923c",marginBottom:8}}>{t.free?"✓ Ücretsiz plan":"Ücretli"}</div>
-            <div style={{fontSize:11,color:t.color,fontWeight:600}}>Detaylı İncele →</div>
-          </div>
-        ))}
-      </div>
-    </div>
-    {/* Tüm kategoriler */}
-    <div>
-      <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>🗂️ 8 Kategoride Tüm Araçlar</div>
-      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:14}}>
-        {allCats.map(c=><button key={c.id} onClick={()=>setAc(c.id)} style={{padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontFamily:"inherit",background:ac===c.id?`${c.color}18`:"rgba(255,255,255,0.04)",color:ac===c.id?c.color:"#475569"}}>{c.icon} {c.label}</button>)}
-      </div>
-      {allCats.filter(c=>c.id===ac).map(cat=>(
-        <div key={cat.id} style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8}}>
-          {cat.tools.map(name=>{const detail=Object.values(TOOL_DETAILS).find(t=>t.name===name);return(
-            <div key={name} onClick={()=>detail&&setPage(`tool-${Object.keys(TOOL_DETAILS).find(k=>TOOL_DETAILS[k].name===name)}`)} style={{background:`${cat.color}06`,border:`1px solid ${cat.color}18`,borderRadius:10,padding:"12px",cursor:"pointer",transition:"all .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=cat.color+"44"} onMouseLeave={e=>e.currentTarget.style.borderColor=cat.color+"18"}>
-              <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:3}}>{name}</div>
-              {detail&&<><div style={{fontSize:9,color:cat.color}}>★ {detail.score}</div><div style={{fontSize:9,color:detail.free?"#34d399":"#fb923c",marginTop:2}}>{detail.free?"Ücretsiz":"Ücretli"}</div></>}
-              {detail&&<div style={{fontSize:9,color:cat.color,marginTop:4}}>Detay →</div>}
-            </div>
-          );})}
-        </div>
-      ))}
-    </div>
-  </div>;
-}
-
-// 9. OYUN (AI mı İnsan mı?)
-function OyunPage(){
-  const GAME=[
-    {text:"Güneş batarken denizin mavisi, gökyüzünün turuncusuyla dans ederken, sahilde yürüyen iki sevgili ellerini tutmuş uzaklara bakıyordu.",isAI:true,reveal:"ChatGPT (GPT-5.5) yazdı",hint:"Mükemmel akış ve klişe metafor AI izlenimi veriyor"},
-    {text:"Bugün patronumla kötü bir gün geçirdim. Toplantıda fikirlerim alınmadı, eve gelince çantamı köşeye fırlattım. Zaten her şey böyle gidiyor.",isAI:false,reveal:"Gerçek Twitter kullanıcısı yazdı",hint:"Düzensiz anlatım ve duygusal patlama insan izlenimi"},
-    {text:"Kuantum mekaniği, parçacıkların aynı anda birden fazla durumda bulunabildiği fikrini içerir. Schrödinger'in kedisi bu ilkeyi simgeler.",isAI:true,reveal:"Claude Opus 4.7 yazdı",hint:"Ansiklopedik netlik ve doğru referans AI izlenimi"},
-    {text:"Arkadaşım 3 yıldır borçlu. 500 lira için bozuşmak olmaz ama bu ilk kez değil. Ne yapayım bilmiyorum.",isAI:false,reveal:"Gerçek Ekşi Sözlük entry'si",hint:"Spesifik rakam ve sosyal dilema tipik insan yazısı"},
-    {text:"Bu pasta tarifini deneyin. Malzemeler: 200g un, 3 yumurta, 150g şeker. Önce kuru malzemeleri karıştırın, ardından yaş malzemeleri ekleyin.",isAI:true,reveal:"Gemini 2.5 Pro yazdı",hint:"Kusursuz ölçüler ve mükemmel format AI izlenimi"},
-    {text:"Bunu yazan sen misin? Yok artık emin misin? Bir daha bak bence. Ben sana söyledim hep ama dinlemedin işte.",isAI:false,reveal:"Gerçek WhatsApp mesajı",hint:"Kesik cümleler ve tekrar eden ifadeler insan yazısı"},
-    {text:"Yapay zekanın 2026'daki en önemli gelişmesi, çok ajanlı sistemlerin gerçek dünya görevlerinde otonom olarak çalışabilmesidir.",isAI:true,reveal:"ChatGPT (GPT-5.5) yazdı",hint:"Akademik ton, kesin tarih ve teknik terim AI izlenimi"},
-    {text:"Bugün market alışverişi yaparken fiyatlara baktım. Geçen ay 200 liraydı şimdi 350. İnsanlar nasıl geçiniyor anlayamıyorum.",isAI:false,reveal:"Gerçek Facebook yorumu",hint:"Şikayet tonu, kişisel deneyim ve belirsiz karşılaştırma"},
-    {text:"İstanbul'un kalabalık sokaklarında, tarih ile modernliğin iç içe geçtiği o eşsiz atmosfer, ziyaretçileri büyülemeye devam etmektedir.",isAI:true,reveal:"Claude Opus 4.7 yazdı",hint:"Resmi dil, akıcı cümle yapısı ve evrensel genelleme"},
-    {text:"Kapı komşumuz her gece müzik açıyor. Defalarca söyledim ama ne fayda. Apartman yönetimine yazsam mı acaba.",isAI:false,reveal:"Gerçek bir forum yazısı",hint:"Pratik sorun arayışı ve kararsızlık insan özelliği"},
-    {text:"Türkiye ekonomisi, 2025 yılında %4.2 büyüme oranıyla beklentilerin üzerinde bir performans sergiledi.",isAI:true,reveal:"Gemini 2.5 Pro yazdı",hint:"İstatistik, kesin rakam ve nesnel sunum AI izlenimi"},
-    {text:"Sabah 6'da uyandım, spor yapmaya karar verdim ama yataktan kalkmak zor oldu. Yarın kesinlikle yapacağım diyorum yine.",isAI:false,reveal:"Gerçek Instagram hikayesi",hint:"Erteleme davranışı ve özeleştiri çok insani bir özellik"},
-  ];
-  const[idx,setIdx]=useState(0);const[ans,setAns]=useState(null);const[score,setScore]=useState({d:0,w:0});const[done,setDone]=useState(false);
-  const g=GAME[idx];
-  function guess(isAI){const c=isAI===g.isAI;if(c)setScore(s=>({...s,d:s.d+1}));else setScore(s=>({...s,w:s.w+1}));setAns({correct:c});}
-  function next(){setAns(null);if(idx+1>=GAME.length)setDone(true);else setIdx(i=>i+1);}
-  function restart(){setIdx(0);setAns(null);setScore({d:0,w:0});setDone(false);}
-  if(done) return <div style={{padding:"60px 20px",textAlign:"center",maxWidth:500,margin:"0 auto"}}>
-    <div style={{fontSize:48,marginBottom:12}}>{score.d>=5?"🏆":score.d>=3?"😊":"😅"}</div>
-    <div style={{fontSize:22,fontWeight:900,color:"#e2e8f0",marginBottom:8}}>Oyun Bitti!</div>
-    <div style={{fontSize:14,color:"#64748b",marginBottom:8}}>{score.d}/{GAME.length} doğru</div>
-    <div style={{fontSize:12,color:"#94a3b8",marginBottom:24,lineHeight:1.7}}>{score.d>=5?"Harika! AI metinlerini tanımada uzmansın.":score.d>=3?"Fena değil. AI giderek daha inandırıcı oluyor.":"AI artık insanlardan ayırt edilemez hale geliyor!"}</div>
-    <button onClick={restart} style={{padding:"12px 28px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#f472b6,#e11d48)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Tekrar Oyna</button>
-  </div>;
-  return <div style={{padding:"28px 20px",maxWidth:660,margin:"0 auto"}}>
-    <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#f472b6",marginBottom:5}}>🎮 İNTERAKTİF OYUN</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🤖 AI mi Yazdı, İnsan mı?</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>Tahmin et — AI metinleri ne kadar insan gibi?</div></div>
-    <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(244,114,182,0.2)",borderRadius:16,padding:"24px"}}>
-      <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}><Tag text={`Soru ${idx+1}/${GAME.length}`} color="#f472b6"/><div style={{display:"flex",gap:12}}><span style={{fontSize:13,color:"#34d399",fontWeight:700}}>✓ {score.d}</span><span style={{fontSize:13,color:"#f472b6",fontWeight:700}}>✗ {score.w}</span></div></div>
-      <div style={{background:"rgba(0,0,0,0.4)",borderRadius:12,padding:"20px",marginBottom:20,fontSize:14,color:"#cbd5e1",lineHeight:1.9,fontStyle:"italic",borderLeft:"3px solid rgba(244,114,182,0.4)"}}>{g.text}</div>
-      {!ans?(
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <button onClick={()=>guess(true)} style={{padding:"14px",borderRadius:11,border:"2px solid rgba(0,220,255,0.3)",background:"rgba(0,220,255,0.06)",color:"#00dcff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🤖 AI Yazdı</button>
-          <button onClick={()=>guess(false)} style={{padding:"14px",borderRadius:11,border:"2px solid rgba(168,85,247,0.3)",background:"rgba(168,85,247,0.06)",color:"#a855f7",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>👤 İnsan Yazdı</button>
-        </div>
-      ):(
-        <div>
-          <div style={{background:ans.correct?"rgba(52,211,153,0.1)":"rgba(244,114,182,0.1)",border:`1px solid ${ans.correct?"#34d399":"#f472b6"}`,borderRadius:12,padding:"16px",marginBottom:14}}>
-            <div style={{fontSize:15,fontWeight:800,color:ans.correct?"#34d399":"#f472b6",marginBottom:8}}>{ans.correct?"✅ Doğru!":"❌ Yanlış!"}</div>
-            <div style={{fontSize:12,color:"#e2e8f0",fontWeight:600,marginBottom:6}}>{g.reveal}</div>
-            <div style={{fontSize:11,color:"#64748b"}}>💡 {g.hint}</div>
-          </div>
-          <button onClick={next} style={{width:"100%",padding:"13px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#f472b6,#e11d48)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{idx+1>=GAME.length?"Sonuçları Gör":"Sonraki →"}</button>
-        </div>
-      )}
-    </div>
-  </div>;
-}
-
-// Diğer basit sayfalar (Haberler, Para, Hakkımızda, vs.)
-function HaberlerPage({setPage}){return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}><div style={{marginBottom:22}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>HABERLER</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>📰 AI Haberleri</div></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))",gap:13}}>{NEWS.map((n,i)=><Card key={i} color={n.color} style={{padding:"19px"}} onClick={()=>{}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><Tag text={n.tag} color={n.color}/>{n.hot&&<Tag text="🔥" color="#ff6b6b" size={8}/>}</div><div style={{fontSize:20,marginBottom:8}}>{n.emoji}</div><div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",marginBottom:7,lineHeight:1.4}}>{n.title}</div><div style={{fontSize:12,color:"#64748b",lineHeight:1.65,marginBottom:11}}>{n.desc}</div><div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#334155"}}><span>📰 {n.src}</span><span>{n.time} · {n.read}</span></div></Card>)}</div></div>;}
-function ParaPage(){
-  const[aktif,setAktif]=useState(0);
-  const yollar=[
-    {
-      icon:"✍️",baslik:"AI İçerik Üreticisi",kazanc:"₺5.000 - ₺30.000/ay",sure:"2-4 hafta",seviye:"Başlangıç",renk:"#00dcff",
-      ozet:"YouTube, blog, Instagram ve TikTok'ta AI araçlarıyla içerik üret. Reklam geliri + sponsorluk + affiliate ile para kazan.",
-      gercekOrnek:"Ahmet, yazılım blog'u açtı. ChatGPT ile haftada 5 makale üretiyor. 6 ayda 12.000 aylık okuyucu, Google AdSense'den aylık ₺3.500 kazanıyor.",
-      adimlar:[
-        {no:1,baslik:"Niş Seç",aciklama:"Para kazanan niş seç: Fintech, sağlık, eğitim, teknoloji. Çok geniş değil, çok dar değil. 'AI araçları' iyi bir niş."},
-        {no:2,baslik:"Platform Belirle",aciklama:"YouTube: Reklam geliri en yüksek. Blog: SEO ile organik trafik. Instagram/TikTok: Hızlı büyüme. En az 2 platform."},
-        {no:3,baslik:"AI Workflow Kur",aciklama:"ChatGPT ile konu araştır → Claude ile yaz → Canva AI ile görsel yap → Buffer ile paylaş. Günde 2 saat yeterli."},
-        {no:4,baslik:"İlk 1000 Takipçi",aciklama:"Nişindeki topluluklarda yorum yap, değer katacak içerikler paylaş, tutarlı ol. 60-90 gün sabret."},
-        {no:5,baslik:"Monetizasyon",aciklama:"YouTube: 1000 abone + 4000 saat → AdSense. Blog: AdSense + affiliate. Instagram: 10K+ → sponsorluk."},
-      ],
-      araclar:["ChatGPT (içerik)","Claude (uzun yazı)","Canva AI (görsel)","ElevenLabs (ses)","Buffer (planlama)"],
-      kazancDetay:"Başlangıç: ₺500-2000/ay | Orta: ₺3000-10000/ay | İleri: ₺15000-30000+/ay",
-      affiliateler:["Google AdSense","Amazon Associates","Cursor affiliate ($20/referral)","ElevenLabs affiliate"]
-    },
-    {
-      icon:"💻",baslik:"AI Freelancer / Yazılımcı",kazanc:"₺8.000 - ₺50.000/ay",sure:"4-8 hafta",seviye:"Orta",renk:"#a855f7",
-      ozet:"Cursor ve Claude Code ile kod 3x hızlı yaz, aynı sürede 3x fazla proje teslim et. Upwork ve Fiverr'de AI uzmanı olarak markalaş.",
-      gercekOrnek:"Mert, web geliştirici. Cursor kullanmaya başladıktan sonra proje teslim süresini %60 kısalttı. Aynı ücretle 2.5x fazla proje alıyor. Aylık geliri ₺8.000'den ₺22.000'e çıktı.",
-      adimlar:[
-        {no:1,baslik:"Cursor'ı Öğren",aciklama:"cursor.com'dan indir, 3 gün kullan. Tab tamamlama, Ctrl+K ile düzenleme, Ctrl+L ile chat. 1 haftada ustalaşırsın."},
-        {no:2,baslik:"Portföy Güncelle",aciklama:"GitHub profilini güncelle. 'AI-assisted development' uzmanlığını öne çıkar. 3 showcase proje hazırla."},
-        {no:3,baslik:"Upwork/Fiverr Profil",aciklama:"'AI-powered web development' başlığıyla profil oluştur. İlk 5 müşteriyi düşük fiyatla al, yorumları topla."},
-        {no:4,baslik:"Hızlı Teslim Avantajı",aciklama:"'3 günde teslim' yaz. AI sayesinde bunu gerçekten yapabilirsin. Hız en büyük fark yaratıcın."},
-        {no:5,baslik:"Fiyat Artır",aciklama:"10 iyi yorum sonrası %30-50 fiyat artır. AI kullandığını söyleme — hızlı ve kaliteli iş yaptığını söyle."},
-      ],
-      araclar:["Cursor (kod)","Claude Code (ajan)","GitHub Copilot (tamamlama)","v0.dev (UI)","Replit (hızlı prototip)"],
-      kazancDetay:"Junior: ₺8000-15000/ay | Mid: ₺15000-30000/ay | Senior: ₺30000-50000+/ay",
-      affiliateler:["Cursor affiliate","GitHub Copilot","Replit affiliate"]
-    },
-    {
-      icon:"🎨",baslik:"AI Görsel Tasarım Servisi",kazanc:"₺3.000 - ₺20.000/ay",sure:"1-2 hafta",seviye:"Kolay",renk:"#f472b6",
-      ozet:"Midjourney ve Adobe Firefly ile logo, sosyal medya görseli, ürün fotoğrafı ve sunum tasarımı sat. Türkiye'de bu servise büyük talep var.",
-      gercekOrnek:"Zeynep, grafik tasarımcı. Midjourney'i öğrendikten sonra logo paketini ₺150'den ₺500'e çıkardı. Aylık 25 logo yapıyor, ₺12.500 kazanıyor. Tasarım süresi: logo başına 45 dakika.",
-      adimlar:[
-        {no:1,baslik:"Araçları Öğren",aciklama:"Midjourney ($10/ay): En yüksek kalite. DALL-E 3 (ücretsiz ChatGPT ile): Metinli görseller. Adobe Firefly: Ticari kullanım güvenli."},
-        {no:2,baslik:"Hizmet Paketi Oluştur",aciklama:"Logo paketi: ₺300-600. Sosyal medya paketi: ₺800-2000/ay. Sunum tasarımı: ₺500-1500. Ürün fotoğrafı: ₺200-500/ürün."},
-        {no:3,baslik:"Fiverr/Bionluk Profil",aciklama:"'AI-powered logo design' kategorisinde profil aç. İlk 3 müşteriye %50 indirim yap, portfolio doldur."},
-        {no:4,baslik:"LinkedIn Pazarlama",aciklama:"Before/after görseller paylaş. 'AI ile 3 günde logo tasarladım' içerikleri çok ilgi çekiyor. Organik trafik gelir."},
-        {no:5,baslik:"Kurumsal Müşteri",aciklama:"KOBİ'lere aylık sosyal medya paketi sat. ₺1500-3000/ay, düzenli gelir. 5 müşteri = ₺10.000+/ay."},
-      ],
-      araclar:["Midjourney (yaratıcı)","Adobe Firefly (ticari)","Canva AI (düzenleme)","DALL-E 3 (metin)","Remove.bg (arkaplan)"],
-      kazancDetay:"Başlangıç: ₺2000-5000/ay | Orta: ₺8000-15000/ay | Kurumsal: ₺15000-20000+/ay",
-      affiliateler:["Midjourney referral","Adobe affiliate","Canva affiliate ($36/referral)"]
-    },
-    {
-      icon:"📚",baslik:"AI Eğitim & Danışmanlık",kazanc:"₺5.000 - ₺80.000/ay",sure:"4-8 hafta",seviye:"Orta",renk:"#34d399",
-      ozet:"Şirketlere ve bireylere AI araçları eğitimi ver. Türkiye'de AI eğitimi talebi 2023'e göre 10x arttı ama eğitimci sayısı çok az.",
-      gercekOrnek:"Elif, eski bir pazarlamacı. 3 aylık AI öğrenimiyle kurumsal eğitimci oldu. Şirket başına ₺5.000-15.000 workshop ücreti alıyor. Ayda 4 eğitim = ₺25.000+.",
-      adimlar:[
-        {no:1,baslik:"Uzmanlık Seç",aciklama:"'AI ile pazarlama', 'AI ile müşteri hizmetleri', 'AI ile yazılım geliştirme'. Genel değil, sektör spesifik ol."},
-        {no:2,baslik:"Kurs İçeriği Hazırla",aciklama:"ChatGPT ile 10 modüllük müfredat hazırla. Gamma ile sunum yap. Her modül: teori + pratik + ödev."},
-        {no:3,baslik:"Udemy / Kendi Sitesi",aciklama:"Udemy: Hızlı erişim, düşük fiyat. Kendi sitesi: Yüksek marj. İkisini birden yap. Udemy ile müşteri çek, siteye taşı."},
-        {no:4,baslik:"LinkedIn İçerik",aciklama:"Haftada 3 AI ipucu paylaş. 'Şirketinizde AI nasıl kullanılır' konusunda yaz. Organik inbound müşteri gelir."},
-        {no:5,baslik:"Kurumsal Satış",aciklama:"LinkedIn'de İK ve eğitim müdürlerine ulaş. 1 saatlik ücretsiz demo sun. Teklif kabul oranı %30-40."},
-      ],
-      araclar:["ChatGPT (müfredat)","Gamma (sunum)","Loom (video kayıt)","Notion (materyal)","Zoom (eğitim)"],
-      kazancDetay:"Online Kurs: ₺2000-8000/ay | Workshop: ₺5000-15000/etkinlik | Kurumsal: ₺20000-80000/ay",
-      affiliateler:["Udemy affiliate","Teachable affiliate","Notion affiliate"]
-    },
-    {
-      icon:"🔧",baslik:"AI Otomasyon Servisi",kazanc:"₺10.000 - ₺60.000/ay",sure:"6-12 hafta",seviye:"Orta-İleri",renk:"#fb923c",
-      ozet:"n8n ve Make ile şirketlerin tekrarlayan süreçlerini otomatize et. E-ticaret, muhasebe, müşteri hizmetleri — her sektörde talep var.",
-      gercekOrnek:"Burak, n8n kullanarak bir e-ticaret firmasına sipariş-kargo-müşteri bildirim akışını otomatize etti. 3 haftalık iş: ₺18.000. Bakım sözleşmesi: ₺3.000/ay.",
-      adimlar:[
-        {no:1,baslik:"n8n Öğren",aciklama:"n8n.io'da ücretsiz hesap aç. YouTube'da 'n8n tutorial' ara. 2 haftada temel workflow'ları yapabilirsin."},
-        {no:2,baslik:"Nişini Belirle",aciklama:"E-ticaret otomasyonu (sipariş, kargo, iade). Müşteri hizmetleri (ticket yönetimi). Pazarlama (lead nurturing)."},
-        {no:3,baslik:"Case Study Hazırla",aciklama:"Kendi projeni veya ücretsiz yaptığın ilk işi case study yap: 'X şirketi Y saati kurtardı, Z TL tasarruf etti.'"},
-        {no:4,baslik:"Fiyatlandırma",aciklama:"Proje bazlı: ₺5000-20000. Aylık retainer: ₺2000-5000. Tasarruf bazlı: 'Şirkete kazandırdığımın %20'si.'"},
-        {no:5,baslik:"Müşteri Bul",aciklama:"LinkedIn'de operasyon müdürlerine ulaş. 'İş süreçlerinizi otomatize ediyorum' mesajı gönder. Demo teklif et."},
-      ],
-      araclar:["n8n (otomasyon)","Make (görsel)","Zapier (kolay)","ChatGPT API","Airtable (veri)"],
-      kazancDetay:"Küçük proje: ₺5000-15000 | Büyük proje: ₺20000-60000 | Retainer: ₺3000-8000/ay",
-      affiliateler:["n8n affiliate","Make affiliate","Zapier affiliate"]
-    },
-    {
-      icon:"💡",baslik:"Prompt Mühendisi",kazanc:"₺15.000 - ₺60.000/ay",sure:"1-3 ay",seviye:"Orta",renk:"#60a5fa",
-      ozet:"Şirketlere özel AI prompt sistemleri tasarla. ChatGPT ve Claude'u şirketin iş süreçlerine entegre et. 2026'nın en hızlı büyüyen mesleği.",
-      gercekOrnek:"Kerem, bir sigorta şirketine müşteri hizmetleri prompt sistemi kurdu. 6 haftalık çalışma: ₺25.000. Şirket 4 çağrı merkezi çalışanı yerine sistemi kullanıyor.",
-      adimlar:[
-        {no:1,baslik:"Prompt Tekniklerini Öğren",aciklama:"Zero-shot, few-shot, chain of thought, role prompting. IMDATAI'nin prompt rehberini oku. 2 hafta yeterli."},
-        {no:2,baslik:"Sektör Seç",aciklama:"Hukuk, finans, sağlık, e-ticaret, müşteri hizmetleri. Sektör bilgin olan yerde başla. Derin domain bilgisi fark yaratır."},
-        {no:3,baslik:"Test Sistemi Kur",aciklama:"100 farklı girdi ile test et. Başarı oranını ölç. Müşteriye 'X% doğruluk oranı' sunabilmek için gerekli."},
-        {no:4,baslik:"Portföy Hazırla",aciklama:"3 farklı sektörden örnek prompt sistemi yap. GitHub'a yükle. 'AI Prompt Engineer' LinkedIn başlığı ekle."},
-        {no:5,baslik:"Danışmanlık Sat",aciklama:"Küçük şirketlere: ₺5000-10000. Orta ölçekli: ₺15000-30000. Kurumsal: ₺30000+. Bakım: ₺2000-5000/ay."},
-      ],
-      araclar:["ChatGPT (test)","Claude (karmaşık)","Gemini (araştırma)","LangChain (sistem)","PostHog (analitik)"],
-      kazancDetay:"Junior: ₺15000-25000/ay | Mid: ₺25000-45000/ay | Senior: ₺45000-60000+/ay",
-      affiliateler:["Anthropic referral","OpenAI referral","LangChain affiliate"]
-    },
-  ];
-  const aktifYol=yollar[aktif];
-  return <div style={{padding:"28px 20px",maxWidth:960,margin:"0 auto"}}>
-    <div style={{marginBottom:24}}>
-      <div style={{fontSize:9,letterSpacing:".2em",color:"#34d399",marginBottom:5}}>PARA KAZAN</div>
-      <div style={{fontSize:24,fontWeight:900,color:"#e2e8f0",marginBottom:8}}>💰 AI ile Para Kazanmanın 6 Gerçekçi Yolu</div>
-      <div style={{fontSize:13,color:"#64748b",lineHeight:1.7}}>Türkiye'de AI bilen profesyonel sayısı hâlâ çok az. Bu pencere kapanmadan başla. Her yol için gerçek örnek, adım adım rehber ve kazanç detayları.</div>
+      </div>)}
     </div>
 
-    {/* Uyarı kutusu */}
-    <div style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.25)",borderRadius:13,padding:"16px 20px",marginBottom:24,display:"flex",gap:14,alignItems:"flex-start"}}>
-      <span style={{fontSize:24,flexShrink:0}}>🇹🇷</span>
-      <div>
-        <div style={{fontSize:13,fontWeight:700,color:"#34d399",marginBottom:4}}>Neden Şimdi?</div>
-        <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.7}}>Türkiye AI trafiğinde dünya #1 (%94.49) ama AI bilen uzman sayısı çok az. 2024'e göre AI meslek ilanları %340 arttı. 2027'de bu avantaj kapanmaya başlayacak. Şimdi başla.</div>
-      </div>
-    </div>
-
-    {/* Yol seçici */}
-    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:20}}>
-      {yollar.map((y,i)=>(
-        <button key={i} onClick={()=>setAktif(i)} style={{padding:"8px 14px",borderRadius:10,border:`1px solid ${aktif===i?y.renk+"60":"rgba(255,255,255,0.08)"}`,background:aktif===i?`${y.renk}12`:"rgba(255,255,255,0.02)",color:aktif===i?y.renk:"#64748b",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:aktif===i?700:400,display:"flex",alignItems:"center",gap:6}}>
-          <span>{y.icon}</span><span>{y.baslik}</span>
-        </button>
-      ))}
-    </div>
-
-    {/* Aktif yol detayı */}
-    <div style={{background:`${aktifYol.renk}06`,border:`1px solid ${aktifYol.renk}22`,borderRadius:16,overflow:"hidden"}}>
-      {/* Header */}
-      <div style={{background:`${aktifYol.renk}10`,padding:"22px 24px",borderBottom:`1px solid ${aktifYol.renk}18`}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-          <div style={{display:"flex",gap:14,alignItems:"center"}}>
-            <span style={{fontSize:40}}>{aktifYol.icon}</span>
-            <div>
-              <div style={{fontSize:20,fontWeight:900,color:"#e2e8f0",marginBottom:4}}>{aktifYol.baslik}</div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                <span style={{fontSize:10,background:`${aktifYol.renk}20`,color:aktifYol.renk,padding:"3px 10px",borderRadius:6,fontWeight:700}}>{aktifYol.seviye}</span>
-                <span style={{fontSize:10,background:"rgba(255,255,255,0.06)",color:"#94a3b8",padding:"3px 10px",borderRadius:6}}>⏱ {aktifYol.sure} başlangıç</span>
-              </div>
-            </div>
-          </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:22,fontWeight:900,color:aktifYol.renk}}>{aktifYol.kazanc}</div>
-            <div style={{fontSize:10,color:"#64748b",marginTop:2}}>aylık potansiyel</div>
-          </div>
-        </div>
-        <div style={{marginTop:14,fontSize:13,color:"#94a3b8",lineHeight:1.7}}>{aktifYol.ozet}</div>
-      </div>
-
-      <div style={{padding:"22px 24px"}}>
-        {/* Gerçek örnek */}
-        <div style={{background:"rgba(0,0,0,0.3)",border:`1px solid ${aktifYol.renk}20`,borderRadius:12,padding:"16px",marginBottom:20}}>
-          <div style={{fontSize:11,color:aktifYol.renk,fontWeight:700,marginBottom:8,letterSpacing:".1em"}}>💬 GERÇEK ÖRNEK</div>
-          <div style={{fontSize:13,color:"#e2e8f0",lineHeight:1.8,fontStyle:"italic"}}>"{aktifYol.gercekOrnek}"</div>
-        </div>
-
-        {/* Adımlar */}
-        <div style={{marginBottom:20}}>
-          <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>📋 Adım Adım Başlangıç Rehberi</div>
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            {aktifYol.adimlar.map(a=>(
-              <div key={a.no} style={{display:"flex",gap:14,alignItems:"flex-start",background:"rgba(255,255,255,0.02)",borderRadius:10,padding:"14px"}}>
-                <div style={{width:28,height:28,borderRadius:"50%",background:`${aktifYol.renk}20`,border:`2px solid ${aktifYol.renk}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:aktifYol.renk,flexShrink:0}}>{a.no}</div>
-                <div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:4}}>{a.baslik}</div>
-                  <div style={{fontSize:12,color:"#64748b",lineHeight:1.7}}>{a.aciklama}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Alt bilgiler */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
-          <div style={{background:"rgba(255,255,255,0.02)",borderRadius:12,padding:"16px"}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:10}}>🛠️ Kullanacağın Araçlar</div>
-            {aktifYol.araclar.map(a=><div key={a} style={{fontSize:11,color:"#64748b",marginBottom:6,display:"flex",gap:8}}><span style={{color:aktifYol.renk,flexShrink:0}}>→</span>{a}</div>)}
-          </div>
-          <div style={{background:"rgba(255,255,255,0.02)",borderRadius:12,padding:"16px"}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:10}}>📈 Kazanç Detayı</div>
-            <div style={{fontSize:12,color:"#64748b",lineHeight:1.8,marginBottom:10}}>{aktifYol.kazancDetay}</div>
-            <div style={{fontSize:11,fontWeight:700,color:aktifYol.renk,marginBottom:6}}>💸 Affiliate Fırsatları:</div>
-            {aktifYol.affiliateler.map(a=><div key={a} style={{fontSize:11,color:"#64748b",marginBottom:4,display:"flex",gap:6}}><span style={{color:"#34d399",flexShrink:0}}>✓</span>{a}</div>)}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Hızlı başlangıç */}
-    <div style={{marginTop:24,background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.06))",border:"1px solid rgba(0,220,255,0.15)",borderRadius:14,padding:"20px 24px"}}>
-      <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>⚡ Bu Hafta Başlamak İçin 3 Adım</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
-        {[
-          {no:"1",yazi:"Bugün: ChatGPT veya Claude'a ücretsiz kaydol, 30 dakika dene",renk:"#00dcff"},
-          {no:"2",yazi:"Bu hafta: Seçtiğin gelir yolunun ilk adımını yap (hesap aç, profil oluştur)",renk:"#a855f7"},
-          {no:"3",yazi:"Bu ay: İlk müşterini bul veya ilk içeriğini yayınla. Mükemmel değil, başlamış ol.",renk:"#34d399"},
-        ].map(a=>(
-          <div key={a.no} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-            <div style={{width:24,height:24,borderRadius:"50%",background:`${a.renk}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:a.renk,flexShrink:0}}>{a.no}</div>
-            <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6}}>{a.yazi}</div>
-          </div>
+    <div style={{marginTop:20,padding:'14px',background:'rgba(255,255,255,0.02)',borderRadius:10,border:'1px solid rgba(255,255,255,0.06)',textAlign:'center'}}>
+      <div style={{fontSize:10,color:'#334155',marginBottom:8}}>📡 Canlı AI haberleri için bu kaynakları takip edin</div>
+      <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+        {[['🌐 Google AI Haberleri','https://news.google.com/search?q=artificial+intelligence&hl=tr'],
+          ['📰 TechCrunch AI','https://techcrunch.com/category/artificial-intelligence/'],
+          ['🤗 Hugging Face Blog','https://huggingface.co/blog'],
+          ['🧠 Anthropic News','https://www.anthropic.com/news'],
+          ['🌊 Mistral News','https://mistral.ai/news/']].map(([n,u])=>(
+          <a key={n} href={u} target="_blank" rel="noopener noreferrer"
+            style={{fontSize:10,color:'#64748b',border:'1px solid rgba(255,255,255,0.08)',borderRadius:7,padding:'5px 10px',textDecoration:'none'}}>{n}</a>
         ))}
       </div>
     </div>
   </div>;
 }
 
-function HakkimizdaPage(){return <div style={{padding:"28px 20px",maxWidth:800,margin:"0 auto"}}><div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>HAKKIMIZDA</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>⬡ IMDATAI Kimdir?</div></div><div style={{background:"linear-gradient(135deg,rgba(0,220,255,0.06),rgba(168,85,247,0.06))",border:"1px solid rgba(0,220,255,0.15)",borderRadius:16,padding:"24px",marginBottom:20}}><div style={{fontSize:14,color:"#94a3b8",lineHeight:1.9}}>IMDATAI, Türkiye'de yapay zeka okuryazarlığını artırmak için kuruldu. 2026'da Türkiye AI trafiğinde dünya birincisi olduğunda bir şeyi fark ettik: Türkçe, kapsamlı ve güvenilir bir AI kaynağı yok. IMDATAI bu boşluğu doldurmak için burada.</div></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>{[{icon:"🎯",t:"Doğruluk",d:"Her içeriği doğruluyoruz."},{icon:"🇹🇷",t:"Türkçe Önce",d:"Çeviri değil, orijinal Türkçe."},{icon:"🆓",t:"Erişilebilirlik",d:"Temel içerik her zaman ücretsiz."},{icon:"⚡",t:"Hız",d:"AI dünyası hızlı, biz de."}].map(v=><div key={v.t} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:13,padding:"16px"}}><div style={{fontSize:22,marginBottom:8}}>{v.icon}</div><div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>{v.t}</div><div style={{fontSize:11,color:"#64748b"}}>{v.d}</div></div>)}</div></div>;}
+function BlogPage({setPage}){
+  const[sel,setSel]=useState(null);
+  const[activeCat,setActiveCat]=useState('Tümü');
+
+  const POSTS=[
+    {id:1,cat:"Model Rehberi",color:"#a855f7",icon:"🧠",hot:true,
+     title:"Claude AI Nedir? 2026 Tam Türkçe Rehberi",
+     summary:"Anthropic'in en gelişmiş AI modeli Claude'u her yönüyle anlatan kapsamlı rehber.",
+     content:`Claude, San Francisco merkezli Anthropic şirketi tarafından geliştirilen yapay zeka asistanıdır. 2026 yılı itibarıyla Claude Sonnet 4.5 ve Claude Opus 4.5 modelleriyle piyasanın en güçlü AI'larından biri konumundadır.
+
+**Claude'un Güçlü Yönleri**
+
+Claude'u diğer AI modellerinden ayıran en önemli özellik Constitutional AI yaklaşımıdır. Bu yöntemle model, etik ilkeleri içselleştirerek yanıt üretir. Sonuç: daha güvenilir, daha az yanıltıcı çıktılar.
+
+• **Kodlama:** SWE-bench'te %72.5 başarı — endüstri standardının üzerinde
+• **Context Window:** 200.000 token — yaklaşık 500 sayfalık kitap
+• **Dil:** Türkçe dahil 30+ dil, yüksek kalite
+• **Araç Kullanımı:** Web arama, kod çalıştırma, dosya analizi
+
+**Claude vs ChatGPT vs Gemini**
+
+| Özellik | Claude | ChatGPT | Gemini |
+|---------|--------|---------|--------|
+| Kodlama | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Türkçe | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Güvenlik | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Context | 200K | 128K | 2M |
+
+**Claude Nasıl Kullanılır?**
+
+1. claude.ai adresine gidin
+2. Ücretsiz hesap oluşturun
+3. Claude Sonnet 4.5'e ücretsiz erişin
+4. Pro plan ($20/ay) ile Opus'a geçin
+
+**En İyi Prompt Teknikleri**
+
+"XML tag kullanın" → <task>, <context>, <format> etiketleriyle Claude çok daha iyi sonuç üretir. "Adım adım düşün" → Karmaşık problemlerde chain-of-thought aktive edin. "Rol ver" → "Sen kıdemli bir yazılım mühendisisin" gibi rol tanımları kaliteyi artırır.`},
+
+    {id:2,cat:"Prompt",color:"#00dcff",icon:"💡",hot:true,
+     title:"İleri Seviye Prompt Mühendisliği: 2026 Teknikleri",
+     summary:"Chain of Thought, Tree of Thoughts, Self-Consistency ve daha fazlası.",
+     content:`Prompt mühendisliği artık bir kariyer. 2026'da en iyi AI sonuçlarını almak için bilmeniz gereken 10 teknik:
+
+**1. Chain of Thought (CoT) Prompting**
+
+"Adım adım düşünerek yanıtla" cümlesi modeli akıl yürütmeye zorlar. Matematik ve mantık problemlerinde %40+ iyileşme sağlar.
+
+Kötü: "45 × 37 kaçtır?"
+İyi: "45 × 37'yi adım adım hesapla. Önce 40×37, sonra 5×37, ardından topla."
+
+**2. Few-Shot Learning**
+
+Modele 2-3 örnek vererek istediğiniz formatı öğretin.
+
+"Email yaz:
+Örnek 1: [örnek] → [sonuç]
+Örnek 2: [örnek] → [sonuç]
+Şimdi şunu yaz: [asıl istek]"
+
+**3. XML Tag Kullanımı (Claude için önemli)**
+
+<task>Türkçe bir ürün açıklaması yaz</task>
+<product>Kablosuz kulaklık</product>
+<tone>Profesyonel, enerjik</tone>
+<length>150 kelime</length>
+
+**4. Role Prompting**
+
+"Sen 10 yıllık deneyimli bir [MESLEK]sın. [GÖREV] konusunda uzman tavsiyesi ver."
+
+**5. Constitutional Prompting**
+
+Yanıta dahil edilmesini İSTEDİKLERİNİZİ ve İSTEMEDİKLERİNİZİ açıkça belirtin.
+
+**6. Tree of Thoughts**
+
+"Bu problemi çözmek için 3 farklı yaklaşım öner. Her birini değerlendir. En iyisini seç ve uygula."
+
+**7. Self-Consistency**
+
+Aynı soruyu 3 farklı şekilde sor, en tutarlı yanıtı kullan.
+
+**8. Prompt Chaining**
+
+Büyük görevi küçük parçalara böl. Her parçanın çıktısı sonrakinin girdisi olsun.
+
+**9. Negative Prompting**
+
+"Şunu YAPMA: tekrar etme, özür dileme, belirsiz ol."
+
+**10. Structured Output**
+
+"JSON formatında yanıtla: {başlık, özet, maddeler:[], puan}"
+
+Bu 10 tekniği uygulayanlar rakiplerine göre 3-5x daha iyi AI sonuçları alıyor.`},
+
+    {id:3,cat:"Karşılaştırma",color:"#34d399",icon:"🆚",hot:true,
+     title:"ChatGPT vs Claude vs Gemini 2026: 10 Kategoride Test",
+     summary:"Hangi AI modeli ne için en iyi? Gerçek test sonuçları.",
+     content:`2026 yılında 3 büyük AI modeli olan ChatGPT, Claude ve Gemini'yi 10 kategoride test ettik. İşte şaşırtıcı sonuçlar:
+
+**TEST 1: Türkçe Metin Kalitesi**
+🥇 ChatGPT — Doğal Türkçe, deyimler mükemmel
+🥈 Claude — Çok iyi ama bazen Yabancı kelimeler
+🥉 Gemini — İyi ama bazen robotik
+
+**TEST 2: Kod Yazma (Python)**
+🥇 Claude — %92 başarı, temiz kod, yorum açıklamaları
+🥈 ChatGPT — %89 başarı
+🥉 Gemini — %85 başarı
+
+**TEST 3: Matematik (Olimpiyat Seviye)**
+🥇 Claude — %78 başarı
+🥈 ChatGPT — %74 başarı
+🥉 Gemini — %71 başarı
+
+**TEST 4: Yaratıcı Yazarlık**
+🥇 Claude — En özgün, en az klişe
+🥈 ChatGPT — İyi ama benzer yapılar
+🥉 Gemini — Yeterli
+
+**TEST 5: Uzun Döküman Analizi**
+🥇 Gemini — 2M token, rakipsiz
+🥈 Claude — 200K token, yüksek kalite
+🥉 ChatGPT — 128K token
+
+**TEST 6: Gerçek Zamanlı Bilgi**
+🥇 ChatGPT — Web arama entegreli
+🥈 Gemini — Google entegrasyonu
+🥉 Claude — Güncel arama sınırlı
+
+**TEST 7: API Fiyat/Performans**
+🥇 DeepSeek — 1/10 maliyetle benzer kalite
+🥈 Gemini Flash — Ucuz ve hızlı
+🥉 Mistral — GDPR uyumlu, uygun fiyat
+
+**TEST 8: Güvenlik ve Güvenilirlik**
+🥇 Claude — Constitutional AI, en az hallüsinasyon
+🥈 ChatGPT — İyi ama bazen uydurma
+🥉 Gemini — Gelişiyor
+
+**TEST 9: Çok Modlu Anlayış (Görsel)**
+🥇 Gemini — En güçlü görsel analiz
+🥈 ChatGPT — DALL-E entegrasyonu
+🥉 Claude — Temel görsel anlama
+
+**TEST 10: Kullanım Kolaylığı**
+🥇 ChatGPT — En geniş kullanıcı tabanı
+🥈 Claude — Sezgisel arayüz
+🥉 Gemini — Google entegrasyonu
+
+**GENEL SONUÇ:**
+- Kod & Analiz → Claude
+- Türkçe & Günlük → ChatGPT
+- Uzun Döküman → Gemini
+- Maliyet → DeepSeek`},
+
+    {id:4,cat:"Görsel AI",color:"#f472b6",icon:"🎨",hot:false,
+     title:"Midjourney v7 Türkçe Rehberi: Fotogerçekçi Görseller",
+     summary:"Midjourney v7 ile %94 fotogerçekçilik. Prompt teknikleri ve parametreler.",
+     content:`Midjourney v7, yapay zeka görsel üretiminde yeni bir çığır açtı. İnsan fotoğraflarından neredeyse ayırt edilemez görseller üretebiliyor.
+
+**Başlamak için:**
+1. discord.com'a girin, Midjourney sunucusuna katılın
+2. /imagine komutuyla prompt yazın
+3. Ya da midjourney.com web arayüzünü kullanın (daha kolay)
+
+**Temel Parametreler:**
+- --ar 16:9 → yatay format
+- --ar 9:16 → dikey (sosyal medya)
+- --q 2 → yüksek kalite
+- --style raw → daha gerçekçi
+- --v 7 → en yeni versiyon
+
+**Fotogerçekçi Portre Promptu:**
+"Professional headshot of a 35-year-old Turkish businessman, natural lighting, Sony A7R camera, 85mm lens, shallow depth of field, corporate office background --ar 3:4 --style raw --v 7"
+
+**Ürün Fotoğrafçılığı:**
+"Minimalist product photo of [ÜRÜN], white background, studio lighting, commercial photography style, 8k resolution --ar 1:1 --v 7"
+
+**Manzara:**
+"Aerial view of Istanbul at golden hour, Bosphorus Bridge, dramatic clouds, hyperrealistic photography --ar 16:9 --style raw --v 7"
+
+**Türkçe Prompt Çalışır mı?**
+Evet! "Güneş batımında İstanbul silüeti, hiperrealitik" gibi Türkçe promptlar çalışır ama İngilizce daha iyi sonuç verir.
+
+**Alternatifler:**
+- DALL-E 3 (ChatGPT içinde) → daha kolay, Türkçe destekli
+- Adobe Firefly → telif güvenli görseller
+- Stable Diffusion → ücretsiz, yerel kurulum
+- Leonardo AI → oyun ve karakter tasarımı`},
+
+    {id:5,cat:"Kariyer",color:"#fbbf24",icon:"💰",hot:true,
+     title:"AI ile Ayda 30.000₺ Kazanmak: Gerçek Yollar",
+     summary:"Türkiye'de AI ile para kazanmanın 7 kanıtlanmış yöntemi.",
+     content:`Yapay zeka alanında Türkiye'de gerçekten para kazanılabilir mi? Evet — ama doğru strateji gerekli.
+
+**1. Prompt Mühendisliği Hizmeti**
+Şirketlere ChatGPT/Claude prompt'larını optimize etme hizmeti verin.
+→ Proje başına 500-5.000₺
+→ Müşteri bulma: LinkedIn, Upwork, yerel network
+→ Gerekli: iyi İngilizce + AI bilgisi
+
+**2. AI Destekli İçerik Üretimi**
+Blog yazıları, sosyal medya içerikleri, ürün açıklamaları.
+→ 1.000 kelime makale: 300-800₺
+→ AI ile 10x daha hızlı üretim
+→ Kalite kontrolü siz yapın
+
+**3. AI Chatbot Kurulumu**
+Şirketlere özel chatbot entegrasyonu.
+→ Proje başına 5.000-25.000₺
+→ Araçlar: Botpress, Voiceflow, n8n
+→ Gerekli: temel programlama bilgisi
+
+**4. Midjourney / DALL-E Hizmeti**
+Markalara özel AI görseli üretimi.
+→ Ürün başına 200-1.000₺
+→ Talep: e-ticaret, reklam ajansları
+→ Portfolyo oluşturun
+
+**5. AI Eğitim ve Workshop**
+Şirket çalışanlarına AI kullanım eğitimi.
+→ Günlük workshop: 3.000-10.000₺
+→ Online kurs: Udemy, Hotmart
+→ Gerekli: sunum becerisi
+
+**6. AI SEO Danışmanlığı**
+AI araçlarıyla web sitesi içerik stratejisi.
+→ Aylık retainer: 5.000-15.000₺
+→ Araçlar: Surfer SEO, Jasper, Claude
+→ Yüksek talep var
+
+**7. Freelance AI Geliştirici**
+Upwork ve Fiverr'da AI projeleri.
+→ Saat ücreti: $15-50
+→ LangChain, OpenAI API, Python
+→ İngilizce şart
+
+**Başlangıç için önerim:**
+Hemen bir alan seçin, 1 ay boyunca günde 2 saat pratik yapın, ilk müşteriyi ücretsiz alın, referans oluşturun.`},
+
+    {id:6,cat:"Güvenlik",color:"#ff4444",icon:"🛡️",hot:false,
+     title:"AI Dolandırıcılığından Korunma Rehberi 2026",
+     summary:"Deepfake, ses klonlama ve AI phishing'e karşı pratik koruma yöntemleri.",
+     content:`2026'da AI tabanlı dolandırıcılık vakalarında rekor artış var. İşte bilmeniz gerekenler:
+
+**En Yaygın AI Dolandırıcılıkları**
+
+**1. Ses Klonlama**
+Dolandırıcılar 3 saniyelik ses kaydından birisinin sesini kopyalayabiliyor.
+"Annenin" sesi sizi arayıp para isteyebilir.
+
+Korunma: Aileyle özel "güvenlik kelimesi" belirleyin. Şüpheli aramalarda kapatıp geri arayın.
+
+**2. Video Deepfake**
+Tanıdık birisinin yüzü sahte videoya yapıştırılıyor.
+WhatsApp video araması bile sahte olabilir.
+
+Korunma: Canlı aramada beklenmedik hareketler isteyin (el sallama, gözlük çıkarma).
+
+**3. AI Phishing E-posta**
+Mükemmel Türkçe, kişiselleştirilmiş sahte e-postalar.
+Banka, vergi, kargo bildirimlerine dikkat.
+
+Korunma: Link'e tıklamadan önce gönderici adresini kontrol edin. Şüpheyi kuruma doğrudan arayın.
+
+**4. Romantik AI Dolandırıcılığı**
+Sosyal medyada AI ile üretilmiş sahte profiller.
+Güven inşa edip para isteme.
+
+Korunma: Video görüntülü görüşme isteyin. Banka havalesi yapmayın.
+
+**Kendinizi Test Edin:**
+Bu URL'ye gidin: deepware.ai — yüklediğiniz videonun deepfake olup olmadığını kontrol eder.
+
+**Acil Durum:**
+Dolandırıcılık mağduru olduysanız: Türkiye'de 155 (polis) veya Siber Suçlar birimi: https://www.sibergüvenlik.gov.tr`},
+
+    {id:7,cat:"Teknik",color:"#00dcff",icon:"⚡",hot:false,
+     title:"Claude Code ile 1 Saatte Gerçek Uygulama Geliştirme",
+     summary:"Cursor + Claude Sonnet: sıfır deneyimle çalışan web uygulaması.",
+     content:`"Kod bilmiyorum ama uygulama yapmak istiyorum." 2026'da bu artık bir engel değil.
+
+**Araçlar**
+- Cursor (cursor.sh) — AI destekli kod editörü, ücretsiz
+- Claude Sonnet 4.5 — en iyi kodlama AI
+- Vercel — ücretsiz deployment
+
+**Adım Adım: Todo Uygulaması**
+
+**Adım 1:** Cursor'u indirin ve kurun (5 dk)
+
+**Adım 2:** Cursor'da Ctrl+K yapın, şunu yazın:
+"React ile basit bir todo uygulaması yap. Görev ekleyebilme, tamamlama işareti koyabilme, silme. Tailwind CSS kullan. Türkçe arayüz."
+
+**Adım 3:** Claude kodu üretir. "Çalıştır" deyin.
+
+**Adım 4:** Sorun varsa hatayı kopyalayın ve Claude'a yapıştırın: "Bu hatayı düzelt: [HATA]"
+
+**Adım 5:** Vercel'e yükleyin (ücretsiz):
+\`npm install -g vercel\`
+\`vercel deploy\`
+
+**Sonuç:** 45 dakikada canlı uygulama.
+
+**Daha İleri:**
+- "Kullanıcı girişi ekle" → Clerk.dev entegrasyonu
+- "Veritabanı ekle" → Supabase (ücretsiz)
+- "Ödeme sistemi" → Stripe entegrasyonu
+
+**Dikkat edilecekler:**
+Claude'un ürettiği kodu anlamaya çalışın. Körce kopyalamayın. Her değişikliğin ne yaptığını sorun.`},
+  ];
+
+  const cats=['Tümü',...new Set(POSTS.map(p=>p.cat)),
+    {id:8,cat:"Araçlar",color:"#34d399",icon:"⌨️",hot:true,
+     title:"Cursor IDE ile Yapay Zeka Destekli Kodlama Rehberi",
+     summary:"Kodu 3x hızlı yazın. Cursor + Claude kombinasyonu ile gerçek proje.",
+     content:`Cursor, yapay zeka ile entegre bir kod editörüdür. VS Code tabanlıdır ve 2026 itibarıyla yapay zeka destekli kodlamada endüstri standardı haline gelmiştir.
+
+**Cursor Neden Özel?**
+
+Tab ile kod tamamlama: Cursor yazmak istediğinizi tahmin eder. Tab'a basarsanız kabul edersiniz.
+Ctrl+K: Seçili kodu yapay zekaya gönderin. "Bu fonksiyonu TypeScript'e çevir" gibi.
+Ctrl+L: Chat paneli açar. Tüm proje bağlamıyla konuşun.
+
+**Hangi AI Modeli Kullanılır?**
+
+Claude Sonnet 4.5 → Kod yazma ve analiz için en iyi
+GPT-4o → Alternatif, genel görevler
+Gemini → Büyük codebase analizi
+
+**Kurulum (5 Dakika):**
+
+1. cursor.com adresinden indirin
+2. VS Code eklentilerinizi import edin (otomatik)
+3. GitHub hesabıyla giriş yapın
+4. Ctrl+L ile Claude'a "Merhaba" deyin
+
+**En İyi Kullanım Senaryoları:**
+
+Yeni özellik eklemek: "Authentication sistemine Google OAuth ekle"
+Bug düzeltmek: Hata mesajını kopyalayın, Cursor'a yapıştırın
+Refactoring: "Bu 200 satırı daha temiz yaz"
+Test yazmak: "Bu fonksiyon için Jest testleri yaz"
+Dokümantasyon: "Bu API endpoint'lerini Markdown'da belgele"
+
+**Ücretsiz vs Pro:**
+
+Ücretsiz: 2000 tamamlama, 50 yavaş sorgu/ay
+Pro ($20/ay): Sınırsız tamamlama, hızlı sorgular, Claude Opus erişimi
+
+**Cursor + AI İpuçları:**
+
+.cursorrules dosyası oluşturun: Projeye özel kurallar belirtin.
+@codebase kullanın: Tüm projeyi bağlam olarak ekler.
+@web kullanın: Güncel dokümantasyonu çeker.`},
+
+    {id:9,cat:"Araçlar",color:"#a855f7",icon:"🔍",hot:true,
+     title:"Perplexity AI: Google'a Meydan Okuyan AI Arama Motoru",
+     summary:"Kaynak gösteren, özetleyen, yanıtlayan. Araştırma için neden Perplexity?",
+     content:`Perplexity AI, geleneksel arama motorlarından farklı olarak size doğrudan yanıt verir ve kaynaklarını gösterir. 2026 itibarıyla günlük 10 milyon+ sorgu işlemektedir.
+
+**Perplexity vs Google:**
+
+Google: Bağlantı listesi verir, siz araştırırsınız.
+Perplexity: Tüm kaynakları okur, size özetini sunar. Kaynakları gösterir.
+
+**Ne Zaman Kullanılır?**
+
+Hızlı araştırma: "Tesla Model 3'ün 2026 fiyatı nedir?"
+Güncel bilgi: Modelin bilgi kesme tarihi yoktur, canlı web'den çeker.
+Akademik: "RAG sistemlerindeki son gelişmeler neler?"
+Alışveriş: "En iyi mekanik klavye 2026 karşılaştırması"
+
+**Pro Özellikleri (Ücretsiz Limiti Var):**
+
+Spaces: Konuya özel koleksiyonlar
+Collections: Araştırma dosyaları
+Claude/GPT-4 ile sorgulama
+
+**Türkçe Performans:**
+
+Türkçe sorgular çok iyi çalışır. "Yapay zeka haber 2026" gibi sorgular Türkçe kaynakları da tarar.
+
+**Perplexity API:**
+
+Geliştiriciler için API mevcut. RAG sistemi kurmak yerine Perplexity kullanabilirsiniz.`},
+
+    {id:10,cat:"Araçlar",color:"#fbbf24",icon:"📓",hot:false,
+     title:"Google NotebookLM: Dokümanlarınızı Konuşturun",
+     summary:"PDF yükleyin, podcast oluşturun, soru sorun. Tamamen ücretsiz.",
+     content:`NotebookLM, Google'ın 2024'te çıkardığı ve 2026'da Türkiye'de popülerleşen ücretsiz AI araştırma asistanıdır.
+
+**NotebookLM Nedir?**
+
+Kendi kaynaklarınızı yükleyip bunlarla konuşmanızı sağlar. Hallüsinasyon minimaldır çünkü sadece sizin verilerinizden yanıt üretir.
+
+**Ne Yükleyebilirsiniz?**
+
+PDF dosyalar (araştırma makaleleri, kitaplar)
+Google Docs
+Web sayfaları (URL ile)
+YouTube videoları (transkript)
+Ses dosyaları
+
+**En İyi Kullanımlar:**
+
+Akademik araştırma: 10 makale yükleyin, "Bu makalelerin ortak bulguları nedir?" sorun.
+Kitap özeti: 400 sayfalık kitabı yükleyin, bölüm özetleri isteyin.
+Toplantı notları: Transkript yükleyin, aksiyon maddelerini çıkarın.
+Podcast modu: İki yapay zeka sunucu yüklediğiniz içeriği podcast olarak anlatır!
+
+**Audio Overview (Podcast Modu):**
+
+NotebookLM'in en viral özelliği: kaynaklarınızı 10-15 dakikalık podcast'e dönüştürür. İki AI sunucu doğal sohbet şeklinde anlatır.
+
+**Sınırlamalar:**
+
+Yalnızca yüklediğiniz kaynaklardan yanıt verir (artı veya eksi olabilir).
+Güncel web bilgisi çekmez.
+Türkçe kaynaklarla çalışır ama İngilizce daha güçlü.
+
+**Başlamak için:** notebooklm.google.com → Ücretsiz, Google hesabı yeterli.`},
+
+    {id:11,cat:"Güvenlik",color:"#ff4444",icon:"⚖️",hot:false,
+     title:"KVKK ve AI Kullanımı: Türkiye'de Hukuki Rehber",
+     summary:"Şirketinizde ChatGPT/Claude kullanırken nelere dikkat etmelisiniz?",
+     content:`Türkiye'deki Kişisel Verilerin Korunması Kanunu (KVKK) ile yapay zeka kullanımının kesişim noktaları kritik önem taşıyor.
+
+**Temel Soru: AI'a ne gönderebilirsiniz?**
+
+Güvenli: Genel sorular, public bilgiler, kendi yazdığınız içerik
+Dikkatli: Şirket stratejileri (NDA olmayabilir ama)
+Risk: Müşteri adları ve iletişim bilgileri
+Yasak: TC kimlik numaraları, sağlık verileri, banka bilgileri
+
+**ChatGPT/Claude'a Göre Fark:**
+
+ChatGPT (OpenAI): Veriler ABD'de işlenir. Enterprise plan ile veri eğitimden hariç tutulur.
+Claude (Anthropic): Benzer, veri işleme şeffaflığı daha yüksek.
+Mistral: GDPR uyumlu Avrupa altyapısı.
+Self-hosted Llama: Veri bilgisayarınızda, en güvenli.
+
+**KVKK Uyum Adımları:**
+
+1. Veri Envanteri: Hangi verilerin AI'a gittiğini belgelein.
+2. Çalışan Eğitimi: Hangi verilerin paylaşılamayacağını öğretin.
+3. Politika: Şirket AI kullanım politikası hazırlayın.
+4. Anonimleştirme: Müşteri verilerini anonimleştirerek gönderin.
+
+**Örnek Doğru Kullanım:**
+
+Yanlış: "Ahmet Yılmaz'ın (TC: 12345...) başvurusu için email yaz"
+Doğru: "Müşteri başvurusu için onay emaili yaz" (kişisel veri yok)
+
+**AB AI Act Türkiye'yi Etkiler mi?**
+
+Türkiye AB üyesi değil ama AB'ye hizmet veren Türk şirketleri etkileniyor. 2025'te Türkiye kendi AI Kanunu taslağını yayınladı.`},
+];
+  const filtered=activeCat==='Tümü'?POSTS:POSTS.filter(p=>p.cat===activeCat);
+
+  if(sel){
+    return <div style={{maxWidth:780,margin:'0 auto',padding:'24px 16px'}}>
+      <button onClick={()=>setSel(null)} style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,padding:'7px 14px',color:'#64748b',cursor:'pointer',fontSize:11,marginBottom:20,fontFamily:'inherit'}}>← Tüm Yazılar</button>
+      <div style={{marginBottom:16}}>
+        <span style={{fontSize:9,color:sel.color,background:sel.color+'15',borderRadius:4,padding:'2px 8px',fontWeight:700,marginBottom:8,display:'inline-block'}}>{sel.icon} {sel.cat}</span>
+        <h1 style={{fontSize:'clamp(18px,4vw,26px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1.3,margin:'8px 0'}}>{sel.title}</h1>
+        <p style={{fontSize:12,color:'#64748b',margin:'0 0 16px'}}>{sel.summary}</p>
+        <div style={{height:2,background:'linear-gradient(90deg,'+sel.color+',transparent)',marginBottom:24}}/>
+      </div>
+      <div style={{fontSize:13,color:'#94a3b8',lineHeight:1.9}}>
+        {sel.content.split('\n').map((line,i)=>{
+          if(line.startsWith('**')&&line.endsWith('**'))
+            return <h3 key={i} style={{fontSize:15,fontWeight:800,color:sel.color,margin:'20px 0 8px'}}>{line.slice(2,-2)}</h3>;
+          if(line.startsWith('• '))
+            return <div key={i} style={{display:'flex',gap:8,marginBottom:6}}><span style={{color:sel.color,flexShrink:0}}>•</span><span>{line.slice(2)}</span></div>;
+          if(line.startsWith('→ '))
+            return <div key={i} style={{display:'flex',gap:8,marginBottom:4,paddingLeft:12}}><span style={{color:sel.color,flexShrink:0}}>→</span><span style={{color:'#64748b',fontSize:12}}>{line.slice(2)}</span></div>;
+          if(line.startsWith('🥇')||line.startsWith('🥈')||line.startsWith('🥉'))
+            return <div key={i} style={{padding:'6px 10px',background:'rgba(255,255,255,0.03)',borderRadius:6,marginBottom:4,fontSize:12}}>{line}</div>;
+          if(line.trim()==='')return <div key={i} style={{height:8}}/>;
+          return <p key={i} style={{margin:'0 0 8px'}}>{line}</p>;
+        })}
+      </div>
+      <div style={{marginTop:24,padding:'14px',background:sel.color+'08',borderRadius:10,border:'1px solid '+sel.color+'20',textAlign:'center'}}>
+        <div style={{fontSize:11,color:'#64748b',marginBottom:8}}>Bu konuyu daha derin keşfedin:</div>
+        <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+          {sel.cat==='Model Rehberi'&&<button onClick={()=>setSel(null)||setPage('claude')} style={{padding:'6px 14px',border:'1px solid '+sel.color+'40',borderRadius:8,background:sel.color+'10',color:sel.color,fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>🧠 Claude Sayfasına Git</button>}
+          {sel.cat==='Prompt'&&<button onClick={()=>setSel(null)||setPage('prompt')} style={{padding:'6px 14px',border:'1px solid '+sel.color+'40',borderRadius:8,background:sel.color+'10',color:sel.color,fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>💡 Prompt Rehberine Git</button>}
+          {sel.cat==='Kariyer'&&<button onClick={()=>setSel(null)||setPage('para')} style={{padding:'6px 14px',border:'1px solid '+sel.color+'40',borderRadius:8,background:sel.color+'10',color:sel.color,fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>💰 Para Kazan Sayfasına Git</button>}
+          {sel.cat==='Güvenlik'&&<button onClick={()=>setSel(null)||setPage('guvenlik')} style={{padding:'6px 14px',border:'1px solid '+sel.color+'40',borderRadius:8,background:sel.color+'10',color:sel.color,fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>🛡️ Güvenlik Sayfasına Git</button>}
+        </div>
+      </div>
+    </div>;
+  }
+
+  return <div style={{maxWidth:1000,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#64748b',marginBottom:4}}>IMDATAI REHBERLERİ</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 6px'}}>✍️ AI Rehber Yazıları</h1>
+      <p style={{fontSize:12,color:'#64748b',margin:0}}>Kapsamlı AI rehberleri — model karşılaştırmaları, prompt teknikleri, kariyer fırsatları</p>
+    </div>
+    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:18}}>
+      {cats.map(c=><button key={c} onClick={()=>setActiveCat(c)} style={{padding:'5px 12px',borderRadius:7,border:'1px solid '+(activeCat===c?'rgba(0,220,255,0.4)':'rgba(255,255,255,0.07)'),background:activeCat===c?'rgba(0,220,255,0.1)':'transparent',color:activeCat===c?'#00dcff':'#64748b',fontSize:10,cursor:'pointer',fontFamily:'inherit'}}>{c}</button>)}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))',gap:14}}>
+      {filtered.map(p=><div key={p.id} onClick={()=>setSel(p)}
+        style={{background:p.color+'06',border:'1px solid '+p.color+'18',borderRadius:13,overflow:'hidden',cursor:'pointer',transition:'all .2s'}}
+        onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.borderColor=p.color+'50';}}
+        onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.borderColor=p.color+'18';}}>
+        <div style={{height:4,background:'linear-gradient(90deg,'+p.color+',transparent)'}}/>
+        <div style={{padding:'16px'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+            <span style={{fontSize:9,color:p.color,background:p.color+'15',borderRadius:4,padding:'2px 8px',fontWeight:700}}>{p.icon} {p.cat}</span>
+            {p.hot&&<span style={{fontSize:8,color:'#ff4444',background:'rgba(255,68,68,0.12)',borderRadius:4,padding:'1px 6px',fontWeight:700}}>🔥 HOT</span>}
+          </div>
+          <div style={{fontSize:13,fontWeight:800,color:'#e2e8f0',lineHeight:1.4,marginBottom:8}}>{p.title}</div>
+          <div style={{fontSize:11,color:'#64748b',lineHeight:1.5,marginBottom:12}}>{p.summary}</div>
+          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            <span style={{fontSize:11,color:p.color,fontWeight:700}}>Oku →</span>
+          </div>
+        </div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+function HakkimizdaPage(){
+  return <div style={{maxWidth:800,margin:'0 auto',padding:'32px 16px'}}>
+    <div style={{textAlign:'center',marginBottom:36}}>
+      <img src="/logo.png" alt="IMDATAI" style={{width:80,height:80,borderRadius:16,marginBottom:16,filter:'drop-shadow(0 0 20px rgba(0,220,255,0.5))'}} onError={e=>e.target.style.display='none'}/>
+      <h1 style={{fontSize:28,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 8px'}}>IMDATAI</h1>
+      <div style={{fontSize:14,color:'#00dcff',marginBottom:12}}>Türkiye'nin AI Hub'ı</div>
+      <p style={{fontSize:13,color:'#64748b',lineHeight:1.8,maxWidth:560,margin:'0 auto'}}>IMDATAI, yapay zekayı Türkiye'de herkes için erişilebilir kılmak amacıyla kurulmuş bağımsız bir platformdur. Tamamen Türkçe, tamamen ücretsiz.</p>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:14,marginBottom:30}}>
+      {[['🎯','Misyonumuz','AI teknolojisini Türkçe olarak herkesin anlayabileceği şekilde aktarmak','#00dcff'],['🌟','Vizyonumuz','Türkiye\'nin yapay zeka okuryazarlığında dünya sıralamasında ilk 10\'a girmek','#a855f7'],['🛡️','Değerlerimiz','Tarafsız, güncel, ücretsiz, Türkçe. Reklam yok, ücret yok, taraf yok','#34d399'],['📊','Rakamlarla','53 sayfa · 403 içerik · 25 animasyon · Mayıs 2026','#fbbf24']].map(([e,t,d,c])=><div key={t} style={{background:c+'07',border:'1px solid '+c+'18',borderRadius:12,padding:'16px',textAlign:'center'}}>
+        <div style={{fontSize:28,marginBottom:8}}>{e}</div>
+        <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:6}}>{t}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+      </div>)}
+    </div>
+    <div style={{background:'rgba(0,220,255,0.04)',border:'1px solid rgba(0,220,255,0.12)',borderRadius:12,padding:'18px',textAlign:'center'}}>
+      <div style={{fontSize:14,fontWeight:700,color:'#e2e8f0',marginBottom:10}}>📱 Sosyal Medya</div>
+      <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
+        {[['📺','YouTube','youtube.com/@imdatai','#ff4444'],['🎵','TikTok','tiktok.com/@imdatai','#00f2ea'],['📸','Instagram','instagram.com/imdatai','#e1306c']].map(([e,n,u,c])=><a key={n} href={'https://'+u} target='_blank' rel='noopener noreferrer' style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,textDecoration:'none',padding:'10px 16px',background:c+'12',border:'1px solid '+c+'30',borderRadius:10}}>
+          <span style={{fontSize:20}}>{e}</span>
+          <span style={{fontSize:10,color:c,fontWeight:700}}>@imdatai</span>
+        </a>)}
+      </div>
+    </div>
+  </div>;
+}
+
 function IletisimPage(){const[f,setF]=useState({ad:"",email:"",mesaj:""});const[s,setS]=useState(false);return <div style={{padding:"28px 20px",maxWidth:600,margin:"0 auto"}}><div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>İLETİŞİM</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>📬 Bize Ulaşın</div></div>{s?<div style={{textAlign:"center",padding:"40px"}}><div style={{fontSize:32,marginBottom:8}}>✅</div><div style={{fontSize:16,fontWeight:700,color:"#34d399"}}>Mesajın İletildi!</div></div>:<div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"22px"}}><div style={{display:"flex",flexDirection:"column",gap:12}}>{[["Ad Soyad","ad","Adın..."],["E-posta","email","E-posta..."]].map(([l,k,ph])=><div key={k}><div style={{fontSize:10,color:"#64748b",marginBottom:5}}>{l.toUpperCase()}</div><input style={{width:"100%",background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#e2e8f0",padding:"10px 13px",fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}} placeholder={ph} value={f[k]} onChange={e=>setF(p=>({...p,[k]:e.target.value}))}/></div>)}<div><div style={{fontSize:10,color:"#64748b",marginBottom:5}}>MESAJ</div><textarea style={{width:"100%",minHeight:120,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#e2e8f0",padding:"10px 13px",fontSize:12,fontFamily:"inherit",outline:"none",resize:"vertical",boxSizing:"border-box"}} placeholder="Mesajını yaz..." value={f.mesaj} onChange={e=>setF(p=>({...p,mesaj:e.target.value}))}/></div><button onClick={()=>{if(f.ad&&f.email&&f.mesaj)setS(true);}} style={{padding:"12px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#00dcff,#a855f7)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Gönder →</button></div></div>}</div>;}
 function GizlilikPage(){return <div style={{padding:"28px 20px",maxWidth:800,margin:"0 auto"}}><div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>HUKUKİ</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🔒 Gizlilik & KVKK</div></div>{[{t:"Veri Sorumlusu",c:"IMDATAI (imdatai.com), 6698 sayılı KVKK kapsamında veri sorumlusudur. İletişim: iletisim@imdatai.com"},{t:"Toplanan Veriler",c:"Bülten için e-posta (isteğe bağlı). İletişim formu için ad ve e-posta. Anonim analitik. AI sorguları bizde saklanmaz."},{t:"KVKK Haklarınız",c:"Verilerinizin işlenip işlenmediğini öğrenme, düzeltme, silme ve işlemeye itiraz hakkına sahipsiniz. Talep: kvkk@imdatai.com"},{t:"Cookie Politikası",c:"Zorunlu ve analitik çerezler kullanılmaktadır. Tarayıcı ayarlarından kapatabilirsiniz."},{t:"Değişiklikler",c:"Bu politika güncellenebilir. Önemli değişiklikler bülten ile duyurulur."}].map(s=><div key={s.t} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"16px",marginBottom:10}}><div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>{s.t}</div><div style={{fontSize:12,color:"#64748b",lineHeight:1.8}}>{s.c}</div></div>)}</div>;}
 function ProPage(){const[e,setE]=useState("");const[s,setS]=useState(false);return <div style={{padding:"28px 20px",maxWidth:860,margin:"0 auto"}}><div style={{textAlign:"center",marginBottom:28}}><div style={{fontSize:9,letterSpacing:".2em",color:"#a855f7",marginBottom:8}}>⭐ PRO MODÜL — YAKINDA</div><h1 style={{fontSize:"clamp(20px,5vw,36px)",fontWeight:900,color:"#e2e8f0",margin:"0 0 10px"}}>48 AI Aracı Çok Yakında</h1><p style={{fontSize:13,color:"#64748b",maxWidth:440,margin:"0 auto",lineHeight:1.7}}>6 kategoride 48 profesyonel AI aracı. Tümü Türkçe, saniyeler içinde sonuç.</p><div style={{marginTop:16,background:"rgba(168,85,247,0.08)",border:"1px solid rgba(168,85,247,0.25)",borderRadius:12,padding:"16px",display:"inline-block"}}>{s?<div style={{fontSize:13,color:"#a855f7",fontWeight:700}}>✅ Kaydedildin! Pro açılınca haber vereceğiz.</div>:<div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}}><input style={{flex:1,minWidth:200,maxWidth:280,background:"rgba(0,0,0,0.4)",border:"1px solid rgba(168,85,247,0.2)",borderRadius:8,color:"#e2e8f0",padding:"10px 14px",fontSize:13,fontFamily:"inherit",outline:"none"}} placeholder="E-posta adresin..." value={e} onChange={ev=>setE(ev.target.value)}/><button onClick={()=>{if(e.includes("@"))setS(true);}} style={{padding:"10px 22px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#a855f7,#7c3aed)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔔 Bildir</button></div>}</div></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>{[{cat:"✍️ Yazı",color:"#00dcff",tools:["Sosyal Medya Post","E-posta","Blog","Haber","Reklam","Hikaye","Video Script","Mektup"]},{cat:"🔍 Analiz",color:"#a855f7",tools:["Metin Analizi","Veri","CV Analiz","Rakip","SEO","Finansal","Trend","Yorum"]},{cat:"🎓 Eğitim",color:"#34d399",tools:["Quiz","Prompt Geliştir","Özet","Kavram","Kelime","Matematik","Bilim","Fikir"]},{cat:"💼 İş",color:"#fb923c",tools:["CV Oluştur","Mülakat","İş Planı","Sözleşme","Sunum","Teklif","OKR","Toplantı"]},{cat:"🌍 Dil",color:"#60a5fa",tools:["Çeviri","Dilbilgisi","Ton","Parafraz","Çok Dilli","Özetle","Dil Analizi","Asistan"]},{cat:"⚙️ Teknik",color:"#f472b6",tools:["Hata Bulucu","Kod Açıkla","Dönüştür","Döküman","Test","SQL","Regex","Komut"]}].map(c=><div key={c.cat} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${c.color}18`,borderRadius:13,padding:"16px"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}><div style={{fontSize:14,fontWeight:700,color:"#e2e8f0"}}>{c.cat}</div><Tag text="8 araç" color={c.color}/></div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{c.tools.map(t=><div key={t} style={{fontSize:10,background:"rgba(0,0,0,0.3)",color:"#475569",padding:"3px 8px",borderRadius:5}}>🔒 {t}</div>)}</div></div>)}</div></div>;}
@@ -2758,11 +3162,71 @@ const GLOSSARY_DATA = [
   {term:"Embeddings",cat:"Teknik",en:"Embeddings",def:"Metin veya nesneleri sayısal vektörlere dönüştürme işlemi. Anlam benzerliği aramak için kullanılır. RAG sistemlerinin temelidir."},
   {term:"Guardrails",cat:"Güvenlik",en:"Guardrails",def:"AI modellerinin zararlı veya istenmeyen içerik üretmesini engelleyen kural ve filtre sistemi."},
   {term:"Reasoning Model",cat:"Yeni Nesil",en:"Reasoning Model",def:"Cevap vermeden önce adım adım düşünerek çıkarsama yapan AI. OpenAI o3, Claude Sonnet 3.7 Thinking örnek."},
-  {term:"Vibe Coding",cat:"Yeni Nesil",en:"Vibe Coding",def:"Doğal dille açıklama yaparak AI'ın kod yazmasını sağlama yöntemi. Programlama bilmeden uygulama geliştirme trendi."}
+  {term:"Vibe Coding",cat:"Yeni Nesil",en:"Vibe Coding",def:"Doğal dille açıklama yaparak AI'ın kod yazmasını sağlama yöntemi. Programlama bilmeden uygulama geliştirme trendi."},
+  {term:"Model Context Protocol",cat:"Teknik",en:"MCP",def:"Anthropic'in geliştirdiği açık standart. AI modellerinin harici araçlar, veritabanları ve API'larla iletişim kurmasını sağlar. Claude Code bu protokolü kullanır."},
+  {term:"Vibe Coding",cat:"Yeni Nesil",en:"Vibe Coding",def:"AI'a ne istediğini söyleyip kodu yazdırma yaklaşımı. 2025'te Andrej Karpathy'nin tanımladığı terim. Kod bilmeden uygulama geliştirme."},
+  {term:"Constitutional AI",cat:"Güvenlik",en:"Constitutional AI",def:"Anthropic'in geliştirdiği eğitim yöntemi. Modele etik ilkeler listesi verilerek kendi çıktılarını değerlendirmesi ve düzeltmesi öğretilir."},
+  {term:"System Prompt",cat:"Teknik",en:"System Prompt",def:"API çağrısında kullanıcı mesajından önce gönderilen talimat metni. Modelin kimliğini, davranışını ve kısıtlamalarını tanımlar."},
+  {term:"Temperature",cat:"Teknik",en:"Temperature",def:"Modelin yanıt rastgeleliğini kontrol eden 0-2 arası değer. 0=deterministik, 1=dengeli, 2=yaratıcı. Kod için düşük, yaratıcı yazı için yüksek önerilir."},
+  {term:"Top-P Sampling",cat:"Teknik",en:"Top-P / Nucleus Sampling",def:"Token seçiminde olasılık kümülatif eşiği. Top-p=0.9 → en olası %90 tokenden seç. Temperature ile birlikte kullanılır."},
+  {term:"Sycophancy",cat:"Güvenlik",en:"Sycophancy",def:"AI modelinin kullanıcıyı memnun etmek için doğruluğu feda etmesi. Yanlış cevabı onaylaması veya kullanıcının görüşüne katılması."},
+  {term:"Latency",cat:"Teknik",en:"Latency",def:"API isteği yapılmasından ilk tokenin gelmesine kadar geçen süre. TTFT (Time to First Token) olarak da ölçülür. UX için kritik."},
+  {term:"Streaming",cat:"Teknik",en:"Streaming",def:"Modelin yanıtını tüm üretim tamamlanmadan token token göndermesi. Kullanıcı deneyimini iyileştirir, TTFT'yi azaltır."},
+  {term:"Tool Use",cat:"Teknik",en:"Tool Use / Function Calling",def:"AI modelinin harici fonksiyonları çağırabilmesi. Hava durumu API, takvim, veritabanı gibi araçlarla entegrasyon."},
+  {term:"Vision Language Model",cat:"Teknik",en:"VLM",def:"Görüntü ve metni birlikte işleyebilen model. GPT-4V, Claude 3, Gemini Vision örnektir. Görüntü açıklama, tablo okuma, diagram analizi."},
+  {term:"Tokenizer",cat:"Teknik",en:"Tokenizer",def:"Metni modelin işleyeceği token birimlerine bölen sistem. Türkçe kelimeler genellikle 2-3 token. 1 token ≈ 0.75 İngilizce kelime."},
+  {term:"Perplexity",cat:"Teknik",en:"Perplexity",def:"Dil modelinin bir metni ne kadar 'şaşırtıcı' bulduğunun ölçüsü. Düşük perplexity = modelin metni iyi tahmin edebildiği anlamına gelir."},
+  {term:"BLEU Score",cat:"Teknik",en:"BLEU Score",def:"Makine çevirisi kalitesini ölçen metrik. 0-1 arası. İnsan referans çevirisiyle n-gram örtüşmesini karşılaştırır."},
+  {term:"Red Teaming",cat:"Güvenlik",en:"Red Teaming",def:"AI sistemlerinin güvenlik açıklarını bulmak için saldırgan testler yapma süreci. Modeli kötüye kullandırmaya çalışma."},
+  {term:"Grounding",cat:"Teknik",en:"Grounding",def:"AI çıktılarını gerçek kaynaklara bağlama süreci. Hallüsinasyonu azaltır. RAG bu tekniği kullanır."},
+  {term:"Emergent Capability",cat:"Bilim",en:"Emergent Capability",def:"Model belirli bir büyüklüğe ulaştığında beklenmedik biçimde ortaya çıkan yetenek. Ölçek artışıyla ani performans sıçramaları."},
+  {term:"Instruction Tuning",cat:"Eğitim",en:"Instruction Tuning",def:"Önceden eğitilmiş modeli insan talimatlarına uymak için ince ayarlama. Temel modeli sohbet asistanına dönüştürür."},
+  {term:"Mixture of Experts",cat:"Teknik",en:"MoE",def:"Her token için modelin sadece bir alt kümesini aktive eden mimari. Mixtral ve DeepSeek V3 bu yapıyı kullanır. Düşük hesaplama maliyeti."},
+  {term:"Knowledge Cutoff",cat:"Temel",en:"Knowledge Cutoff",def:"Modelin eğitim verilerinin kesildiği tarih. Bu tarihten sonraki olayları bilmez. GPT-4o: Nisan 2024, Claude: Ağustos 2025."},
+  {term:"Semantic Search",cat:"Teknik",en:"Semantic Search",def:"Kelime eşleştirme yerine anlam benzerliğine göre arama. Embedding vektörleri kullanır. RAG sistemlerinin temelidir."},
+  {term:"Chain of Density",cat:"Teknik",en:"Chain of Density",def:"Özetleme tekniği. İlk geniş özeti giderek daha yoğun (dense) kılarak kısaltma yöntemi. Bilgi kaybı minimuma indirilir."},
+  {term:"LLM-as-a-Judge",cat:"Teknik",en:"LLM as a Judge",def:"Bir dil modelinin başka bir dil modelinin çıktısını değerlendirmesi. Otomatik kalite ölçümü ve benchmark'ta kullanılır."},
+  {term:"Prompt Chaining",cat:"Teknik",en:"Prompt Chaining",def:"Karmaşık görevi birbirine bağlı prompt dizisine bölerek çözme. Her adımın çıktısı sonrakinin girdisi olur."},
+  {term:"Auto-regressive",cat:"Teknik",en:"Auto-regressive",def:"Her tokenin önceki tokenlara bakılarak üretildiği model tipi. GPT, Claude, Llama bu mimariyi kullanır. Sol-sağ metin üretimi."},
+  {term:"RLHF",cat:"Eğitim",en:"Reinforcement Learning from Human Feedback",def:"İnsan değerlendirmelerini ödül sinyali olarak kullanarak modeli ince ayarlama. GPT-4 ve Claude'un ana eğitim yöntemi."},
+  {term:"DPO",cat:"Eğitim",en:"Direct Preference Optimization",def:"RLHF'ye alternatif, reward model gerektirmeyen tercih optimizasyonu yöntemi. Daha kararlı eğitim sağlar."},
+  {term:"Speculative Decoding",cat:"Teknik",en:"Speculative Decoding",def:"Küçük taslak modelin tahminlerini büyük modelin doğrulaması ile hızlanma tekniği. 2-4x hız artışı sağlar."},
+  {term:"KV Cache",cat:"Teknik",en:"Key-Value Cache",def:"Tekrar hesaplamayı önlemek için attention mekanizmasının bellek önbelleği. Uzun context'lerde çok önemli maliyet tasarrufu."},
+  {term:"Sparse Attention",cat:"Teknik",en:"Sparse Attention",def:"Tam attention yerine sadece önemli pozisyonlara bakma. Uzun dizilerde O(n²) maliyeti azaltır."},
+  {term:"Vibe Coding",cat:"Yeni Nesil",en:"Vibe Coding",def:"AI'a ne istediğini söyleyip kodu yazdırma. Andrej Karpathy'nin 2025'te tanımladığı terim. Programlama bilgisi gerekmeden uygulama geliştirme."},
+  {term:"AI Slop",cat:"Kültür",en:"AI Slop",def:"Kalitesiz, anlamsız AI üretimi içerik. İnternet düşük kaliteli AI yazısı ve görsellerle dolmaya başlayınca ortaya çıkan terim."},
+  {term:"Jailbreak",cat:"Güvenlik",en:"Jailbreak",def:"AI modelinin güvenlik kısıtlamalarını aşmaya çalışmak. Modeli yasaklı içerik üretmeye zorlamak. Kullanım koşullarını ihlal eder."},
+  {term:"AI Hallucination",cat:"Güvenlik",en:"Hallucination",def:"Modelin gerçekmiş gibi tamamen yanlış veya uydurma bilgi üretmesi. En büyük LLM problemi. Doğrulama zorunludur."},
+  {term:"Ollama",cat:"Araç",en:"Ollama",def:"Açık kaynak LLM'leri yerel bilgisayarda çalıştırmaya yarayan araç. İnternet gerektirmez, ücretsiz, gizli. llama.run gibi alternatifleri var."},
+  {term:"LM Studio",cat:"Araç",en:"LM Studio",def:"Yerel AI modeli çalıştırmak için görsel arayüz. Hugging Face'den model indirip çalıştırılır. Teknik bilgi gerektirmiyor."},
+  {term:"Perplexity AI",cat:"Araç",en:"Perplexity AI",def:"AI destekli arama motoru. Gerçek zamanlı kaynak göstererek yanıt üretir. Google'a alternatif olarak popülerleşti."},
+  {term:"RLHF",cat:"Eğitim",en:"Reinforcement Learning from Human Feedback",def:"İnsan geri bildirimi ile pekiştirmeli öğrenme. GPT-4 ve Claude'un ince ayar yöntemi. İnsan değerlendirmelerini ödül sinyali olarak kullanır."},
+  {term:"Mixture of Experts",cat:"Teknik",en:"MoE",def:"Her token için modelin sadece bir alt kümesini aktive eden mimari. DeepSeek V3 ve Mixtral kullanır. Düşük hesaplama, yüksek kapasite."},
+  {term:"Embedding",cat:"Teknik",en:"Embedding",def:"Metni sayısal vektöre dönüştürme. Anlamsal benzerlik hesaplanmasına olanak tanır. RAG sistemlerinin temel yapı taşı."},
+  {term:"Fine-tuning",cat:"Eğitim",en:"Fine-tuning",def:"Genel bir modeli belirli bir görev için özelleştirme. Az veriyle yüksek performans. GPT-3.5'i müşteri hizmetleri için eğitmek gibi."},
+  {term:"Quantization",cat:"Teknik",en:"Quantization",def:"Model ağırlıklarını daha küçük sayı formatına dönüştürme. 4-bit quant ile model 4x küçülür. Yerel çalıştırma için gerekli."},
+  {term:"Retrieval Augmented Generation",cat:"Teknik",en:"RAG",def:"Modele harici bilgi tabanından bilgi çekip ekleyerek yanıt üretme. Hallüsinasyonu azaltır. Şirket chatbotlarının temel yöntemi."},
+  {term:"Agentic AI",cat:"Yeni Nesil",en:"Agentic AI",def:"Hedef belirlenince adımları kendi planlayıp uygulayan otonom AI sistemi. İnsan onayı gerektirmeden görevleri tamamlar."},
+  {term:"Multi-Agent System",cat:"Teknik",en:"Multi-Agent",def:"Birden fazla AI ajanının koordineli çalışması. Bir ajan araştırır, diğeri yazar, üçüncüsü doğrular. Claude Code bu modeli kullanır."},
+  {term:"Prompt Injection",cat:"Güvenlik",en:"Prompt Injection",def:"Kötü niyetli talimatları gizleyerek AI'ı istenmeyen davranışa yönlendirme saldırısı. RAG ve chatbot sistemlerinde ciddi güvenlik riski."},
+  {term:"AI Act",cat:"Hukuk",en:"EU AI Act",def:"Avrupa Birliği'nin yapay zekayı düzenleyen ilk kapsamlı yasası. Riske göre sınıflandırma: yüksek risk AI'lar için sıkı kurallar."},
+  {term:"Synthetic Data",cat:"Eğitim",en:"Synthetic Data",def:"Gerçek veriye benzeyecek şekilde AI tarafından üretilen eğitim verisi. Gizlilik korunur, yetersiz veri sorunu aşılır."},
+  {term:"Zero-shot Learning",cat:"Teknik",en:"Zero-shot",def:"Modelin hiç örnek görmeden yeni görevleri çözebilmesi. Modern LLM'lerin temel özelliği. GPT-4 bu yetenekle öne çıktı."},
+  {term:"Multimodal",cat:"Teknik",en:"Multimodal",def:"Metin, görüntü, ses ve video gibi farklı veri türlerini birlikte işleyebilen model. GPT-4V, Gemini Ultra, Claude 3 multimodal."},
+  {term:"Context Window",cat:"Temel",en:"Context Window",def:"Modelin tek seferde işleyebildiği maksimum token sayısı. Claude: 200K, Gemini: 2M, GPT-4o: 128K. Büyük context = daha iyi anlayış."},
+  {term:"Inference",cat:"Teknik",en:"Inference",def:"Eğitilmiş modelin yeni girdilere yanıt üretmesi. Eğitimden farklı: daha hızlı ve ucuz. API çağrıları birer inference işlemidir."},
+  {term:"Benchmark",cat:"Temel",en:"Benchmark",def:"Modellerin standardize testlerde karşılaştırılması. MMLU, HumanEval, SWE-bench gibi. Rakip modellerin gerçek performansını karşılaştırır."},
+  {term:"Tokenizer",cat:"Teknik",en:"Tokenizer",def:"Metni modelin işleyeceği token birimlerine bölen sistem. Türkçe kelimeler genellikle 2-3 token. 1 token ≈ 0.75 İngilizce kelime."},
+  {term:"Temperature",cat:"Teknik",en:"Temperature",def:"Modelin yanıt rastgeleliğini kontrol eden 0-2 değer. 0=deterministik, 1=dengeli, 2=yaratıcı. Kod için düşük, yaratıcı yazı için yüksek."},
+  {term:"System Prompt",cat:"Teknik",en:"System Prompt",def:"API çağrısında kullanıcı mesajından önce gönderilen talimat. Modelin kimliğini ve davranışını belirler. Chatbot kişiliği buradan gelir."},
+  {term:"Claude Code",cat:"Araç",en:"Claude Code",def:"Anthropic'in terminal tabanlı kod asistanı. Tüm proje dosyalarını okur, değiştirir. MCP ile harici araçlara bağlanır."},
+  {term:"Cursor",cat:"Araç",en:"Cursor",def:"Claude ve GPT entegreli kod editörü. Tab ile kod tamamlama, Ctrl+K ile komut. En popüler AI kod asistanı 2026'da."},
+  {term:"n8n",cat:"Araç",en:"n8n",def:"Açık kaynak otomasyon ve iş akışı platformu. AI entegrasyonu ile 400+ uygulama bağlanır. Zapier'e ücretsiz alternatif."},
+  {term:"LangChain",cat:"Framework",en:"LangChain",def:"LLM uygulamaları geliştirmek için Python/JS framework. RAG, ajan, zincir kurma araçları. En yaygın AI geliştirici framework."}
 ];
 
 const AI_MODELS_DATA = {
-  chatgpt:{name:"ChatGPT",company:"OpenAI",icon:"🤖",color:"#00dcff",tagline:"Dünyanın En Popüler AI Asistanı",users:"900M haftalık",model:"GPT-5.5",context:"128K token",scores:{genel:97,kod:93,yazi:96,turkce:92,gorsel:94,hiz:95,gizlilik:75},plans:[{n:"Ücretsiz",p:"$0",d:"GPT-4o mini, günlük sınır",c:"#475569"},{n:"Plus",p:"$20/ay",d:"GPT-5.5, 80 mesaj/3saat",c:"#00dcff"},{n:"Pro",p:"$200/ay",d:"Sınırsız, tüm modeller",c:"#a855f7"}],guclu:["En geniş kullanıcı tabanı","Mükemmel görsel üretim (DALL-E 3)","Gelişmiş ses modu","En iyi plugin ekosistemi","Hafıza özelliği"],zayif:["Kısa context window (128K)","Hallüsinasyon riski yüksek","$200/ay Pro çok pahalı","Günlük limit kısıtları"],bestFor:"Genel kullanım, yaratıcı görevler, görsel üretim, sesli sohbet",prompt:"Rol ver: 'Deneyimli bir pazarlamacı olarak...' diye başla. Sonuç %300 daha iyi.",url:"https://chatgpt.com",sistem:"OpenAI'ın Transformer tabanlı modeli. RLHF ile eğitildi. 2022 ChatGPT 3.5'ten GPT-5.5'e dramatik gelişim. 175+ ülkede kullanılıyor."},
+  chatgpt:{name:"ChatGPT",company:"OpenAI",icon:"🤖",color:"#00dcff",tagline:"Dünyanın En Popüler AI Asistanı",users:"900M haftalık",model:"GPT-5.5",context:"128K token",scores:{genel:97,kod:93,yazi:96,turkce:92,gorsel:94,hiz:95,gizlilik:75},plans:[{n:"Ücretsiz",p:"$0",d:"GPT-4o mini, günlük sınır",c:"#475569"},{n:"Plus",p:"$20/ay",d:"GPT-5.5, 80 mesaj/3saat",c:"#00dcff"},{n:"Pro",p:"$200/ay",d:"Sınırsız, tüm modeller",c:"#a855f7"}],guclu:["En geniş kullanıcı tabanı","Mükemmel görsel üretim (DALL-E 3)","Gelişmiş ses modu","En iyi plugin ekosistemi","Hafıza özelliği"],zayif:["Kısa context window (128K)","Hallüsinasyon riski yüksek","$200/ay Pro çok pahalı","Günlük limit kısıtları"],bestFor:"Genel kullanım, yaratıcı görevler, görsel üretim, sesli sohbet",prompt:"Rol ver: 'Deneyimli bir pazarlamacı olarak...' diye başla. Sonuç %300 daha iyi.",url:"https://chatgpt.com",sistem:"OpenAI'ın Transformer tabanlı modeli. RLHF ile eğitildi. 2022 ChatGPT 3.5'ten GPT-5.5'e dramatik gelişim. 1113+ ülkede kullanılıyor."},
   claude:{name:"Claude",company:"Anthropic",icon:"🧠",color:"#a855f7",tagline:"Kodlama ve Analiz Şampiyonu",users:"30M aylık",model:"Opus 4.7",context:"1M token",scores:{genel:96,kod:99,yazi:97,turkce:94,gorsel:60,hiz:87,gizlilik:96},plans:[{n:"Ücretsiz",p:"$0",d:"Claude 3.5 Haiku, günlük sınır",c:"#475569"},{n:"Pro",p:"$20/ay",d:"Opus 4.7, 5x kullanım",c:"#a855f7"},{n:"Max",p:"$100/ay",d:"Sınırsız, öncelikli erişim",c:"#f472b6"}],guclu:["Kodlamada rakipsiz (#1 SWE-bench %87.6)","1M token context (kitap boyutu)","En az hallüsinasyon","Constitutional AI güvenliği","Derin analiz"],zayif:["Görsel üretim yok","Daha az popüler","Ses modu sınırlı","Düşük günlük limit (ücretsiz)"],bestFor:"Kod yazma/debug, uzun belge analizi, akademik araştırma, güvenli kullanım",prompt:"1M token context'ini kullan: Tüm kod tabanını veya uzun PDF'leri yükle, 'Analiz et' de. Rakipsiz özellik.",url:"https://claude.ai",sistem:"Anthropic'in Constitutional AI yaklaşımıyla eğitildi. AI kendi davranışını değerlendiriyor. Haiku (hızlı), Sonnet (dengeli), Opus (en güçlü) üç seviye."},
   gemini:{name:"Gemini",company:"Google",icon:"🌟",color:"#34d399",tagline:"Google Ekosistemiyle Entegre AI",users:"100M aylık",model:"2.5 Pro",context:"2M token",scores:{genel:94,kod:91,yazi:90,turkce:89,gorsel:97,hiz:98,gizlilik:72},plans:[{n:"Ücretsiz",p:"$0",d:"Gemini 2.5, geniş sınır",c:"#475569"},{n:"AI Pro",p:"$19.99/ay",d:"2.5 Pro, Google One",c:"#34d399"},{n:"AI Ultra",p:"$249/ay",d:"Ultra modeller, iş araçları",c:"#00dcff"}],guclu:["2M token context (dünya rekoru)","Google Drive/Docs/Gmail entegrasyonu","En iyi görsel anlama","Gerçek zamanlı web arama","En hızlı yanıt"],zayif:["Türkçe diğerlerinden zayıf","Yaratıcı yazarlık orta","Google bağımlılığı","Tutarsız davranış"],bestFor:"Araştırma, Google Workspace kullanıcıları, multimodal görevler, görsel analiz",prompt:"Google Drive dosyalarını direkt analiz ettir. 'Bu Drive dosyamı özetle ve aksiyon öner' de. Rakiplerin yapamayacağı şey.",url:"https://gemini.google.com",sistem:"Google DeepMind tarafından sıfırdan multimodal tasarlandı. Nano (mobil), Flash (hızlı), Pro (dengeli), Ultra (en güçlü) katmanlar. Tüm Google ekosistemine entegre."},
 };
@@ -2921,6 +3385,52 @@ const PROMPTS_DATA = [
     {title:"PowerPoint Outline",kotu:"Sunum hazırla",iyi:"[Konu] için 15 slaytlık kurumsal sunum taslağı oluştur. Her slayt için: başlık, 3 bullet point, görsel/grafik önerisi ve konuşmacı notu. Hedef kitle: [üst yönetim/yatırımcılar]. Sonuç slaytı CTA içersin."},
     {title:"Podcast Bölüm Planı",kotu:"Podcast bölümü hazırla",iyi:"[Konu] hakkında 45 dakikalık podcast bölümü için tam yapı: giriş hook, 4 ana segment, konuk soruları ve kapanış. Her segmentin süresini ve anahtar sorularını ekle."},
     {title:"Webinar Skript",kotu:"Webinar içeriği",iyi:"[Ürün/Servis] tanıtımı için 60 dakikalık webinar skripti hazırla. Bölümler: karşılama, problem tanımlama, çözüm sunumu, demo, Q&A ve satış kapanışı. Her bölüm geçiş cümleleriyle."},
+  ]},
+  {cat:"🎙️ Sesli & Podcast",color:"#00dcff",icon:"🎙️",items:[
+    {title:"Podcast Senaryo",kotu:"Podcast yaz",iyi:"[KONU] hakkında 30 dakikalık podcast bölümü için: Açılış hook (30sn), 4 ana segment (her biri için 5 soru + geçiş cümleleri), konuk intro metni ve kapanış CTA. Dinleyici profili: [YAŞ/İLGİ]."},
+    {title:"Sesli Kitap Anlatı",kotu:"Sesli kitap yaz",iyi:"[KİTAP/KONU] için profesyonel sesli kitap anlatı scripti yaz. Tempo, vurgu noktaları, duraksamalar ve ses tonu notları ekle. Bölüm başı ve sonu geçiş formülleri ver."},
+    {title:"YouTube Açıklama",kotu:"Video açıklaması yaz",iyi:"[VİDEO BAŞLIĞI] için SEO optimize YouTube açıklaması yaz. 0-150 karakter hook, keywords bölümü, timestamps şablonu, social links bölümü ve CTA. Hedef kelime: [KEYWORD]."},
+    {title:"Transcript Özet",kotu:"Videoyu özetle",iyi:"Bu transkripti/toplantı notunu analiz et: [METİN]. Çıktı: 1-sayfa yönetici özeti, 5 önemli karar, aksiyon maddeler (kişi+tarih) ve takip gereken metrikler."},
+  ]},
+  {cat:"🔬 Araştırma & Akademi",color:"#a855f7",icon:"🔬",items:[
+    {title:"Literatür Tarama",kotu:"Akademik araştırma yap",iyi:"[KONU] alanında 2022-2026 yılları arası akademik literatür taraması yap. Bulgular: ana teoriler, tartışmalı noktalar, metodoloji eğilimleri ve araştırma boşlukları. APA formatında 8 kaynak öner."},
+    {title:"Hipotez Geliştir",kotu:"Hipotez yaz",iyi:"[ALAN]'da şu gözlemden: '[GÖZLEM]' yola çıkarak 3 araştırılabilir hipotez geliştir. Her hipotez için: bağımsız/bağımlı değişken, ölçüm yöntemi, null hipotez ve potansiyel karıştırıcı değişkenler."},
+    {title:"Akademik Makale Özet",kotu:"Makale özetle",iyi:"Şu akademik makaleyi analiz et: [BAŞLIK/ÖZET]. Çıktı: problem tanımı, metodoloji, ana bulgular, sınırlılıklar, pratik uygulamalar ve atıf değeri. Teknik olmayan okuyucu için Türkçe paragraf ekle."},
+    {title:"İstatistik Yorumu",kotu:"İstatistik yorumla",iyi:"Bu veri setinin [VERİ/TABLO] istatistiksel analizini yap. Betimleyici istatistikler, normallik testi ihtiyacı, uygun istatistiksel test önerileri ve potansiyel bias kaynakları. SPSS/Python kodu öner."},
+  ]},
+  {cat:"💰 Finans & Yatırım",color:"#fbbf24",icon:"💰",items:[
+    {title:"Hisse Analizi",kotu:"Hisse analizi yap",iyi:"[ŞİRKET] için temel analiz raporu hazırla. P/E, P/B, ROE, borç/özkaynak oranları, rekabetçi avantaj, sektör trendi ve 12 aylık beklenti. Risk faktörleri ve çıkış kriterleri de ekle."},
+    {title:"Portföy Optimizasyonu",kotu:"Portföy öner",iyi:"Risk profili: [DÜŞÜK/ORTA/YÜKSEK]. Yatırım ufku: [YILLAR]. Sermaye: [TL]. Modern Portföy Teorisi'ne göre varlık dağılımı öner. Her varlık sınıfı için gerekçe ve rebalancing stratejisi."},
+    {title:"Kripto Analizi",kotu:"Kripto analiz et",iyi:"[KRİPTO] için teknik ve temel analiz. Fiyat seviyeleri (destek/direnç), on-chain metrikler, geliştirici aktivitesi, token ekonomisi ve kısa/orta vade senaryo analizi (bull/base/bear)."},
+    {title:"Bütçe Optimizasyonu",kotu:"Bütçe yap",iyi:"Aylık gelir: [TUTAR]. Sabit giderler: [LİSTE]. Bu bilgilerle 50/30/20 kuralı bazlı bütçe planı yap. Tasarruf otomasyonu, acil fon hesabı ve 6 aylık finansal hedef listesi ekle."},
+  ]},
+  {cat:"🌍 Çeviri & Yerelleştirme",color:"#34d399",icon:"🌍",items:[
+    {title:"Kültürel Uyarlama",kotu:"Çeviri yap",iyi:"Bu içeriği [KAYNAK DİL]'den Türkçeye sadece çeviri değil, kültürel uyarlama yaparak dönüştür: [METİN]. Yerel deyimler, referanslar ve ton uyarlamaları için notlar ekle."},
+    {title:"Teknik Çeviri",kotu:"Teknik metin çevir",iyi:"Bu teknik dokümantasyonu [DİL]'den Türkçeye çevir: [METİN]. Teknik terimler için glossary oluştur, tutarsız kullanım varsa standartlaştır, hedef kitle: [SEVİYE]."},
+    {title:"SEO Çeviri",kotu:"Web sitesi çevir",iyi:"Bu web sayfasını Türkçeye çevir ve SEO optimize et: [URL/METİN]. Hedef keyword: [KEYWORD]. Meta başlık, meta açıklama ve H1-H3 başlıkları da Türkçe SEO uyumlu yaz."},
+  ]},
+  {cat:"🔬 Araştırma & Analiz",color:"#a855f7",icon:"🔬",items:[
+    {title:"Derin Araştırma",kotu:"Bu konuyu araştır",iyi:"[KONU] hakkında kapsamlı araştırma yap. Şunları dahil et: (1) temel kavramlar ve tanımlar, (2) mevcut durum ve trendler, (3) ana tartışmalı noktalar, (4) uzman görüşleri, (5) Türkiye'ye özgü boyut, (6) kaynaklar listesi. Akademik dil kullan."},
+    {title:"Rakip Analizi",kotu:"Rakipler hakkında bilgi ver",iyi:"[ŞİRKET] ile [RAKİP1], [RAKİP2] arasında karşılaştırmalı analiz yap. SWOT bazlı değerlendirme, fiyatlandırma stratejisi, hedef kitle, güçlü/zayıf yönler. Tablo formatında özet ekle."},
+    {title:"Trend Analizi",kotu:"Trendleri anlat",iyi:"[SEKTÖR] sektöründe 2024-2026 döneminin en önemli 10 trendi neler? Her trend için: açıklama, Türkiye'deki yansıması, fırsat veya tehdit mi, şu an için öneri. Sıralı liste yap."},
+    {title:"SWOT Analizi",kotu:"SWOT yap",iyi:"[İŞ/PROJE/ÜRÜN] için detaylı SWOT analizi yap. Her bölüm için minimum 5 madde. Sonunda en kritik 3 stratejik öneri ekle. Türkiye piyasasına uygun değerlendirme."},
+  ]},
+  {cat:"💌 E-posta & İletişim",color:"#34d399",icon:"💌",items:[
+    {title:"İş Teklifi E-postası",kotu:"Teklif emaili yaz",iyi:"[ŞİRKET]'e [HİZMET/ÜRÜN] sunmak için soğuk e-posta yaz. Konu: kişiselleştirilmiş hook. Gövde: sorunu tanımla, çözümü sun, sosyal kanıt ver, net CTA ekle. Uzunluk: max 200 kelime."},
+    {title:"Takip E-postası",kotu:"Takip emaili yaz",iyi:"[KİŞİ]'ye [KONU] hakkındaki önceki toplantıdan 3 gün sonra gönderilecek takip e-postası yaz. Önceki konuşmaya atıfla başla, taahhütleri hatırlat, bir sonraki adımı netleştir, nazik ama kararlı ton."},
+    {title:"Şikayet Yanıtı",kotu:"Şikayete cevap ver",iyi:"Müşterinin [ŞİKAYET] konusundaki şikayetine profesyonel yanıt yaz. Empati göster, sorumluluğu kabul et, somut çözüm sun, tazminat/telafi belirt, ilişkiyi güçlendir. Savunmacı olmayan ton."},
+    {title:"Özgeçmiş Kapak Mektubu",kotu:"Kapak mektubu yaz",iyi:"[POZİSYON] için kapak mektubu yaz. Benim güçlü yönlerim: [LİSTE]. Şirketin dikkatimi çeken özellikleri: [ÖZELLIK]. İlk paragraf dikkat çekici, ikinci katkılarım, üçüncü CTA. Max 250 kelime."},
+  ]},
+  {cat:"📱 Sosyal Medya",color:"#f472b6",icon:"📱",items:[
+    {title:"LinkedIn Post Dizisi",kotu:"LinkedIn post yaz",iyi:"[KONU] hakkında 5 günlük LinkedIn içerik dizisi yaz. Her post: güçlü hook (ilk satır), 3-5 ana nokta, kişisel hikaye/deneyim, soru/CTA. 1200 karakter limit. Türkçe, profesyonel ama samimi ton."},
+    {title:"Twitter/X Thread",kotu:"Thread yaz",iyi:"[KONU] hakkında 10 tweetlik viral thread yaz. Tweet 1: çarpıcı istatistik veya soru. Tweet 2-9: her biri tek bir öğreti. Tweet 10: özet ve takip et CTA. Her tweet max 280 karakter."},
+    {title:"Instagram Caption",kotu:"Açıklama yaz",iyi:"[GÖRSEL/KONU] için Instagram gönderisi açıklaması yaz. İlk satır scroll durdurucu olsun. Emoji kullan (aşırıya kaçma). 5 satır içerik. 10 alakalı hashtag. Takipçi artıran bir soru ekle."},
+    {title:"TikTok Script",kotu:"TikTok videosu yaz",iyi:"[KONU] hakkında 60 saniyelik TikTok scripti yaz. Hook (0-3sn): çarpıcı soru/istatistik. Ana içerik (3-50sn): 3 hızlı nokta. CTA (50-60sn): beğen+takip+yorum. Dinamik, genç dil."},
+  ]},
+  {cat:"📊 Sunum & Rapor",color:"#00dcff",icon:"📊",items:[
+    {title:"Yönetici Özeti",kotu:"Özet yaz",iyi:"Şu bilgileri yöneticiye sunmak için 1 sayfalık yönetici özeti hazırla: [BİLGİLER]. Yapı: Problem (2 cümle), Analiz (3 madde), Öneri (2 madde), Beklenen Sonuç, Aksiyon Planı. Teknik jargonsuz, karar odaklı."},
+    {title:"Vaka Çalışması",kotu:"Vaka çalışması yaz",iyi:"[MÜŞTERİ/PROJE] için başarı hikayesi/vaka çalışması yaz. Yapı: Müşteri profili, karşılaşılan sorun, uygulanan çözüm, ölçülebilir sonuçlar (%X iyileşme), müşteri alıntısı. Satış materyali olarak kullanılacak."},
+    {title:"Haftalık Performans Raporu",kotu:"Rapor yaz",iyi:"Şu verileri kullanarak haftalık performans raporu oluştur: [VERİLER]. Bölümler: özet dashboard, tamamlanan işler, devam edenler, hedeflere göre sapma, önümüzdeki hafta planı, öneriler. CEO'ya sunulacak."},
   ]}
 ];
 
@@ -3104,7 +3614,7 @@ function ModelPage({modelKey}){
           </div>
           <div style={{fontSize:13,color:"#94a3b8",marginBottom:10}}>{m.tagline}</div>
           <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-            {[[m.users,"Kullanıcı"],[m.context,"Context"],[m.free?"Ücretsiz var":"Ücretli","Plan"]].map(([v,l])=>(
+            {[[m.users,"İçerik"],[m.context,"Context"],[m.free?"Ücretsiz var":"Ücretli","Plan"]].map(([v,l])=>(
               <div key={l}><div style={{fontSize:9,color:"#475569"}}>{l}</div><div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>{v}</div></div>
             ))}
           </div>
@@ -3215,36 +3725,104 @@ function PromptPage(){
 }
 
 function KarsilastirmaPage(){
-  const[tab,setTab]=useState("sohbet");
-  const d=COMP_DATA[tab];
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#475569",marginBottom:5}}>KARŞILAŞTIRMA</div><div style={{fontSize:22,fontWeight:800,color:"#e2e8f0"}}>🆚 AI Araç Karşılaştırması</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>5 kategoride detaylı, puanlı karşılaştırma</div></div>
-    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:18}}>
-      {Object.entries(COMP_DATA).map(([k,v])=><button key={k} onClick={()=>setTab(k)} style={{padding:"8px 16px",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontFamily:"inherit",background:tab===k?"rgba(0,220,255,0.15)":"rgba(255,255,255,0.04)",color:tab===k?"#00dcff":"#475569"}}>{v.title}</button>)}
+  const[filter,setFilter]=useState('hepsi');
+  const MODELS=[
+    {n:"Claude Sonnet 4.5",icon:"🧠",co:"Anthropic",ctx:"200K",free:true,
+     scores:{kod:92,genel:89,turkce:88,hiz:85,guvenik:98,maliyet:82},
+     best:"Kod, uzun döküman, güvenli görevler",color:"#a855f7"},
+    {n:"GPT-4o",icon:"🤖",co:"OpenAI",ctx:"128K",free:true,
+     scores:{kod:90,genel:89,turkce:95,hiz:88,guvenik:85,maliyet:75},
+     best:"Türkçe, multimodal, günlük kullanım",color:"#34d399"},
+    {n:"Gemini 2.5 Pro",icon:"🌟",co:"Google",ctx:"2M",free:true,
+     scores:{kod:87,genel:90,turkce:88,hiz:82,guvenik:87,maliyet:88},
+     best:"Uzun döküman, görsel analiz, araştırma",color:"#fbbf24"},
+    {n:"DeepSeek V3",icon:"🔬",co:"DeepSeek",ctx:"128K",free:true,
+     scores:{kod:90,genel:86,turkce:75,hiz:87,guvenik:70,maliyet:98},
+     best:"Kod, maliyet verimliliği, açık kaynak",color:"#00dcff"},
+    {n:"Grok 3",icon:"⚡",co:"xAI",ctx:"128K",free:false,
+     scores:{kod:84,genel:85,turkce:80,hiz:90,guvenik:78,maliyet:72},
+     best:"Güncel bilgi, Twitter verisi, hız",color:"#60a5fa"},
+    {n:"Mistral Large 2",icon:"🌊",co:"Mistral",ctx:"128K",free:false,
+     scores:{kod:82,genel:84,turkce:78,hiz:86,guvenik:90,maliyet:85},
+     best:"GDPR uyumluluk, Avrupa, maliyet",color:"#f472b6"},
+    {n:"Meta Llama 3.3",icon:"🦙",co:"Meta",ctx:"128K",free:true,
+     scores:{kod:83,genel:83,turkce:72,hiz:92,guvenik:75,maliyet:99},
+     best:"Self-host, açık kaynak, ücretsiz",color:"#fb923c"},
+  ];
+  const CATEGORIES=[
+    {id:'hepsi',l:'Tümü'},
+    {id:'kod',l:'💻 Kodlama'},
+    {id:'genel',l:'🧠 Genel'},
+    {id:'turkce',l:'🇹🇷 Türkçe'},
+    {id:'hiz',l:'⚡ Hız'},
+    {id:'guvenik',l:'🛡️ Güvenlik'},
+    {id:'maliyet',l:'💰 Maliyet'},
+  ];
+  const sorted=filter==='hepsi'?MODELS:[...MODELS].sort((a,b)=>b.scores[filter]-a.scores[filter]);
+
+  return <div style={{maxWidth:1000,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{marginBottom:22}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#00dcff',marginBottom:4}}>MODEL KARŞILAŞTIRMA</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 6px'}}>🆚 AI Model Karşılaştırması — 2026</h1>
+      <p style={{fontSize:12,color:'#64748b',margin:0}}>Claude · ChatGPT · Gemini · DeepSeek · Grok · Mistral · Llama — 7 model 6 kategoride</p>
     </div>
-    <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,overflow:"hidden",marginBottom:16}}>
-      <div style={{display:"grid",gridTemplateColumns:`140px repeat(${d.tools.length},1fr)`,background:"rgba(0,0,0,0.3)",padding:"12px 16px",gap:8,overflowX:"auto"}}>
-        <div style={{fontSize:11,color:"#475569",display:"flex",alignItems:"center"}}>KATEGORİ</div>
-        {d.tools.map((t,i)=><div key={t} style={{textAlign:"center",padding:"8px",background:`${d.colors[i]}10`,borderRadius:8}}><div style={{fontSize:12,fontWeight:700,color:d.colors[i]}}>{t}</div></div>)}
-      </div>
-      {d.cats.map((cat,ci)=>(
-        <div key={cat} style={{display:"grid",gridTemplateColumns:`140px repeat(${d.tools.length},1fr)`,padding:"10px 16px",gap:8,borderTop:"1px solid rgba(255,255,255,0.04)",background:ci%2===0?"transparent":"rgba(255,255,255,0.01)"}}>
-          <div style={{fontSize:11,color:"#94a3b8",display:"flex",alignItems:"center"}}>{cat}</div>
-          {d.scores[ci].map((sc,si)=>{const win=d.scores[ci].indexOf(Math.max(...d.scores[ci]))===si;return(
-            <div key={si} style={{textAlign:"center"}}>
-              <div style={{fontSize:12,fontWeight:win?800:400,color:win?d.colors[si]:"#475569"}}>{win?"🏆 ":""}{sc}</div>
-              <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginTop:3}}><div style={{width:`${sc}%`,height:"100%",background:win?d.colors[si]:"rgba(255,255,255,0.1)",borderRadius:2}}/></div>
+    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
+      {CATEGORIES.map(c=><button key={c.id} onClick={()=>setFilter(c.id)} style={{padding:'6px 12px',borderRadius:8,border:'1px solid '+(filter===c.id?'rgba(0,220,255,0.5)':'rgba(255,255,255,0.07)'),background:filter===c.id?'rgba(0,220,255,0.1)':'transparent',color:filter===c.id?'#00dcff':'#64748b',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>{c.l}</button>)}
+    </div>
+    {/* Skor kartları */}
+    <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
+      {sorted.map((m,idx)=>{
+        const scoreKey=filter==='hepsi'?null:filter;
+        const avgScore=Math.round(Object.values(m.scores).reduce((a,b)=>a+b,0)/6);
+        const displayScore=scoreKey?m.scores[scoreKey]:avgScore;
+        return <div key={m.n} style={{background:m.color+'06',border:'1px solid '+m.color+'20',borderRadius:12,padding:'14px 16px',display:'flex',gap:12,alignItems:'center',flexWrap:'wrap'}}>
+          <div style={{fontSize:9,fontWeight:900,color:m.color,background:m.color+'18',width:22,height:22,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>#{idx+1}</div>
+          <span style={{fontSize:24,flexShrink:0}}>{m.icon}</span>
+          <div style={{flex:1,minWidth:150}}>
+            <div style={{fontSize:13,fontWeight:800,color:m.color,marginBottom:2}}>{m.n} <span style={{fontSize:9,color:'#475569',fontWeight:400}}>— {m.co}</span></div>
+            <div style={{fontSize:10,color:'#64748b'}}>{m.best}</div>
+          </div>
+          {/* Skor barı */}
+          <div style={{flex:2,minWidth:120}}>
+            <div style={{display:'flex',gap:3,alignItems:'center',marginBottom:3}}>
+              <div style={{flex:1,height:6,background:'rgba(255,255,255,0.06)',borderRadius:3,overflow:'hidden'}}>
+                <div style={{height:'100%',width:displayScore+'%',background:'linear-gradient(90deg,'+m.color+'80,'+m.color+')',borderRadius:3,transition:'width .5s'}}/>
+              </div>
+              <span style={{fontSize:11,fontWeight:700,color:m.color,minWidth:32,textAlign:'right'}}>{displayScore}</span>
             </div>
-          );})}
-        </div>
-      ))}
+            {filter==='hepsi'&&<div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+              {Object.entries(m.scores).map(([k,v])=><span key={k} style={{fontSize:8,color:'#334155'}}>{k}:{v}</span>)}
+            </div>}
+          </div>
+          <div style={{display:'flex',gap:5,flexShrink:0}}>
+            <span style={{fontSize:8,color:'#475569',background:'rgba(255,255,255,0.04)',borderRadius:4,padding:'2px 6px'}}>{m.ctx}</span>
+            {m.free&&<span style={{fontSize:8,color:'#34d399',background:'rgba(52,211,153,0.12)',borderRadius:4,padding:'2px 6px'}}>Ücretsiz</span>}
+          </div>
+        </div>;
+      })}
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:10}}>
-      {d.tools.map((t,i)=><div key={t} style={{background:`${d.colors[i]}06`,border:`1px solid ${d.colors[i]}20`,borderRadius:11,padding:"13px"}}>
-        <div style={{fontSize:13,fontWeight:700,color:d.colors[i],marginBottom:4}}>{t}</div>
-        <div style={{fontSize:11,color:"#64748b"}}>Ort: {Math.round(d.scores.reduce((sum,row)=>sum+row[i],0)/d.cats.length)}/100</div>
-      </div>)}
+    {/* Tam benchmark tablosu */}
+    <div style={{fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:12}}>📊 Detaylı Benchmark Tablosu</div>
+    <div style={{overflowX:'auto',borderRadius:12,border:'1px solid rgba(255,255,255,0.07)'}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:10}}>
+        <thead><tr style={{background:'rgba(255,255,255,0.04)'}}>
+          {['Model','Kodlama','Genel','Türkçe','Hız','Güvenlik','Maliyet','ORT.'].map(h=><th key={h} style={{padding:'9px 10px',textAlign:'left',color:'#475569',borderBottom:'1px solid rgba(255,255,255,0.06)',whiteSpace:'nowrap',fontWeight:700}}>{h}</th>)}
+        </tr></thead>
+        <tbody>{[...MODELS].sort((a,b)=>{
+          const avgA=Object.values(a.scores).reduce((x,y)=>x+y,0)/6;
+          const avgB=Object.values(b.scores).reduce((x,y)=>x+y,0)/6;
+          return avgB-avgA;
+        }).map((m,i)=>{
+          const avg=Math.round(Object.values(m.scores).reduce((a,b)=>a+b,0)/6);
+          return <tr key={m.n} style={{background:i%2===0?'transparent':'rgba(255,255,255,0.01)'}}>
+            <td style={{padding:'8px 10px',fontWeight:700,color:m.color,whiteSpace:'nowrap'}}>{m.icon} {m.n}</td>
+            {Object.values(m.scores).map((s,j)=><td key={j} style={{padding:'8px 10px',color:s>=90?'#34d399':s>=80?'#fbbf24':'#94a3b8',fontWeight:s>=90?700:400}}>{s}</td>)}
+            <td style={{padding:'8px 10px',fontWeight:900,color:m.color}}>{avg}</td>
+          </tr>;
+        })}</tbody>
+      </table>
     </div>
+    <div style={{marginTop:14,fontSize:10,color:'#334155',textAlign:'center'}}>Skorlar 0-100 arası. Kaynak: SWE-bench, MMLU, HumanEval, LMSYS Chatbot Arena, IMDATAI test sonuçları · Mayıs 2026</div>
   </div>;
 }
 
@@ -3868,37 +4446,15 @@ function LoadingScreen({onDone}){
     {t:">> Grok / DeepSeek  [BAĞLANDI ✓]",c:"#34d399"},
     {t:">> TÜRKİYE AI #1 ██ %94.49",c:"#ff4444",b:true},
     {t:">> GÜVENLİK ........ [GEÇTİ ✓]",c:"#34d399"},
-    {t:">> 52 SAYFA/75+ PR  [HAZIR ✓]",c:"#00dcff"},
+    {t:">> 52 SAYFA/113+ PR  [HAZIR ✓]",c:"#00dcff"},
     {t:"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",c:"#0a2a14"},
     {t:"⚡ ERİŞİM ONAYLANDI",c:"#00ff88",b:true},
   ];
   useEffect(()=>{
-    // Click sound - file: /sounds/intro-click.mp3 (public klasörüne ekleyin)
-    // Şimdilik Web Audio API ile üretilen click sesi
-    try{
-      const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
-      const ctx=new AC();const T=ctx.currentTime;
-      // Keyboard click sound - 3 tuş sesi
-      [0,.08,.16].forEach((delay,i)=>{
-        const buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.025),ctx.sampleRate);
-        const data=buf.getChannelData(0);
-        for(let j=0;j<data.length;j++)data[j]=(Math.random()*2-1)*Math.pow(1-j/data.length,3)*.4;
-        const src=ctx.createBufferSource();
-        const gn=ctx.createGain();
-        const filt=ctx.createBiquadFilter();
-        filt.type='highpass';filt.frequency.value=800+i*200;
-        src.buffer=buf;src.connect(filt);filt.connect(gn);gn.connect(ctx.destination);
-        gn.gain.setValueAtTime(.3,T+delay);
-        gn.gain.exponentialRampToValueAtTime(.001,T+delay+.12);
-        src.start(T+delay);
-      });
-      // Bass thump
-      const o=ctx.createOscillator();const g=ctx.createGain();
-      o.type='sine';o.frequency.setValueAtTime(80,T);o.frequency.exponentialRampToValueAtTime(30,T+.3);
-      g.gain.setValueAtTime(.15,T);g.gain.exponentialRampToValueAtTime(.001,T+.3);
-      o.connect(g);g.connect(ctx.destination);o.start(T);o.stop(T+.35);
-    }catch(e){}
+    // Ses: imdataiwebgiris.mp3
+    _snd.play(0, 1.5);
   },[]);
+
 
   
   useEffect(()=>{const CH="IMDATAI01CLAUDE10GPT01GEMINI10NEURAL01";const iv=setInterval(()=>setChars(p=>p.map(c=>({...c,ch:CH[Math.floor(Math.random()*CH.length)],op:Math.max(.05,Math.min(.9,c.op+(Math.random()-.5)*.28)),br:Math.random()>.92,sp:Math.random()>.97}))),90);return()=>clearInterval(iv);},[]);
@@ -3985,7 +4541,7 @@ function LoadingScreen({onDone}){
         <div style={{fontSize:"clamp(24px,6vw,52px)",fontWeight:900,background:"linear-gradient(90deg,#00ff88,#00dcff,#a855f7,#f472b6,#00ff88)",backgroundSize:"250% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradient 2s linear infinite",fontFamily:"Space Grotesk,monospace",letterSpacing:".15em",marginBottom:3}}>IMDATAI</div>
         <div style={{fontSize:"clamp(6px,1.3vw,9px)",letterSpacing:".4em",color:"rgba(0,255,136,.45)",marginBottom:12}}>TÜRKİYE'NİN AI HUB'I</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,maxWidth:300,margin:"0 auto 12px"}}>
-          {[["900M+","Kullanıcı","#00dcff"],["8","Model","#a855f7"],["75+","Prompt","#fbbf24"],["52","Sayfa","#34d399"]].map(([v,l,c])=><div key={l} style={{background:c+"12",border:"1px solid "+c+"25",borderRadius:8,padding:"7px 2px",textAlign:"center"}}><div style={{fontSize:"clamp(11px,2.5vw,16px)",fontWeight:900,color:c,fontFamily:"Space Grotesk,sans-serif"}}>{v}</div><div style={{fontSize:7,color:"#334155",marginTop:1}}>{l}</div></div>)}
+          {[["480+","İçerik","#00dcff"],["8","Model","#a855f7"],["113+","Prompt","#fbbf24"],["55","Sayfa","#34d399"]].map(([v,l,c])=><div key={l} style={{background:c+"12",border:"1px solid "+c+"25",borderRadius:8,padding:"7px 2px",textAlign:"center"}}><div style={{fontSize:"clamp(11px,2.5vw,16px)",fontWeight:900,color:c,fontFamily:"Space Grotesk,sans-serif"}}>{v}</div><div style={{fontSize:7,color:"#334155",marginTop:1}}>{l}</div></div>)}
         </div>
         <div style={{fontSize:10,color:"rgba(0,255,136,.38)",letterSpacing:".18em",animation:"blink 1.1s infinite",marginBottom:5}}>[ EKRANA TIKLAYINiZ ]</div>
       </div>}
@@ -4207,6 +4763,200 @@ function LuckyWheelPage(){
 // ══════════════════════════════════════════════════════════
 // ANİMASYON GALERİSİ — Fullscreen
 // ══════════════════════════════════════════════════════════
+
+// ── Generic Canvas Animasyon Bileşeni (TEK bileşen, prop ile çalışır) ──
+// makeCanvasAnim KULLANMIYOR — React #321 hatasını önler
+function GenericCanvasAnim({drawFn}){
+  const ref=useRef();
+  const fRef=useRef(0);
+  useEffect(()=>{
+    const c=ref.current;if(!c)return;
+    const ctx=c.getContext('2d');
+    let raf,running=true;
+    function resize(){
+      const parent=c.parentElement;
+      const w=parent?parent.clientWidth:window.innerWidth;
+      const h=parent?parent.clientHeight:window.innerHeight;
+      if(c.width!==w||c.height!==h){c.width=w||640;c.height=h||400;}
+    }
+    resize();
+    // ResizeObserver + fullscreen change
+    const ro=typeof ResizeObserver!=='undefined'?new ResizeObserver(()=>{resize();}):{observe:()=>{},disconnect:()=>{}};
+    if(c.parentElement)ro.observe(c.parentElement);
+    const onFS=()=>setTimeout(resize,100);
+    document.addEventListener('fullscreenchange',onFS);
+    document.addEventListener('webkitfullscreenchange',onFS);
+    function loop(){
+      if(!running)return;
+      try{
+        resize();
+        const w=c.width,h=c.height;
+        if(w>0&&h>0)drawFn({w,h,ctx,frame:fRef.current});
+        fRef.current++;
+      }catch(e){}
+      raf=requestAnimationFrame(loop);
+    }
+    raf=requestAnimationFrame(loop);
+    return()=>{
+      running=false;cancelAnimationFrame(raf);ro.disconnect();
+      document.removeEventListener('fullscreenchange',onFS);
+      document.removeEventListener('webkitfullscreenchange',onFS);
+    };
+  },[drawFn]);
+  return <canvas ref={ref} style={{width:'100%',height:'100%',display:'block',background:'#050A14'}}/>;
+}
+
+// ── Draw Fonksiyonları (module scope'ta güvenli — sadece plain JS) ──────
+const _fractalDraw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);const t=Date.now()/1000;
+  function br(x,y,len,ang,d){
+    if(d<1||len<2)return;
+    const x2=x+Math.cos(ang)*len,y2=y-Math.sin(ang)*len;
+    ctx.strokeStyle=`hsl(${120+d*20},80%,${40+d*5}%)`;
+    ctx.lineWidth=d*0.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();
+    br(x2,y2,len*0.72,ang-0.45+Math.sin(t)*0.1,d-1);
+    br(x2,y2,len*0.72,ang+0.45+Math.cos(t)*0.1,d-1);
+  }
+  br(w/2,h,h*0.22,Math.PI/2,10);
+};
+const _galaxyDraw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);const t=Date.now()/3000,cx=w/2,cy=h/2;
+  for(let i=0;i<250;i++){
+    const a=i*0.1+t,r=Math.sqrt(i)*12;
+    ctx.beginPath();ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.4,1.2,0,6.28);
+    ctx.fillStyle=`hsl(${200+i*0.5},80%,70%)`;ctx.fill();
+  }
+};
+const _auraDraw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#000820';ctx.fillRect(0,0,w,h);
+  const t=Date.now()/2000;
+  [0,1,2,3].forEach(l=>{
+    ctx.beginPath();
+    for(let x=0;x<=w;x+=5){
+      const y=h*0.3+Math.sin(x/80+t+l)*60+Math.sin(x/40+t*1.3+l)*30;
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.lineTo(w,0);ctx.lineTo(0,0);ctx.closePath();
+    ctx.fillStyle=`hsla(${120+l*40+Math.sin(t)*30},100%,50%,0.18)`;ctx.fill();
+  });
+};
+const _blackholeDraw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);const t=Date.now()/1000,cx=w/2,cy=h/2;
+  for(let i=200;i>0;i--){
+    const a=i*0.35+t*(1+i/200),r=i*1.2;
+    ctx.beginPath();ctx.arc(cx+Math.cos(a)*r*(1-i/400),cy+Math.sin(a)*r*0.5*(1-i/400),Math.max(1,3-i/100),0,6.28);
+    ctx.fillStyle=`hsl(${200+i},90%,${20+i/4}%)`;ctx.fill();
+  }
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,80);
+  g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.arc(cx,cy,80,0,6.28);ctx.fillStyle=g;ctx.fill();
+};
+const _dna2Draw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);const t=Date.now()/800;
+  for(let y=0;y<h;y+=5){
+    const wave=Math.sin(y/40+t)*w*0.25,x1=w/2+wave,x2=w/2-wave;
+    ctx.beginPath();ctx.arc(x1,y,5,0,6.28);ctx.fillStyle=`hsl(${240+y/h*120},90%,60%)`;ctx.fill();
+    ctx.beginPath();ctx.arc(x2,y,5,0,6.28);ctx.fillStyle=`hsl(${300+y/h*60},90%,60%)`;ctx.fill();
+    if(Math.floor(y/20)%2===0){ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();}
+  }
+};
+const _neonCityDraw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#050510';ctx.fillRect(0,0,w,h);
+  const t=Date.now()/2000;
+  for(let i=0;i<12;i++){
+    const bw=40+i*8,bh=50+Math.sin(i*1.5)*70,bx=i*(w/11.5),by=h-bh,hue=i*30+t*20;
+    ctx.fillStyle=`hsl(${hue},80%,8%)`;ctx.fillRect(bx,by,bw-2,bh);
+    ctx.strokeStyle=`hsl(${hue},100%,55%)`;ctx.lineWidth=1.5;ctx.strokeRect(bx,by,bw-2,bh);
+    for(let wy=by+12;wy<h-5;wy+=14){
+      for(let wx=bx+5;wx<bx+bw-5;wx+=10){
+        if(Math.random()>0.65){ctx.fillStyle=`hsl(${hue+30},100%,70%)`;ctx.fillRect(wx,wy,6,7);}
+      }
+    }
+  }
+};
+const _quantumDraw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);const t=Date.now()/600;
+  for(let wave=0;wave<5;wave++){
+    ctx.beginPath();
+    for(let x=0;x<w;x+=2){
+      const y=h/2+Math.sin(x/30+t+wave)*40*Math.exp(-Math.pow((x-w/2)/150,2))+Math.sin(x/15+t*2+wave)*15;
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle=`hsla(${180+wave*36},100%,60%,0.6)`;ctx.lineWidth=2;ctx.stroke();
+  }
+};
+const _musicDraw=({w,h,ctx,frame})=>{
+  ctx.fillStyle='rgba(5,8,20,0.4)';ctx.fillRect(0,0,w,h);
+  const bars=48,bw=w/bars;
+  for(let i=0;i<bars;i++){
+    const height=(Math.sin(i*0.4+frame*0.08)+1)*h*0.4+Math.sin(i*0.8+frame*0.05)*h*0.1;
+    ctx.fillStyle=`hsl(${i*(360/bars)+frame},100%,55%)`;
+    ctx.fillRect(i*bw+1,h/2-height/2,bw-2,height);
+  }
+};
+const _snowDraw=({w,h,ctx})=>{
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#050A14';ctx.fillRect(0,0,w,h);
+  const t=Date.now()/100;
+  for(let i=0;i<80;i++){
+    ctx.beginPath();ctx.arc((i*137+t*0.5)%w,(i*83+t*(0.5+i%3*0.3))%h,1+i%3,0,6.28);
+    ctx.fillStyle=`rgba(200,220,255,${0.3+i%3*0.2})`;ctx.fill();
+  }
+  const cx=w/2,cy=h/2,r=60,ts=Date.now()/3000;
+  for(let arm=0;arm<6;arm++){
+    const a=arm*Math.PI/3+ts;
+    ctx.strokeStyle='rgba(180,210,255,0.7)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.stroke();
+  }
+};
+const _nebulaDraw=({w,h,ctx,frame})=>{
+  if(frame===0)ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='rgba(5,0,15,0.03)';ctx.fillRect(0,0,w,h);
+  for(let i=0;i<12;i++){
+    const x=w/2+Math.sin(frame*0.01+i)*w*0.38,y=h/2+Math.cos(frame*0.013+i*1.3)*h*0.38;
+    const g=ctx.createRadialGradient(x,y,0,x,y,50);
+    const hue=200+i*18+frame*0.1;
+    g.addColorStop(0,`hsla(${hue},100%,70%,0.15)`);g.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(x,y,70,0,6.28);ctx.fillStyle=g;ctx.fill();
+  }
+};
+const _gridDraw=({w,h,ctx,frame})=>{
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#030810';ctx.fillRect(0,0,w,h);
+  const cols=10,rows=7,cw=w/cols,rh=h/rows;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const pulse=Math.sin(Math.sqrt(Math.pow(c-cols/2,2)+Math.pow(r-rows/2,2))*0.8-frame*0.1)*0.5+0.5;
+      ctx.strokeStyle=`rgba(0,220,255,${pulse*0.6})`;ctx.lineWidth=1;ctx.strokeRect(c*cw+2,r*rh+2,cw-4,rh-4);
+      if(pulse>0.8){ctx.fillStyle=`rgba(0,220,255,${(pulse-0.8)*2})`;ctx.fillRect(c*cw+4,r*rh+4,cw-8,rh-8);}
+    }
+  }
+};
+const _fireworksDraw=({w,h,ctx,frame})=>{
+  ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,0,w,h);
+  if(frame%45===0){
+    const x=w*(0.2+Math.random()*0.6),y=h*(0.1+Math.random()*0.5),hue=Math.random()*360;
+    for(let i=0;i<50;i++){
+      const a=Math.random()*Math.PI*2,spd=1+Math.random()*3;
+      ctx.beginPath();ctx.arc(x+Math.cos(a)*spd*15,y+Math.sin(a)*spd*15,3,0,6.28);
+      ctx.fillStyle=`hsla(${hue},100%,65%,0.8)`;ctx.fill();
+    }
+  }
+};
+const _heartbeatDraw=({w,h,ctx,frame})=>{
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#050010';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#00ff88';ctx.lineWidth=2;ctx.shadowColor='#00ff88';ctx.shadowBlur=12;
+  ctx.beginPath();
+  for(let x=0;x<w;x++){
+    const off=(x+frame*2)%w;
+    let y=h/2;
+    if(off>w*0.4&&off<w*0.42)y=h/2-80;
+    else if(off>w*0.42&&off<w*0.44)y=h/2+40;
+    else if(off>w*0.44&&off<w*0.46)y=h/2-20;
+    else y=h/2+Math.sin(off/30)*5;
+    x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();ctx.shadowBlur=0;
+};
+
 function AnimParticle(){
   const r=useRef();
   useEffect(()=>{
@@ -4322,7 +5072,21 @@ const ANIMS=[
   {id:"plasma",t:"⚗️ Plazma",d:"Sıvı renkli plazma akışı",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const iv=setInterval(()=>{t+=0.04;const img=ctx.createImageData(c.width,c.height);const d=img.data;for(let y=0;y<c.height;y+=2)for(let x=0;x<c.width;x+=2){const v=Math.sin(x/30+t)+Math.sin(y/30+t)+Math.sin((x+y)/40+t)+Math.sin(Math.sqrt(x*x+y*y)/25+t);const r2=Math.floor((Math.sin(v*Math.PI)+1)*127.5);const g2=Math.floor((Math.sin(v*Math.PI+2.1)+1)*127.5);const b2=Math.floor((Math.sin(v*Math.PI+4.2)+1)*127.5);const i=(y*c.width+x)*4;d[i]=r2;d[i+1]=g2;d[i+2]=b2;d[i+3]=220;if(x+1<c.width){d[i+4]=r2;d[i+5]=g2;d[i+6]=b2;d[i+7]=220;}if(y+1<c.height){const i2=((y+1)*c.width+x)*4;d[i2]=r2;d[i2+1]=g2;d[i2+2]=b2;d[i2+3]=220;}}ctx.putImageData(img,0,0);},50);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"fractal",t:"🌿 Fraktal Ağaç",d:"Özyinelemeli fraktal büyüme",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;function branch(x,y,len,angle,depth){if(depth<=0||len<2)return;const x2=x+Math.cos(angle)*len,y2=y+Math.sin(angle)*len;const hue=(t*30+depth*25)%360;ctx.strokeStyle=`hsla(${hue},80%,${40+depth*8}%,${depth/8})`;ctx.lineWidth=depth*0.8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();const spread=0.4+Math.sin(t+depth)*0.15;branch(x2,y2,len*.68,angle-spread,depth-1);branch(x2,y2,len*.68,angle+spread,depth-1);}const iv=setInterval(()=>{t+=0.025;ctx.fillStyle="rgba(3,6,9,.35)";ctx.fillRect(0,0,c.width,c.height);branch(c.width/2,c.height,80,-Math.PI/2,7);},60);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
   {id:"lissajous",t:"〰️ Lissajous",d:"Harmonik eğri izleri",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");let t=0;const pts=[];const iv=setInterval(()=>{t+=0.018;const A=c.width*.38,B=c.height*.38,a=3,b=2;const px=c.width/2+A*Math.sin(a*t+Math.PI/4),py=c.height/2+B*Math.sin(b*t);pts.push({x:px,y:py,age:0});if(pts.length>350)pts.shift();ctx.fillStyle="rgba(3,6,9,.18)";ctx.fillRect(0,0,c.width,c.height);pts.forEach((p,i)=>{p.age++;const ratio=i/pts.length;const hue=(t*60+i*1.2)%360;ctx.fillStyle=`hsla(${hue},90%,65%,${ratio*.9})`;ctx.beginPath();ctx.arc(p.x,p.y,ratio*3.5+.5,0,Math.PI*2);ctx.fill();});},22);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
-  {id:"sandpile",t:"🏖️ Kum Fırtınası",d:"Parçacık akış simülasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const ps=Array.from({length:180},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,h:Math.random()*360,size:1.5+Math.random()*2.5,life:Math.random()}));let t=0;const iv=setInterval(()=>{t+=.025;ctx.fillStyle="rgba(4,8,20,.2)";ctx.fillRect(0,0,c.width,c.height);ps.forEach(p=>{const windX=Math.sin(t+p.y*.008)*1.2,windY=Math.cos(t*.7+p.x*.006)*.8;p.vx=p.vx*.96+windX*.08;p.vy=p.vy*.96+windY*.08+.04;p.x+=p.vx;p.y+=p.vy;p.life+=.01;if(p.x<0||p.x>c.width||p.y>c.height){p.x=Math.random()*c.width;p.y=-5;p.vx=(Math.random()-.5)*2;p.vy=Math.random()*.5;p.life=0;}if(p.x>c.width)p.x=0;const al=Math.sin(p.life*Math.PI)*.85;ctx.fillStyle=`hsla(${p.h},80%,65%,${al})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});},35);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },
+  {id:"sandpile",t:"🏖️ Kum Fırtınası",d:"Parçacık akış simülasyonu",Comp:()=>{const r=useRef();useEffect(()=>{const c=r.current;if(!c)return;c.width=c.offsetWidth||400;c.height=c.offsetHeight||300;const ctx=c.getContext("2d");const ps=Array.from({length:180},()=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,h:Math.random()*360,size:1.5+Math.random()*2.5,life:Math.random()}));let t=0;const iv=setInterval(()=>{t+=.025;ctx.fillStyle="rgba(4,8,20,.2)";ctx.fillRect(0,0,c.width,c.height);ps.forEach(p=>{const windX=Math.sin(t+p.y*.008)*1.2,windY=Math.cos(t*.7+p.x*.006)*.8;p.vx=p.vx*.96+windX*.08;p.vy=p.vy*.96+windY*.08+.04;p.x+=p.vx;p.y+=p.vy;p.life+=.01;if(p.x<0||p.x>c.width||p.y>c.height){p.x=Math.random()*c.width;p.y=-5;p.vx=(Math.random()-.5)*2;p.vy=Math.random()*.5;p.life=0;}if(p.x>c.width)p.x=0;const al=Math.sin(p.life*Math.PI)*.85;ctx.fillStyle=`hsla(${p.h},80%,65%,${al})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});},35);return()=>clearInterval(iv);},[]);return <canvas ref={r} style={{width:"100%",height:"100%"}}/>;} },,
+  // ── YENİ ANİMASYONLAR ─────────────────────────
+  {id:"fractal",t:"🌿 Fraktal Ağaç",d:"Matematiksel dal sistemi",cat:"Matematik",drawFn:_fractalDraw},
+  {id:"galaxy2",t:"🌌 Galaksi Dönüşü",d:"Sarmal galaksi simülasyonu",cat:"Uzay",drawFn:_galaxyDraw},
+  {id:"aurora",t:"🌈 Kuzey Işıkları",d:"Aurora borealis efekti",cat:"Doğa",drawFn:_auraDraw},
+  {id:"blackhole",t:"🕳️ Karadelik",d:"Kütleçekim simülasyonu",cat:"Uzay",drawFn:_blackholeDraw},
+  {id:"dna2",t:"🧬 DNA Sarmalı v2",d:"Renkli çift sarmal",cat:"Bilim",drawFn:_dna2Draw},
+  {id:"neon_city",t:"🌆 Neon Şehir",d:"Siberpunk şehir görünümü",cat:"Sanat",drawFn:_neonCityDraw},
+  {id:"quantum",t:"🔬 Kuantum Dalgası",d:"Dalga fonksiyonu görselleştirme",cat:"Bilim",drawFn:_quantumDraw},
+  {id:"music",t:"🎵 Müzik Visualizer",d:"Audio spectrum barları",cat:"Sanat",drawFn:_musicDraw},
+  {id:"snow",t:"❄️ Kar Tanesi",d:"Kar yağışı + kristal",cat:"Doğa",drawFn:_snowDraw},
+  {id:"nebula",t:"🌌 Nebula",d:"Galaksik bulutsu",cat:"Uzay",drawFn:_nebulaDraw},
+  {id:"grid",t:"⚡ Izgara Pulse",d:"Teknoloji grid efekti",cat:"Teknoloji",drawFn:_gridDraw},
+  {id:"fireworks",t:"🎆 Havai Fişek",d:"Kutlama patlamaları",cat:"Görsel",drawFn:_fireworksDraw},
+  {id:"heartbeat",t:"❤️ Kalp Atışı",d:"EKG monitör simülasyonu",cat:"Bilim",drawFn:_heartbeatDraw}
 ];
 
 
@@ -4343,6 +5107,10 @@ function AnimasyonPage(){
   const EMOJIS=["🌌","🧠","🧬","🌊","🌐","🔢","⬡","🎆","⚫","🌠","❤️","🐦","🌀","✨","📡","🎵","🔲","💎","🫧","📐","🕐","🚇","⚗️","🌿","〰️","🏖️"];
 
   const[audioOn,setAudioOn]=useState(false);
+
+  // Sayfa değişince sesi MUTLAKA durdur
+  useEffect(()=>{ return()=>{ stopAudio(); }; },[]);
+
 
   function tryPlayAudio(id){
     try{
@@ -4386,7 +5154,12 @@ function AnimasyonPage(){
 
 
   function openAnim(anim){setSel(anim);setViewMode('mini');tryPlayAudio(anim.id);}
-  function closeAnim(){stopAudio();setSel(null);}
+  function closeAnim(){
+    stopAudio();
+    setSel(null);
+    setViewMode('mini');
+    try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}
+  }
   function goFull(){
     setViewMode('full');
     try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}catch(e){}
@@ -4400,7 +5173,8 @@ function AnimasyonPage(){
 
     // ── MINI WINDOW ──────────────────────────────────
   if(sel&&viewMode==='mini'){
-    const AnimComp=sel.Comp;
+    const hasDrawFn=sel.drawFn&&typeof sel.drawFn==='function';
+    const AnimComp=hasDrawFn?()=><GenericCanvasAnim drawFn={sel.drawFn}/>:sel.Comp;
     return(
       <div style={{
         position:"fixed",inset:0,zIndex:9998,
@@ -4411,10 +5185,10 @@ function AnimasyonPage(){
           background:"#030810",
           border:"1.5px solid rgba(168,85,247,.55)",
           borderRadius:14,
-          overflow:"hidden",
           boxShadow:"0 16px 60px rgba(0,0,0,.95),0 0 40px rgba(168,85,247,.18)",
           width:"min(680px,92vw)",
-          maxHeight:"90vh",
+          height:"min(440px,78vh)",
+          maxHeight:"85vh",
           display:"flex",
           flexDirection:"column",
           overflow:"hidden"
@@ -4430,9 +5204,10 @@ function AnimasyonPage(){
             <span style={{fontSize:9,color:audioOn?"#34d399":"#475569",flexShrink:0}}>{audioOn?"🎵 Ses Açık":"🔇 Ses Yok"}</span>
             <button onClick={goFull} style={{padding:"3px 11px",border:"1px solid rgba(0,220,255,.35)",borderRadius:7,background:"rgba(0,220,255,.08)",color:"#00dcff",fontSize:10,cursor:"pointer",fontFamily:"monospace",fontWeight:700,flexShrink:0}}>⛶ Tam</button>
           </div>
-          {/* Canvas - 16:9 ratio, flex grow */}
-          <div style={{flex:1,minHeight:0,position:"relative",background:"#020609",overflow:"hidden"}}>
-            <div style={{position:"absolute",inset:0}}>
+          {/* Canvas - explicit height */}
+          <div style={{position:"relative",background:"#020609",overflow:"hidden",
+            flexGrow:1,minHeight:200,height:"calc(min(440px,78vh) - 88px)"}}>
+            <div style={{position:"absolute",inset:0,width:"100%",height:"100%"}}>
               <Safe><AnimComp/></Safe>
             </div>
           </div>
@@ -4507,133 +5282,411 @@ function AnimasyonPage(){
 }
 
 function GrokPage({setPage}){
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{background:"linear-gradient(135deg,rgba(0,0,0,0.4),rgba(251,146,60,0.05))",border:"1px solid rgba(251,146,60,0.25)",borderRadius:20,padding:"28px",marginBottom:20}}>
-      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
-        <div style={{fontSize:52}}>⚡</div>
-        <div><div style={{fontSize:26,fontWeight:900,color:"#fb923c",fontFamily:"'Space Grotesk',sans-serif"}}>Grok 3 — xAI</div>
-        <div style={{fontSize:12,color:"#64748b"}}>Elon Musk'ın AI'ı · X/Twitter entegreli · Gerçek Zamanlı Veriler · Mizahi Kişilik</div></div>
+  const[tab,setTab]=useState('genel');
+  const TABS=[{id:'genel',l:'⚡ Genel'},{id:'ozellik',l:'🔥 Özellikler'},{id:'karsi',l:'🆚 Karşılaştır'},{id:'ipucu',l:'💡 İpuçları'}];
+
+  const FEATURES=[
+    {e:"📡",t:"Gerçek Zamanlı Veri",d:"X (Twitter) verisine direkt erişim. Güncel haberler, trendler, tartışmalar anlık olarak işlenebiliyor. Diğer modellerin bilmediği son dakika olaylarını biliyor."},
+    {e:"🧠",t:"Grok 3 Modeli",d:"xAI'ın en güçlü modeli. Matematik, kodlama ve akıl yürütmede üst düzey performans. Aurora görsel üretimi dahil."},
+    {e:"😄",t:"Mizah ve Yaratıcılık",d:"Diğer AI'lardan farklı olarak daha az kısıtlı ve daha esprili. Hiciv, ironi ve yaratıcı içerikler için tercih ediliyor."},
+    {e:"🔍",t:"Ağır Araştırma Modu",d:"'DeepSearch' özelliği ile bir konuyu derinlemesine araştırıp kapsamlı rapor üretiyor. Saatler sürecek araştırmayı dakikalara indiriyor."},
+    {e:"🎨",t:"Aurora Görsel Üretimi",d:"Grok içinde entegre görsel üretim. Metin açıklamasından yüksek kaliteli görseller oluşturma özelliği."},
+    {e:"📊",t:"Büyük Düşünme Modeli",d:"Karmaşık problemlerde adım adım düşünme (chain-of-thought). Matematik ve bilim sorularında güçlü performans."},
+  ];
+
+  const COMPARE=[
+    {m:"Gerçek Zamanlı Veri",grok:"✅ X/Twitter",gpt:"✅ Web arama",claude:"Sınırlı"},
+    {m:"Güncel Haber",grok:"✅ Anlık",gpt:"✅ İyi",claude:"🟡 Orta"},
+    {m:"Kod Yazma",grok:"⭐⭐⭐⭐",gpt:"⭐⭐⭐⭐⭐",claude:"⭐⭐⭐⭐⭐"},
+    {m:"Türkçe",grok:"⭐⭐⭐",gpt:"⭐⭐⭐⭐⭐",claude:"⭐⭐⭐⭐"},
+    {m:"Mizah/Yaratıcılık",grok:"⭐⭐⭐⭐⭐",gpt:"⭐⭐⭐⭐",claude:"⭐⭐⭐⭐"},
+    {m:"Ücretsiz Kullanım",grok:"Sınırlı",gpt:"Sınırlı",claude:"Sınırlı"},
+    {m:"API Erişimi",grok:"✅ var",gpt:"✅ var",claude:"✅ var"},
+    {m:"Görsel Üretim",grok:"✅ Aurora",gpt:"✅ DALL-E",claude:"🟡 Sınırlı"},
+  ];
+
+  const TIPS=[
+    "Grok'u Twitter trendlerini analiz etmek için kullanın: 'Bu hafta X'teki [KONU] tartışmasını özetle'",
+    "DeepSearch ile: 'Grok, [KONU] hakkında kapsamlı araştırma yap, kaynak belirt' deneyin",
+    "Haber doğrulama için: 'X'te [HABER] hakkında söylenenler gerçek mi?' sorusu işe yarıyor",
+    "Grok'un mizah yeteneğini test edin: 'Yapay zeka hakkında esprili bir şiir yaz'",
+    "Rakip analizi için: 'X'te [ŞİRKET] hakkında ne konuşuluyor?' sorusu değerli bilgiler verir",
+    "Aurora ile görsel: 'Sinematik, fotogerçekçi [KONU] görseli oluştur' formatını deneyin",
+  ];
+
+  return <div style={{maxWidth:960,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{background:'linear-gradient(135deg,rgba(96,165,250,0.1),rgba(96,165,250,0.02))',border:'1px solid rgba(96,165,250,0.2)',borderRadius:18,padding:'22px',marginBottom:20}}>
+      <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#60a5fa,#3b82f6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 20px rgba(96,165,250,0.4)'}}>⚡</div>
+        <div>
+          <h1 style={{margin:0,fontSize:'clamp(18px,4vw,28px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif"}}>Grok AI — Tam Türkçe Rehber</h1>
+          <div style={{fontSize:11,color:'#60a5fa',marginTop:3}}>xAI · Elon Musk · Twitter/X Entegrasyonu · Gerçek Zamanlı</div>
+        </div>
+        <div style={{marginLeft:'auto',display:'flex',gap:5,flexWrap:'wrap'}}>
+          {['X Entegrasyonu','Gerçek Zamanlı','Aurora Görsel','DeepSearch'].map(b=><span key={b} style={{fontSize:9,background:'rgba(96,165,250,0.15)',color:'#60a5fa',border:'1px solid rgba(96,165,250,0.3)',borderRadius:5,padding:'2px 7px',fontWeight:700}}>{b}</span>)}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10,marginBottom:20}}>
-        {[["⚡","Gerçek Zamanlı","X/Twitter verisi anlık"],["🎭","Mizahi Kişilik","'Grok mode' sansürsüz"],["🔬","Araştırma","DeepSearch özelliği"],["🖼️","Görsel Üretim","Aurora modeli dahil"],["💻","Kod Analiz","Güçlü programlama"],["🆓","Ücretsiz","X Premium dahil"]].map(([e,t,d])=>(
-          <div key={t} style={{background:"rgba(251,146,60,0.08)",border:"1px solid rgba(251,146,60,0.18)",borderRadius:11,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:20,marginBottom:4}}>{e}</div>
-            <div style={{fontSize:11,fontWeight:700,color:"#fb923c",marginBottom:2}}>{t}</div>
-            <div style={{fontSize:9,color:"#475569"}}>{d}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{fontSize:13,color:"#64748b",lineHeight:1.8,marginBottom:16}}>Grok, Elon Musk'ın xAI şirketi tarafından 2023'te duyuruldu. En büyük avantajı: <strong style={{color:"#fb923c"}}>X (Twitter) platformundaki gerçek zamanlı verilere</strong> erişim. "Bugün X'te ne konuşuluyor?" sorusunu anında cevaplayabilir. Grok 3, DeepSearch özelliğiyle akademik ve web araştırması da yapabiliyor.</div>
-      <div style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:"16px",marginBottom:16}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#fb923c",marginBottom:8}}>💡 Özel Prompt Şablonu</div>
-        <div style={{fontFamily:"monospace",fontSize:11,color:"#94a3b8",lineHeight:1.8}}>{"X'te şu an [konu] hakkında ne konuşuluyor?\nEn viral tweetleri özetle.\nTürk kullanıcıların görüşleri ne?"}</div>
-      </div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-        <a href="https://x.ai" target="_blank" rel="noopener noreferrer" style={{padding:"10px 22px",borderRadius:10,background:"linear-gradient(135deg,#fb923c,#f59e0b)",color:"#fff",fontSize:13,fontWeight:700,textDecoration:"none"}}>Grok'u Dene →</a>
-        <ShareButton title="Grok 3 Rehberi" text="⚡ Grok 3 — Elon Musk'ın AI'ı! X/Twitter verisi gerçek zamanlı. Tam rehber:"/>
-        <button onClick={()=>setPage("karsilastirma")} style={{padding:"10px 18px",borderRadius:10,border:"1px solid rgba(251,146,60,0.3)",background:"transparent",color:"#fb923c",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>🆚 Diğerleriyle Karşılaştır</button>
-      </div>
+      <p style={{margin:0,fontSize:12,color:'#94a3b8',lineHeight:1.7}}>Grok, Elon Musk'ın xAI şirketi tarafından geliştirilen yapay zeka asistanıdır. <strong style={{color:'#e2e8f0'}}>En büyük avantajı: X (Twitter) verisine gerçek zamanlı erişim.</strong> Güncel olayları, trendleri ve sosyal medya tartışmalarını anlık olarak işleyebiliyor.</p>
     </div>
+
+    <div style={{display:'flex',gap:6,marginBottom:20,flexWrap:'wrap'}}>
+      {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'7px 13px',borderRadius:9,border:'1px solid '+(tab===t.id?'rgba(96,165,250,0.5)':'rgba(255,255,255,0.07)'),background:tab===t.id?'rgba(96,165,250,0.1)':'transparent',color:tab===t.id?'#60a5fa':'#64748b',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:tab===t.id?700:400}}>{t.l}</button>)}
+    </div>
+
+    {tab==='genel'&&<div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12,marginBottom:20}}>
+        {[['xAI','2023 yılında Elon Musk tarafından kuruldu. San Francisco merkezli. OpenAI\'ın eski mühendisleri de ekipte.'],
+          ['X Premium','Groka erişmek için X Premium ($8/ay) veya Premium+ ($16/ay) abonelik gerekiyor.'],
+          ['Kullanım','x.com adresinde sağ menüden Groka erişin. Mobil uygulamadan da kullanılabilir.'],
+          ['API','api.x.ai üzerinden geliştirici API si mevcut. OpenAI uyumlu format.']].map(([t,d])=><div key={t} style={{background:'rgba(96,165,250,0.05)',border:'1px solid rgba(96,165,250,0.15)',borderRadius:12,padding:'14px'}}>
+          <div style={{fontSize:12,fontWeight:700,color:'#60a5fa',marginBottom:5}}>{t}</div>
+          <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+        </div>)}
+      </div>
+      <div style={{background:'rgba(96,165,250,0.06)',border:'1px solid rgba(96,165,250,0.2)',borderRadius:12,padding:'16px'}}>
+        <div style={{fontSize:12,fontWeight:700,color:'#60a5fa',marginBottom:10}}>⚡ Grok Ne Zaman Kullanılır?</div>
+        {[['✅ Kullanın','Güncel haber analizi, X trendleri, son dakika olayları, hicivli içerik, sosyal medya araştırması'],
+          ['🟡 Dikkatli','Kod yazma (Claude daha iyi), uzun döküman (Gemini daha iyi), Türkçe metin (ChatGPT daha iyi)'],
+          ['❌ Kullanmayın','Hassas tıbbi/hukuki sorular, uzun akademik çalışmalar, gizlilik gerektiren içerikler']].map(([s,t])=><div key={s} style={{marginBottom:6,fontSize:11,color:'#94a3b8'}}><strong style={{color:s.startsWith('✅')?'#34d399':s.startsWith('🟡')?'#fbbf24':'#ff4444'}}>{s}:</strong> {t}</div>)}
+      </div>
+    </div>}
+
+    {tab==='ozellik'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:12}}>
+      {FEATURES.map(f=><div key={f.t} style={{background:'rgba(96,165,250,0.05)',border:'1px solid rgba(96,165,250,0.15)',borderRadius:12,padding:'16px'}}>
+        <div style={{fontSize:24,marginBottom:8}}>{f.e}</div>
+        <div style={{fontSize:12,fontWeight:700,color:'#60a5fa',marginBottom:5}}>{f.t}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{f.d}</div>
+      </div>)}
+    </div>}
+
+    {tab==='karsi'&&<div style={{overflowX:'auto',borderRadius:12,border:'1px solid rgba(255,255,255,0.07)'}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+        <thead><tr style={{background:'rgba(96,165,250,0.06)'}}>
+          {['Özellik','Grok','ChatGPT','Claude'].map((h,i)=><th key={h} style={{padding:'9px 14px',textAlign:'left',color:i===1?'#60a5fa':'#475569',borderBottom:'1px solid rgba(255,255,255,0.06)',fontWeight:700}}>{h}</th>)}
+        </tr></thead>
+        <tbody>{COMPARE.map((r,i)=><tr key={r.m} style={{background:i%2===0?'transparent':'rgba(255,255,255,0.015)'}}>
+          <td style={{padding:'8px 14px',color:'#94a3b8',fontSize:10}}>{r.m}</td>
+          <td style={{padding:'8px 14px',color:'#60a5fa',fontWeight:600}}>{r.grok}</td>
+          <td style={{padding:'8px 14px',color:'#64748b'}}>{r.gpt}</td>
+          <td style={{padding:'8px 14px',color:'#64748b'}}>{r.claude}</td>
+        </tr>)}</tbody>
+      </table>
+    </div>}
+
+    {tab==='ipucu'&&<div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {TIPS.map((tip,i)=><div key={i} style={{background:'rgba(96,165,250,0.05)',border:'1px solid rgba(96,165,250,0.15)',borderRadius:10,padding:'14px',display:'flex',gap:12,alignItems:'flex-start'}}>
+        <div style={{width:24,height:24,borderRadius:'50%',background:'rgba(96,165,250,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#60a5fa',fontWeight:700,flexShrink:0}}>{i+1}</div>
+        <div style={{fontSize:11,color:'#94a3b8',lineHeight:1.6}}>{tip}</div>
+      </div>)}
+      <a href="https://x.com/i/grok" target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',gap:8,alignItems:'center',padding:'10px 20px',background:'linear-gradient(135deg,#60a5fa,#3b82f6)',borderRadius:10,color:'#fff',textDecoration:'none',fontSize:12,fontWeight:700,marginTop:8,alignSelf:'flex-start'}}>⚡ Grok'u Dene →</a>
+    </div>}
   </div>;
 }
 
 function DeepSeekPage({setPage}){
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{background:"linear-gradient(135deg,rgba(96,165,250,0.08),rgba(0,0,0,0.2))",border:"1px solid rgba(96,165,250,0.25)",borderRadius:20,padding:"28px",marginBottom:20}}>
-      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
-        <div style={{fontSize:52}}>🔬</div>
-        <div><div style={{fontSize:26,fontWeight:900,color:"#60a5fa",fontFamily:"'Space Grotesk',sans-serif"}}>DeepSeek V4 — Çin</div>
-        <div style={{fontSize:12,color:"#64748b"}}>Açık Kaynak · Matematikte Dünya Rekoru · Ücretsiz API · MIT Lisansı</div></div>
+  const[tab,setTab]=useState('genel');
+  const TABS=[{id:'genel',l:'🔬 Genel'},{id:'modeller',l:'🔢 Modeller'},{id:'karsi',l:'🆚 Karşılaştır'},{id:'ipucu',l:'💡 İpuçları'},{id:'kod',l:'⚡ Kod'}];
+  const MODELS=[
+    {n:"DeepSeek V3",e:"🔬",desc:"671B MoE parametreli açık kaynak model. GPT-4o seviyesinde performans, %90 daha ucuz maliyet.",ctx:"128K",free:true,best:"Kod, matematik, analiz",benchmark:"89.9 HumanEval",color:"#00dcff"},
+    {n:"DeepSeek R1",e:"🧠",desc:"Chain-of-thought reasoning modeli. OpenAI o1 ile benchmark'ta yarışıyor. Tamamen açık kaynak.",ctx:"128K",free:true,best:"Matematik, mantık, araştırma",benchmark:"97.3 MATH",color:"#a855f7"},
+    {n:"DeepSeek Coder V2",e:"💻",desc:"Kodlama için optimize 16B model. 338 programlama dili destekler.",ctx:"128K",free:true,best:"Kod yazma, debug, refactor",benchmark:"90.2 HumanEval",color:"#34d399"},
+    {n:"DeepSeek-V2.5",e:"⚡",desc:"V2 + Coder birleşimi. Hem genel hem kodlama görevlerinde güçlü.",ctx:"128K",free:true,best:"Hibrit görevler",benchmark:"88.1 MMLU",color:"#fbbf24"},
+  ];
+  const TIPS=[
+    {e:"🆓",t:"Tamamen Ücretsiz API",d:"DeepSeek API'si şu an ücretsiz. Claude/GPT'nin 1/10 maliyetiyle aynı kalite."},
+    {e:"🔓",t:"Açık Kaynak",d:"Model ağırlıkları herkese açık. Kendi sunucunuza kurabilir, fine-tune edebilirsiniz."},
+    {e:"🇨🇳",t:"Çin Menşei — Dikkat",d:"Şirket verileri Çin sunucularında işlenebilir. Hassas veriler için dikkatli kullanın."},
+    {e:"💻",t:"Kod için #1 Tercih",d:"HumanEval'de GPT-4o'yu geçiyor. Cursor ve VS Code eklentileri mevcut."},
+    {e:"🔍",t:"Reasoning Modu",d:"'<think>' etiketi ile adım adım düşünme. Matematik ve mantık problemlerinde çok güçlü."},
+    {e:"⚡",t:"Hız",d:"V3 modeli saniyede 60+ token. Ücretsiz planda bile yüksek hız."},
+  ];
+  const COMPARE=[
+    {metric:"Genel Performans (MMLU)",ds:"88.5",gpt:"88.7",claude:"88.7",gem:"90.0"},
+    {metric:"Kodlama (HumanEval)",ds:"89.9",gpt:"90.2",claude:"92.0",gem:"87.8"},
+    {metric:"Matematik (MATH)",ds:"97.3",gpt:"93.5",claude:"95.0",gem:"94.0"},
+    {metric:"Context Window",ds:"128K",gpt:"128K",claude:"1M",gem:"2M"},
+    {metric:"API Fiyatı (1M token)",ds:"$0.27",gpt:"$2.50",claude:"$3.00",gem:"$1.25"},
+    {metric:"Açık Kaynak",ds:"✅",gpt:"❌",claude:"❌",gem:"❌"},
+    {metric:"Ücretsiz Kullanım",ds:"✅",gpt:"Sınırlı",claude:"Sınırlı",gem:"Sınırlı"},
+  ];
+  return <div style={{maxWidth:960,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{background:'linear-gradient(135deg,rgba(0,220,255,0.1),rgba(0,220,255,0.02))',border:'1px solid rgba(0,220,255,0.2)',borderRadius:18,padding:'22px',marginBottom:20}}>
+      <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#00dcff,#0891b2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 20px rgba(0,220,255,0.4)'}}>🔬</div>
+        <div>
+          <h1 style={{margin:0,fontSize:'clamp(18px,4vw,28px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif"}}>DeepSeek — Tam Türkçe Rehber</h1>
+          <div style={{fontSize:11,color:'#00dcff',marginTop:3}}>DeepSeek AI · Açık Kaynak · Ücretsiz API · Çin Menşei</div>
+        </div>
+        <div style={{marginLeft:'auto',display:'flex',gap:5,flexWrap:'wrap'}}>
+          {['Ücretsiz','Açık Kaynak','671B Params','Kod #1'].map(b=><span key={b} style={{fontSize:9,background:'rgba(0,220,255,0.15)',color:'#00dcff',border:'1px solid rgba(0,220,255,0.3)',borderRadius:5,padding:'2px 7px',fontWeight:700}}>{b}</span>)}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10,marginBottom:20}}>
-        {[["🔓","Açık Kaynak","MIT lisansı, ücretsiz"],["📐","Matematik #1","AIME'de en yüksek skor"],["💻","Kod Gücü","Programlama benchmark"],["🆓","Ücretsiz API","Aylık 500K token ücretsiz"],["🌏","Çin AI","DeepSeek şirketi, 2023"],["⚡","Hız","Çok hızlı inference"]].map(([e,t,d])=>(
-          <div key={t} style={{background:"rgba(96,165,250,0.08)",border:"1px solid rgba(96,165,250,0.18)",borderRadius:11,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:20,marginBottom:4}}>{e}</div>
-            <div style={{fontSize:11,fontWeight:700,color:"#60a5fa",marginBottom:2}}>{t}</div>
-            <div style={{fontSize:9,color:"#475569"}}>{d}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{fontSize:13,color:"#64748b",lineHeight:1.8,marginBottom:16}}>DeepSeek, Çin merkezli yapay zeka şirketi. 2025'te piyasaya çıktığında <strong style={{color:"#60a5fa"}}>matematikte dünya rekoru</strong> kırarak herkesi şaşırttı. Özellikle AIME (Amerikan Matematik Olimpiyatı) testlerinde GPT-4'ü geçti. En büyük avantajı: <strong style={{color:"#60a5fa"}}>MIT lisansı ile tamamen açık kaynak</strong> ve ücretsiz API erişimi.</div>
-      <div style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:"16px",marginBottom:16}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#60a5fa",marginBottom:8}}>💡 En İyi Kullanım Alanları</div>
-        <div style={{fontSize:11,color:"#94a3b8",lineHeight:1.8}}>✅ Matematik ve fizik problemleri<br/>✅ Kod yazma ve debug<br/>✅ Açık kaynak projelere entegrasyon<br/>✅ Ücretsiz API gerektiren uygulamalar</div>
-      </div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-        <a href="https://chat.deepseek.com" target="_blank" rel="noopener noreferrer" style={{padding:"10px 22px",borderRadius:10,background:"linear-gradient(135deg,#60a5fa,#3b82f6)",color:"#fff",fontSize:13,fontWeight:700,textDecoration:"none"}}>DeepSeek'i Dene →</a>
-        <ShareButton title="DeepSeek Rehberi" text="🔬 DeepSeek V4 — Çin'in açık kaynak AI'ı! Matematikte dünya rekoru. Ücretsiz!"/>
-      </div>
+      <p style={{margin:0,fontSize:12,color:'#94a3b8',lineHeight:1.7}}>DeepSeek, Çin merkezli High-Flyer şirketi tarafından geliştirilen açık kaynak AI modelidir. <strong style={{color:'#e2e8f0'}}>GPT-4o ile yarışan performansını 1/10 maliyetle</strong> sunuyor. R1 modeli matematik ve mantıkta OpenAI o1'i geçti.</p>
     </div>
+    <div style={{display:'flex',gap:6,marginBottom:20,flexWrap:'wrap'}}>
+      {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'7px 13px',borderRadius:9,border:'1px solid '+(tab===t.id?'rgba(0,220,255,0.5)':'rgba(255,255,255,0.07)'),background:tab===t.id?'rgba(0,220,255,0.1)':'transparent',color:tab===t.id?'#00dcff':'#64748b',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:tab===t.id?700:400}}>{t.l}</button>)}
+    </div>
+    {tab==='genel'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12}}>
+      {[['🆓','Tamamen Ücretsiz API','platform.deepseek.com — kayıt ol, API key al, hemen kullan','#34d399'],['💻','Kodlamada Dünya Rekoru','HumanEval %89.9 — GPT-4o ve Claude Sonnet ile aynı seviye','#00dcff'],['🔓','Tam Açık Kaynak','MIT lisansı. Fine-tuning, deployment, ticari kullanım serbest','#a855f7'],['🇨🇳','Hangi ülke?','Çin, Hangzhou. Hassas şirket verisi için dikkatli olun','#ff4444'],['⚡','Hız & Kapasite','Saniyede 60+ token, 128K context, çok dilli destek','#fbbf24'],['🧠','Reasoning Modeli','R1: chain-of-thought ile olimpiyat soruları çözüyor','#f472b6']].map(([e,t,d,c])=><div key={t} style={{background:c+'08',border:'1px solid '+c+'20',borderRadius:12,padding:'14px'}}>
+        <div style={{fontSize:24,marginBottom:8}}>{e}</div>
+        <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:5}}>{t}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+      </div>)}
+    </div>}
+    {tab==='modeller'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12}}>
+      {MODELS.map(m=><div key={m.n} style={{background:m.color+'07',border:'1px solid '+m.color+'25',borderRadius:13,padding:'16px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:26}}>{m.e}</span><span style={{fontSize:8,color:'#34d399',background:'rgba(52,211,153,0.15)',borderRadius:4,padding:'2px 6px',fontWeight:700}}>Ücretsiz</span></div>
+        <div style={{fontSize:13,fontWeight:800,color:m.color,marginBottom:4}}>{m.n}</div>
+        <div style={{fontSize:10,color:'#94a3b8',lineHeight:1.5,marginBottom:8}}>{m.desc}</div>
+        {[['Context',m.ctx],['Benchmark',m.benchmark],['En İyi',m.best]].map(([k,v])=><div key={k} style={{display:'flex',gap:6,marginBottom:3}}><span style={{fontSize:9,color:'#334155',minWidth:65}}>{k}:</span><span style={{fontSize:9,color:'#94a3b8'}}>{v}</span></div>)}
+      </div>)}
+    </div>}
+    {tab==='karsi'&&<div style={{overflowX:'auto',borderRadius:12,border:'1px solid rgba(255,255,255,0.07)'}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+        <thead><tr style={{background:'rgba(0,220,255,0.06)'}}>
+          {['Metrik','DeepSeek','GPT-4o','Claude','Gemini'].map((h,i)=><th key={h} style={{padding:'10px 14px',textAlign:'left',color:i===1?'#00dcff':'#475569',borderBottom:'1px solid rgba(255,255,255,0.07)',whiteSpace:'nowrap',fontWeight:700}}>{h}</th>)}
+        </tr></thead>
+        <tbody>{COMPARE.map((r,i)=><tr key={r.metric} style={{background:i%2===0?'transparent':'rgba(255,255,255,0.015)'}}>
+          <td style={{padding:'9px 14px',color:'#94a3b8',fontSize:10}}>{r.metric}</td>
+          <td style={{padding:'9px 14px',color:'#00dcff',fontWeight:700}}>{r.ds}</td>
+          <td style={{padding:'9px 14px',color:'#64748b'}}>{r.gpt}</td>
+          <td style={{padding:'9px 14px',color:'#64748b'}}>{r.claude}</td>
+          <td style={{padding:'9px 14px',color:'#64748b'}}>{r.gem}</td>
+        </tr>)}</tbody>
+      </table>
+      <div style={{padding:'10px 14px',background:'rgba(0,220,255,0.04)',fontSize:10,color:'#334155',borderTop:'1px solid rgba(255,255,255,0.05)'}}>⚡ Sonuç: Fiyat/performans oranında DeepSeek rakipsiz. Ücretsiz katmanda GPT-4o kalitesi.</div>
+    </div>}
+    {tab==='ipucu'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(270px,1fr))',gap:12}}>
+      {TIPS.map(t=><div key={t.t} style={{background:'rgba(0,220,255,0.04)',border:'1px solid rgba(0,220,255,0.1)',borderRadius:12,padding:'15px'}}>
+        <div style={{display:'flex',gap:10,marginBottom:8}}><span style={{fontSize:22}}>{t.e}</span><div style={{fontSize:12,fontWeight:700,color:'#00dcff'}}>{t.t}</div></div>
+        <div style={{fontSize:11,color:'#64748b',lineHeight:1.6}}>{t.d}</div>
+      </div>)}
+    </div>}
+    {tab==='kod'&&<div>
+      <div style={{fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:12}}>⚡ DeepSeek API Hızlı Başlangıç</div>
+      {[['Python',`import openai
+client = openai.OpenAI(
+    api_key="YOUR_DEEPSEEK_KEY",
+    base_url="https://api.deepseek.com"
+)
+response = client.chat.completions.create(
+    model="deepseek-chat",  # veya deepseek-reasoner
+    messages=[{"role": "user", "content": "Merhaba!"}]
+)
+print(response.choices[0].message.content)`],
+['JavaScript',`const response = await fetch(
+  "https://api.deepseek.com/chat/completions",
+  { method: "POST",
+    headers: {
+      "Authorization": "Bearer YOUR_KEY",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [{ role: "user", content: "Merhaba!" }]
+    })
+  }
+);`]].map(([lang,code])=><div key={lang} style={{marginBottom:14}}>
+        <div style={{fontSize:10,color:'#00dcff',marginBottom:6,fontWeight:700}}>{lang}</div>
+        <pre style={{background:'rgba(0,0,0,0.5)',borderRadius:10,padding:'14px',fontSize:10,color:'#94a3b8',overflowX:'auto',margin:0,lineHeight:1.6,border:'1px solid rgba(0,220,255,0.1)'}}>{code}</pre>
+      </div>)}
+      <a href="https://platform.deepseek.com" target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',gap:8,alignItems:'center',padding:'10px 20px',background:'linear-gradient(135deg,#00dcff,#0891b2)',borderRadius:10,color:'#fff',textDecoration:'none',fontSize:12,fontWeight:700,marginTop:8}}>🔬 DeepSeek Platform →</a>
+    </div>}
   </div>;
 }
 
 function MistralPage({setPage}){
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{background:"linear-gradient(135deg,rgba(244,114,182,0.06),rgba(0,0,0,0.2))",border:"1px solid rgba(244,114,182,0.22)",borderRadius:20,padding:"28px",marginBottom:20}}>
-      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
-        <div style={{fontSize:52}}>🇫🇷</div>
-        <div><div style={{fontSize:26,fontWeight:900,color:"#f472b6",fontFamily:"'Space Grotesk',sans-serif"}}>Mistral Large — Fransa</div>
-        <div style={{fontSize:12,color:"#64748b"}}>Avrupa'nın AI'ı · GDPR Uyumlu · Çok Dilli · Açık Kaynak Seçeneği</div></div>
+  const[tab,setTab]=useState('genel');
+  const TABS=[{id:'genel',l:'🌊 Genel'},{id:'modeller',l:'📦 Modeller'},{id:'karsi',l:'🆚 Karşılaştır'},{id:'api',l:'⚡ API'}];
+  const MODELS=[
+    {n:"Mistral Large 2",e:"👑",desc:"Mistral'ın en güçlü modeli. GPT-4 seviyesi, %30 daha ucuz. 128K context.",best:"Analiz, yazı, çok dilli",free:false,price:"€0.002/1K token",color:"#f472b6"},
+    {n:"Mistral Nemo",e:"🚀",desc:"12B, verimlilikte benchmark lideri. Codestral ile birlikte kullanım.",best:"Hızlı görevler, mobil",free:true,price:"Ücretsiz",color:"#34d399"},
+    {n:"Codestral",e:"💻",desc:"Kod için özel 22B model. 80+ dil, fill-in-the-middle desteği.",best:"Kod tamamlama, debug",free:false,price:"€0.001/1K",color:"#00dcff"},
+    {n:"Mixtral 8x7B",e:"⚡",desc:"Mixture of Experts mimari. Açık kaynak, yerel kurulum mümkün.",best:"Açık kaynak projeleri",free:true,price:"Açık Kaynak",color:"#a855f7"},
+    {n:"Mistral Small 3",e:"🌱",desc:"Küçük ama güçlü. Uygun fiyat + hız kombinasyonu.",best:"Yüksek hacim görevler",free:false,price:"€0.001/1K",color:"#fbbf24"},
+    {n:"Le Chat",e:"💬",desc:"Mistral'ın ChatGPT alternatifi. Web arayüzü, Türkçe destekler.",best:"Günlük kullanım",free:true,price:"Ücretsiz",color:"#fb923c"},
+  ];
+  const COMPARE=[
+    {m:"MMLU Genel",mis:"84.0",gpt:"88.7",claude:"88.7"},
+    {m:"HumanEval Kod",mis:"82.0",gpt:"90.2",claude:"92.0"},
+    {m:"Context",mis:"128K",gpt:"128K",claude:"1M"},
+    {m:"Açık Kaynak",mis:"✅ Bazı",gpt:"❌",claude:"❌"},
+    {m:"Avrupa Menşei",mis:"🇫🇷 Evet",gpt:"🇺🇸",claude:"🇺🇸"},
+    {m:"GDPR Uyumlu",mis:"✅ Tam",gpt:"Kısmi",claude:"Kısmi"},
+    {m:"Türkçe",mis:"İyi",gpt:"Mükemmel",claude:"Çok İyi"},
+  ];
+  return <div style={{maxWidth:960,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{background:'linear-gradient(135deg,rgba(244,114,182,0.1),rgba(244,114,182,0.02))',border:'1px solid rgba(244,114,182,0.2)',borderRadius:18,padding:'22px',marginBottom:20}}>
+      <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#f472b6,#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 20px rgba(244,114,182,0.4)'}}>🌊</div>
+        <div>
+          <h1 style={{margin:0,fontSize:'clamp(18px,4vw,28px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif"}}>Mistral AI — Tam Türkçe Rehber</h1>
+          <div style={{fontSize:11,color:'#f472b6',marginTop:3}}>Fransa · Açık Kaynak Lider · GDPR Uyumlu · Avrupa'nın en güçlü AI şirketi</div>
+        </div>
+        <div style={{marginLeft:'auto',display:'flex',gap:5,flexWrap:'wrap'}}>
+          {['🇫🇷 Fransız','GDPR Uyumlu','Açık Kaynak','6 Model'].map(b=><span key={b} style={{fontSize:9,background:'rgba(244,114,182,0.15)',color:'#f472b6',border:'1px solid rgba(244,114,182,0.3)',borderRadius:5,padding:'2px 7px',fontWeight:700}}>{b}</span>)}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10,marginBottom:20}}>
-        {[["🇪🇺","GDPR Uyumlu","AB veri gizliliği"],["🌍","Çok Dilli","Türkçe dahil 20+ dil"],["🔓","Açık Kaynak","Mistral 7B ve 8x7B ücretsiz"],["⚡","Hız","Mixtral MoE mimarisi"],["🔒","Veri Gizliliği","Veriler AB'de kalır"],["💼","Kurumsal","Enterprise seçenekleri"]].map(([e,t,d])=>(
-          <div key={t} style={{background:"rgba(244,114,182,0.08)",border:"1px solid rgba(244,114,182,0.18)",borderRadius:11,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:20,marginBottom:4}}>{e}</div>
-            <div style={{fontSize:11,fontWeight:700,color:"#f472b6",marginBottom:2}}>{t}</div>
-            <div style={{fontSize:9,color:"#475569"}}>{d}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{fontSize:13,color:"#64748b",lineHeight:1.8,marginBottom:16}}>Mistral AI, 2023'te Paris'te kurulan Avrupa'nın en önemli AI girişimi. AB kurumları, bankalar ve GDPR uyumluluğuna önem veren şirketlerin tercihi. <strong style={{color:"#f472b6"}}>Mixtral 8x7B</strong> modeli, 8 uzman modelin bir arada çalıştığı "Mixture of Experts" mimarisini kullanıyor — hem hızlı hem güçlü.</div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-        <a href="https://chat.mistral.ai" target="_blank" rel="noopener noreferrer" style={{padding:"10px 22px",borderRadius:10,background:"linear-gradient(135deg,#f472b6,#ec4899)",color:"#fff",fontSize:13,fontWeight:700,textDecoration:"none"}}>Mistral'ı Dene →</a>
-        <ShareButton title="Mistral Rehberi" text="🇫🇷 Mistral — Avrupa'nın AI şampiyonu! GDPR uyumlu, Türkçe destekli."/>
-      </div>
+      <p style={{margin:0,fontSize:12,color:'#94a3b8',lineHeight:1.7}}>Mistral AI, 2023'te Paris'te kurulan ve sadece 18 ayda <strong style={{color:'#e2e8f0'}}>6 milyar Euro değerlemeye</strong> ulaşan Avrupa'nın en hızlı büyüyen AI şirketidir. GDPR uyumluluğu ve açık kaynak modelleriyle kurumsal tercih.</p>
     </div>
+    <div style={{display:'flex',gap:6,marginBottom:20,flexWrap:'wrap'}}>
+      {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'7px 13px',borderRadius:9,border:'1px solid '+(tab===t.id?'rgba(244,114,182,0.5)':'rgba(255,255,255,0.07)'),background:tab===t.id?'rgba(244,114,182,0.1)':'transparent',color:tab===t.id?'#f472b6':'#64748b',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:tab===t.id?700:400}}>{t.l}</button>)}
+    </div>
+    {tab==='genel'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12}}>
+      {[['🇫🇷','Avrupa Yapımı','OpenAI alternatifinizin verileriniz Avrupa sunucularında kalıyor. GDPR %100 uyumlu.','#f472b6'],['🔓','Açık Kaynak Lider','Mixtral 8x7B ve Mistral 7B tamamen açık. Kendi altyapınızda çalıştırın.','#34d399'],['💻','Codestral ile Kod','GitHub Copilot benzeri kod tamamlama. VS Code + JetBrains eklentisi var.','#00dcff'],['⚡','Maliyet Verimliliği','GPT-4 kalitesinde performans, %30-60 daha düşük API maliyeti.','#fbbf24'],['🌍','Çok Dilli','Fransızca başta, Türkçe dahil 30+ dil. Avrupa dilleri en iyi.','#a855f7'],['💬','Le Chat','mistral.ai/chat — ücretsiz web arayüzü. Türkçe konuşabilir.','#fb923c']].map(([e,t,d,c])=><div key={t} style={{background:c+'07',border:'1px solid '+c+'18',borderRadius:12,padding:'14px'}}>
+        <div style={{fontSize:24,marginBottom:8}}>{e}</div>
+        <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:5}}>{t}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+      </div>)}
+    </div>}
+    {tab==='modeller'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:12}}>
+      {MODELS.map(m=><div key={m.n} style={{background:m.color+'07',border:'1px solid '+m.color+'20',borderRadius:13,padding:'16px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:24}}>{m.e}</span><span style={{fontSize:8,color:m.free?'#34d399':'#fbbf24',background:m.free?'rgba(52,211,153,0.12)':'rgba(251,191,36,0.12)',borderRadius:4,padding:'2px 6px',fontWeight:700}}>{m.price}</span></div>
+        <div style={{fontSize:13,fontWeight:800,color:m.color,marginBottom:4}}>{m.n}</div>
+        <div style={{fontSize:10,color:'#94a3b8',lineHeight:1.5,marginBottom:6}}>{m.desc}</div>
+        <div style={{fontSize:9,color:m.color,background:m.color+'10',borderRadius:5,padding:'4px 8px'}}>✅ {m.best}</div>
+      </div>)}
+    </div>}
+    {tab==='karsi'&&<div style={{overflowX:'auto',borderRadius:12,border:'1px solid rgba(255,255,255,0.07)'}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+        <thead><tr style={{background:'rgba(244,114,182,0.06)'}}>{['Metrik','Mistral','GPT-4o','Claude'].map((h,i)=><th key={h} style={{padding:'9px 14px',textAlign:'left',color:i===1?'#f472b6':'#475569',borderBottom:'1px solid rgba(255,255,255,0.06)',fontWeight:700}}>{h}</th>)}</tr></thead>
+        <tbody>{COMPARE.map((r,i)=><tr key={r.m} style={{background:i%2===0?'transparent':'rgba(255,255,255,0.015)'}}><td style={{padding:'8px 14px',color:'#94a3b8',fontSize:10}}>{r.m}</td><td style={{padding:'8px 14px',color:'#f472b6',fontWeight:700}}>{r.mis}</td><td style={{padding:'8px 14px',color:'#64748b'}}>{r.gpt}</td><td style={{padding:'8px 14px',color:'#64748b'}}>{r.claude}</td></tr>)}</tbody>
+      </table>
+    </div>}
+    {tab==='api'&&<div>
+      <div style={{fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:12}}>⚡ Mistral API Entegrasyonu</div>
+      <pre style={{background:'rgba(0,0,0,0.5)',borderRadius:10,padding:'14px',fontSize:10,color:'#94a3b8',border:'1px solid rgba(244,114,182,0.1)',overflowX:'auto',lineHeight:1.6}}>{`from mistralai import Mistral
+
+client = Mistral(api_key="YOUR_MISTRAL_KEY")
+
+# Sohbet
+response = client.chat.complete(
+    model="mistral-large-latest",
+    messages=[{"role":"user","content":"Türkçe açıkla: RAG nedir?"}]
+)
+print(response.choices[0].message.content)
+
+# Kod tamamlama (Codestral)
+code_resp = client.fim.complete(
+    model="codestral-latest",
+    prompt="def fibonacci(",
+    suffix="    return result"
+)`}</pre>
+      <a href="https://console.mistral.ai" target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',gap:8,alignItems:'center',padding:'10px 20px',background:'linear-gradient(135deg,#f472b6,#ec4899)',borderRadius:10,color:'#fff',textDecoration:'none',fontSize:12,fontWeight:700,marginTop:12}}>🌊 Mistral Console →</a>
+    </div>}
   </div>;
 }
 
 function LlamaPage({setPage}){
-  return <div style={{padding:"28px 20px",maxWidth:900,margin:"0 auto"}}>
-    <div style={{background:"linear-gradient(135deg,rgba(52,211,153,0.06),rgba(0,0,0,0.2))",border:"1px solid rgba(52,211,153,0.22)",borderRadius:20,padding:"28px",marginBottom:20}}>
-      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
-        <div style={{fontSize:52}}>🦙</div>
-        <div><div style={{fontSize:26,fontWeight:900,color:"#34d399",fontFamily:"'Space Grotesk',sans-serif"}}>Llama 4 — Meta</div>
-        <div style={{fontSize:12,color:"#64748b"}}>Meta AI · Tamamen Açık Kaynak · Ticari Kullanım Serbest · Kendi Sunucunda Çalıştır</div></div>
+  const[tab,setTab]=useState('genel');
+  const TABS=[{id:'genel',l:'🦙 Genel'},{id:'modeller',l:'📦 Modeller'},{id:'kur',l:'⚙️ Nasıl Kurulur'},{id:'karsi',l:'🆚 Karşılaştır'}];
+
+  const MODELS=[
+    {n:"Llama 3.3 70B",e:"🦙",ctx:"128K",free:true,desc:"Genel kullanım için en dengeli model. GPT-3.5 seviyesinde, tamamen ücretsiz.",color:"#fb923c",best:"Genel görevler, sohbet"},
+    {n:"Llama 3.2 Vision",e:"👁️",ctx:"128K",free:true,desc:"Görüntü anlama özelliği. Fotoğraf analizi, tablo okuma, diyagram anlama.",color:"#34d399",best:"Görsel analiz"},
+    {n:"Llama 3.1 405B",e:"🔥",ctx:"128K",free:true,desc:"En büyük ve güçlü Llama modeli. GPT-4 seviyesinde, lokal çalışabilir.",color:"#a855f7",best:"Karmaşık görevler"},
+    {n:"Llama 3.2 11B",e:"⚡",ctx:"128K",free:true,desc:"Hızlı ve verimli. Günlük kullanım için ideal denge.",color:"#00dcff",best:"Hız gerektiren görevler"},
+    {n:"CodeLlama",e:"💻",ctx:"100K",free:true,desc:"Kod için özelleştirilmiş. Python, JS, C++ ve 20+ dil.",color:"#fbbf24",best:"Kod yazma ve debug"},
+  ];
+
+  const HOW_TO=[
+    {step:"1",title:"Ollama ile Yerel Kurulum (En Kolay)",icon:"🏠",
+     cmd:"# MacOS/Linux:\ncurl -fsSL https://ollama.ai/install.sh | sh\nollama run llama3.3\n\n# Windows:\n# ollama.ai/download adresinden indirin",
+     desc:"Ollama ile Llama modelini bilgisayarınıza kurun. İnternet gerektirmez, tamamen gizli, ücretsiz."},
+    {step:"2",title:"LM Studio ile Görsel Arayüz",icon:"🖥️",
+cmd:"# lmstudio.ai adresinden indirin\n# Model Kutuphanesi > Llama-3 secin\n# Chat sekmesine gecin, kullanmaya baslayin",
+     desc:"LM Studio ile Llama modellerini görsel arayüzde kullanın. Kod bilgisi gerekmez."},
+    {step:"3",title:"Ücretsiz API (Groq Cloud)",icon:"☁️",
+cmd:"// groq.com ucretsiz API key alin\nconst response = await fetch('https://api.groq.com/openai/v1/chat/completions', {headers: {'Authorization': 'Bearer GROQ_KEY'},body: JSON.stringify({model: 'llama-3.3-70b-versatile'})});" ,
+     desc:"Groq Cloud ile Llama modellerini ücretsiz API olarak kullanın. Saniyede 500 token - çok hızlı."},
+  ];
+
+  const COMPARE=[
+    {m:"Maliyet",llama:"✅ Tamamen Ücretsiz",gpt:"💲 $0.01-0.03/1K",claude:"💲 $0.003-0.015/1K"},
+    {m:"Gizlilik",llama:"✅ %100 Yerel",gpt:"☁️ OpenAI sunucu",claude:"☁️ Anthropic sunucu"},
+    {m:"Özelleştirme",llama:"✅ Fine-tune edebilir",gpt:"❌ Sınırlı",claude:"❌ Sınırlı"},
+    {m:"Türkçe Kalitesi",llama:"⭐⭐⭐",gpt:"⭐⭐⭐⭐⭐",claude:"⭐⭐⭐⭐"},
+    {m:"Kod Yazma",llama:"⭐⭐⭐⭐",gpt:"⭐⭐⭐⭐⭐",claude:"⭐⭐⭐⭐⭐"},
+    {m:"Yerel Kurulum",llama:"✅ Var",gpt:"❌ Yok",claude:"❌ Yok"},
+    {m:"Internet Gerekliliği",llama:"❌ Gerekmez",gpt:"✅ Gerekir",claude:"✅ Gerekir"},
+  ];
+
+  return <div style={{maxWidth:960,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{background:'linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.02))',border:'1px solid rgba(251,146,60,0.2)',borderRadius:18,padding:'22px',marginBottom:20}}>
+      <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#fb923c,#ea580c)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 20px rgba(251,146,60,0.4)'}}>🦙</div>
+        <div>
+          <h1 style={{margin:0,fontSize:'clamp(18px,4vw,28px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif"}}>Meta Llama — Tam Türkçe Rehber</h1>
+          <div style={{fontSize:11,color:'#fb923c',marginTop:3}}>Meta AI · Açık Kaynak · Yerel Kurulum · Tamamen Ücretsiz</div>
+        </div>
+        <div style={{marginLeft:'auto',display:'flex',gap:5,flexWrap:'wrap'}}>
+          {['Açık Kaynak','Ücretsiz','Yerel Çalışır','Özelleştirilebilir'].map(b=><span key={b} style={{fontSize:9,background:'rgba(251,146,60,0.15)',color:'#fb923c',border:'1px solid rgba(251,146,60,0.3)',borderRadius:5,padding:'2px 7px',fontWeight:700}}>{b}</span>)}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10,marginBottom:20}}>
-        {[["🆓","Tamamen Ücretsiz","Ticari kullanım açık"],["🖥️","Lokal Çalıştır","Kendi bilgisayarında"],["🔓","Açık Kaynak","Tam şeffaflık"],["💪","Güçlü","GPT-4 seviyesi"],["🌍","Global","180+ ülke erişimi"],["🔧","Özelleştir","Fine-tune edebilirsin"]].map(([e,t,d])=>(
-          <div key={t} style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.18)",borderRadius:11,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:20,marginBottom:4}}>{e}</div>
-            <div style={{fontSize:11,fontWeight:700,color:"#34d399",marginBottom:2}}>{t}</div>
-            <div style={{fontSize:9,color:"#475569"}}>{d}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{fontSize:13,color:"#64748b",lineHeight:1.8,marginBottom:16}}>Meta'nın açık kaynak AI modeli. En büyük özelliği: <strong style={{color:"#34d399"}}>tamamen ücretsiz, ticari kullanıma açık</strong>. Kendi sunucunda veya bilgisayarında çalıştırabilirsin — veri gizliliği %100. Girişimler için mükemmel: API maliyeti sıfır, özelleştirme sınırsız. Ollama ile Mac/Linux'ta yerel kullanım mümkün.</div>
-      <div style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:"14px",marginBottom:16}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#34d399",marginBottom:6}}>🖥️ Lokal Kurulum (Ollama ile)</div>
-        <div style={{fontFamily:"monospace",fontSize:11,color:"#94a3b8"}}>{"brew install ollama\nollama run llama3"}</div>
-      </div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-        <a href="https://ai.meta.com/llama" target="_blank" rel="noopener noreferrer" style={{padding:"10px 22px",borderRadius:10,background:"linear-gradient(135deg,#34d399,#059669)",color:"#fff",fontSize:13,fontWeight:700,textDecoration:"none"}}>Llama'yı İndir →</a>
-        <ShareButton title="Llama 4 Rehberi" text="🦙 Llama 4 — Meta'nın ücretsiz AI modeli! Ticari kullanım açık, kendi sunucunda çalıştır."/>
-      </div>
+      <p style={{margin:0,fontSize:12,color:'#94a3b8',lineHeight:1.7}}>Meta Llama, Facebook/Instagram şirketi Meta tarafından geliştirilen ve <strong style={{color:'#e2e8f0'}}>tamamen açık kaynak olarak yayınlanan</strong> yapay zeka modelidir. Kendi bilgisayarınızda çalıştırabilir, ticari projelerde kullanabilir, istediğiniz gibi özelleştirebilirsiniz.</p>
     </div>
+
+    <div style={{display:'flex',gap:6,marginBottom:20,flexWrap:'wrap'}}>
+      {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'7px 13px',borderRadius:9,border:'1px solid '+(tab===t.id?'rgba(251,146,60,0.5)':'rgba(255,255,255,0.07)'),background:tab===t.id?'rgba(251,146,60,0.1)':'transparent',color:tab===t.id?'#fb923c':'#64748b',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:tab===t.id?700:400}}>{t.l}</button>)}
+    </div>
+
+    {tab==='genel'&&<div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:20}}>
+        {[['🆓','Tamamen Ücretsiz','Kullanım, dağıtım ve ticari kullanım için lisans ücreti yok.','#34d399'],
+          ['🔒','Maksimum Gizlilik','Verileriniz internete çıkmaz. GDPR ve KVKK uyum sorunu yok.','#a855f7'],
+          ['⚙️','Özelleştirme','Fine-tuning ile kendi verilerinizle eğitebilirsiniz.','#00dcff'],
+          ['🚀','Yüksek Hız','Groq Cloud ile saniyede 500 token — en hızlı LLM deneyimi.','#fbbf24']].map(([e,t,d,c])=><div key={t} style={{background:c+'07',border:'1px solid '+c+'18',borderRadius:12,padding:'14px'}}>
+          <div style={{fontSize:22,marginBottom:6}}>{e}</div>
+          <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:4}}>{t}</div>
+          <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+        </div>)}
+      </div>
+      <div style={{background:'rgba(251,146,60,0.06)',border:'1px solid rgba(251,146,60,0.2)',borderRadius:12,padding:'16px'}}>
+        <div style={{fontSize:12,fontWeight:700,color:'#fb923c',marginBottom:10}}>🦙 Llama Ne Zaman Kullanılır?</div>
+        {[['✅ İdeal','Gizli veriler, şirket içi kullanım, maliyet optimizasyonu, özelleştirilmiş görevler'],
+          ['🟡 Dikkatli','Türkçe kalite (GPT daha iyi), yaratıcı yazarlık'],
+          ['❌ Sınırlı','Gerçek zamanlı web bilgisi, ticari API desteği']].map(([s,t])=><div key={s} style={{marginBottom:6,fontSize:11,color:'#94a3b8'}}><strong style={{color:s.startsWith('✅')?'#34d399':s.startsWith('🟡')?'#fbbf24':'#ff4444'}}>{s}:</strong> {t}</div>)}
+      </div>
+    </div>}
+
+    {tab==='modeller'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:12}}>
+      {MODELS.map(m=><div key={m.n} style={{background:m.color+'07',border:'1px solid '+m.color+'20',borderRadius:13,padding:'16px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:24}}>{m.e}</span><span style={{fontSize:8,color:'#34d399',background:'rgba(52,211,153,0.12)',borderRadius:4,padding:'2px 6px',fontWeight:700}}>Ücretsiz</span></div>
+        <div style={{fontSize:13,fontWeight:800,color:m.color,marginBottom:4}}>{m.n}</div>
+        <div style={{fontSize:10,color:'#94a3b8',lineHeight:1.5,marginBottom:8}}>{m.desc}</div>
+        <div style={{fontSize:9,color:m.color,background:m.color+'10',borderRadius:5,padding:'4px 8px'}}>✅ {m.best}</div>
+      </div>)}
+    </div>}
+
+    {tab==='kur'&&<div style={{display:'flex',flexDirection:'column',gap:14}}>
+      {HOW_TO.map(h=><div key={h.step} style={{background:'rgba(251,146,60,0.05)',border:'1px solid rgba(251,146,60,0.15)',borderRadius:12,padding:'16px'}}>
+        <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:10}}>
+          <span style={{fontSize:22}}>{h.icon}</span>
+          <div style={{fontSize:13,fontWeight:800,color:'#fb923c'}}>{h.title}</div>
+        </div>
+        <div style={{fontSize:11,color:'#64748b',marginBottom:10,lineHeight:1.5}}>{h.desc}</div>
+        <pre style={{background:'rgba(0,0,0,0.5)',borderRadius:8,padding:'12px',fontSize:10,color:'#94a3b8',overflowX:'auto',margin:0,lineHeight:1.6}}>{h.cmd}</pre>
+      </div>)}
+      <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',gap:8,alignItems:'center',padding:'10px 20px',background:'linear-gradient(135deg,#fb923c,#ea580c)',borderRadius:10,color:'#fff',textDecoration:'none',fontSize:12,fontWeight:700,alignSelf:'flex-start'}}>🦙 Ollama ile Başla →</a>
+    </div>}
+
+    {tab==='karsi'&&<div style={{overflowX:'auto',borderRadius:12,border:'1px solid rgba(255,255,255,0.07)'}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+        <thead><tr style={{background:'rgba(251,146,60,0.06)'}}>
+          {['Özellik','Llama (Ücretsiz)','GPT-4o','Claude'].map((h,i)=><th key={h} style={{padding:'9px 14px',textAlign:'left',color:i===1?'#fb923c':'#475569',borderBottom:'1px solid rgba(255,255,255,0.06)',fontWeight:700}}>{h}</th>)}
+        </tr></thead>
+        <tbody>{COMPARE.map((r,i)=><tr key={r.m} style={{background:i%2===0?'transparent':'rgba(255,255,255,0.015)'}}>
+          <td style={{padding:'8px 14px',color:'#94a3b8',fontSize:10}}>{r.m}</td>
+          <td style={{padding:'8px 14px',color:'#fb923c',fontWeight:600}}>{r.llama}</td>
+          <td style={{padding:'8px 14px',color:'#64748b'}}>{r.gpt}</td>
+          <td style={{padding:'8px 14px',color:'#64748b'}}>{r.claude}</td>
+        </tr>)}</tbody>
+      </table>
+      <div style={{padding:'10px 14px',background:'rgba(251,146,60,0.04)',fontSize:10,color:'#334155',borderTop:'1px solid rgba(255,255,255,0.05)'}}>💡 Gizlilik ve maliyet için Llama, kalite ve Türkçe için ChatGPT/Claude tercih edilmeli.</div>
+    </div>}
   </div>;
 }
 
-// ══════════════════════════════════════════════════════════
-// MALİYET HESAPLAYICI
-// ══════════════════════════════════════════════════════════
-const MODEL_PRICES={
-  "GPT-4o":{input:0.005,output:0.015,color:"#00dcff"},
-  "GPT-4o mini":{input:0.00015,output:0.0006,color:"#60a5fa"},
-  "Claude Opus 4.7":{input:0.015,output:0.075,color:"#a855f7"},
-  "Claude Sonnet":{input:0.003,output:0.015,color:"#a855f7"},
-  "Gemini 2.0 Flash":{input:0.0001,output:0.0004,color:"#34d399"},
-  "Gemini Pro":{input:0.00125,output:0.005,color:"#34d399"},
-};
 function MaliyetPage(){
   const[tokens,setTokens]=useState(10000);const[daily,setDaily]=useState(100);
   return <div style={{padding:"28px 20px",maxWidth:860,margin:"0 auto"}}>
@@ -5045,7 +6098,14 @@ function AIHukukPage(){
 // PROMPT YARIŞMASI
 // ══════════════════════════════════════════════════════════
 function YarismPage(){
-  const[voted,setVoted]=useState({});
+  const[voted,setVoted]=useState(()=>{
+    try{return JSON.parse(localStorage.getItem('imdatai_prompt_votes')||'{}');}
+    catch(e){return {};}
+  });
+  const[counts,setCounts]=useState(()=>{
+    try{return JSON.parse(localStorage.getItem('imdatai_vote_counts')||'{}');}
+    catch(e){return {};}
+  });
   const PROMPTS=[
     {id:1,user:"@mehmet_dev",avatar:"👨‍💻",title:"Kod Debug Master",prompt:"Senior yazılım mühendisi ve hata ayıklama uzmanı olarak [DİL] kodumu incele. Önce hatanın kök nedenini açıkla, sonra düzeltilmiş versiyonu yaz, ardından bu hatayı gelecekte önleyecek 3 ipucu ver.",votes:234,cat:"Kod",color:"#00dcff"},
     {id:2,user:"@zeynep_market",avatar:"👩‍💼",title:"Müzakere Ustası",prompt:"Deneyimli bir iş müzakere uzmanı olarak [DURUM] için strateji geliştir. Güçlü yanlarım: [GÜÇLÜ]. Zayıf yanlarım: [ZAYIF]. En az 3 farklı senaryo sun, her biri için başlangıç teklifi, BATNA ve son sınır belirt.",votes:189,cat:"İş",color:"#fbbf24"},
@@ -5072,8 +6132,15 @@ function YarismPage(){
             <div style={{fontSize:13,fontWeight:700,color:p.color,marginBottom:2}}>{p.title}</div>
             <div style={{fontSize:10,color:'#334155'}}>{p.user} · {p.cat}</div>
           </div>
-          <button onClick={()=>setVoted(v=>({...v,[p.id]:!v[p.id]}))} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 12px',border:'1px solid '+(voted[p.id]?p.color+'60':'rgba(255,255,255,0.1)'),borderRadius:8,background:voted[p.id]?p.color+'15':'transparent',color:voted[p.id]?p.color:'#475569',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
-            {voted[p.id]?'❤️':'🤍'} {p.votes+(voted[p.id]?1:0)}
+          <button onClick={()=>{
+              const newVoted={...voted,[p.id]:!voted[p.id]};
+              const newCounts={...counts,[p.id]:(counts[p.id]||p.votes)+(newVoted[p.id]?1:-1)};
+              setVoted(newVoted);
+              setCounts(newCounts);
+              try{localStorage.setItem('imdatai_prompt_votes',JSON.stringify(newVoted));
+                localStorage.setItem('imdatai_vote_counts',JSON.stringify(newCounts));}catch(e){}
+            }} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 12px',border:'1px solid '+(voted[p.id]?p.color+'60':'rgba(255,255,255,0.1)'),borderRadius:8,background:voted[p.id]?p.color+'15':'transparent',color:voted[p.id]?p.color:'#475569',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
+            {voted[p.id]?'❤️':'🤍'} {(counts[p.id]||p.votes)+(voted[p.id]&&!(counts[p.id])? 1:0)}
           </button>
         </div>
         <div style={{background:'rgba(0,0,0,0.3)',borderRadius:8,padding:'10px 12px',fontSize:11,color:'#94a3b8',fontFamily:'monospace',lineHeight:1.6}}>{p.prompt}</div>
@@ -5083,58 +6150,897 @@ function YarismPage(){
   </div>;
 }
 
+// ═══════════════════════════════════════════════════
+// GÖRSEL AI REHBERİ
+// ═══════════════════════════════════════════════════
+function GorselAIPage(){
+  const TOOLS=[
+    {name:"Midjourney",icon:"🎨",tier:"Pro",price:"$10/ay",best:"Sanatsal, sinematik",prompt:"a cyberpunk Istanbul at night, neon lights, 8K, cinematic --ar 16:9 --v 6",tip:"--style raw ile fotogerçekçi, --niji ile anime",color:"#a855f7"},
+    {name:"DALL-E 3",icon:"🖼️",tier:"Free/Pro",price:"ChatGPT ile",best:"Hızlı prototip, yazılı içerik",prompt:"minimalist logo for AI startup called IMDATAI, blue cyan colors, vector style",tip:"ChatGPT içinde /image komutu veya doğal dil",color:"#34d399"},
+    {name:"Stable Diffusion",icon:"⚡",tier:"Ücretsiz",price:"Yerel kurulum",best:"Sonsuz özelleştirme",prompt:"portrait of a Turkish woman, professional photo, studio lighting, 85mm",tip:"LoRA modelleriyle kişiye özel karakter",color:"#00dcff"},
+    {name:"Adobe Firefly",icon:"🔥",tier:"Free/Pro",price:"Adobe CC ile",best:"Ticari güvenli, marka tutarlılığı",prompt:"product photo of coffee cup on marble table, soft shadows, lifestyle",tip:"Telif hakkı güvenli — ticari kullanım %100",color:"#fb923c"},
+    {name:"Leonardo AI",icon:"🦁",tier:"Free/Pro",price:"$12/ay",best:"Oyun, karakter, konsept sanatı",prompt:"fantasy warrior character, Turkish mythology inspired, epic pose",tip:"Motion özelliği ile GIF animasyon",color:"#fbbf24"},
+    {name:"Ideogram",icon:"✍️",tier:"Free",price:"Ücretsiz",best:"Metin içeren görseller",prompt:"modern logo with text IMDATAI, minimalist, gradient blue",tip:"Görsel üzerine metin ekleme = diğerlerinden üstün",color:"#f472b6"},
+  ];
+  const TIPS=[
+    "📐 Aspect ratio her zaman belirt: --ar 16:9 (YouTube), 9:16 (Reels), 1:1 (Instagram)",
+    "🎭 Stil kelimesi en önemli: cinematic, photorealistic, anime, oil painting, watercolor",
+    "💡 Negatif prompt kullan: --no text, blur, watermark, ugly, deformed",
+    "🔢 Kalite artır: --quality 2 (Midjourney), CFG scale 7-9 (SD)",
+    "🌈 Renk tutarlılığı: 'warm tones', 'cold blue palette', 'vibrant colors'",
+    "📸 Kamera açısı: bird's eye view, low angle, close-up, wide shot",
+  ];
+  return <div style={{padding:'24px 16px',maxWidth:1000,margin:'0 auto'}}>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#a855f7',marginBottom:4}}>GÖRSEL ÜRETME REHBERİ</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 8px'}}>🎨 AI Görsel Üretimi — Tam Rehber</h1>
+      <p style={{fontSize:13,color:'#64748b',margin:0}}>Midjourney, DALL-E 3, Stable Diffusion — hangi araç, ne zaman?</p>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14,marginBottom:24}}>
+      {TOOLS.map(t=><div key={t.name} style={{background:t.color+'06',border:'1px solid '+t.color+'20',borderRadius:14,padding:'18px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
+          <div style={{display:'flex',gap:10,alignItems:'center'}}>
+            <span style={{fontSize:28}}>{t.icon}</span>
+            <div>
+              <div style={{fontSize:14,fontWeight:800,color:t.color}}>{t.name}</div>
+              <div style={{fontSize:9,color:'#475569'}}>{t.price}</div>
+            </div>
+          </div>
+          <span style={{fontSize:8,background:t.color+'20',color:t.color,borderRadius:5,padding:'2px 8px',fontWeight:700,alignSelf:'flex-start'}}>{t.tier}</span>
+        </div>
+        <div style={{fontSize:11,color:'#64748b',marginBottom:8}}>✅ En iyi: {t.best}</div>
+        <div style={{background:'rgba(0,0,0,.3)',borderRadius:8,padding:'8px 10px',fontSize:9,color:'#94a3b8',fontFamily:'monospace',lineHeight:1.5,marginBottom:8}}>{t.prompt}</div>
+        <div style={{fontSize:10,color:t.color,background:t.color+'10',borderRadius:6,padding:'5px 8px'}}>💡 {t.tip}</div>
+      </div>)}
+    </div>
+    <div style={{background:'rgba(168,85,247,0.05)',border:'1px solid rgba(168,85,247,0.2)',borderRadius:12,padding:'16px'}}>
+      <div style={{fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:12}}>⚡ Pro Prompt İpuçları</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:8}}>
+        {TIPS.map((t,i)=><div key={i} style={{fontSize:11,color:'#94a3b8',background:'rgba(255,255,255,0.03)',borderRadius:8,padding:'10px 12px',lineHeight:1.5}}>{t}</div>)}
+      </div>
+    </div>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════
+// AI VİDEO ÜRETİMİ
+// ═══════════════════════════════════════════════════
+function AIVideoPage(){
+  const TOOLS=[
+    {name:"Sora (OpenAI)",icon:"🎬",status:"Enterprise",desc:"60 saniyelik gerçekçi video. Metin → video dönüşümünde dünya standardı.",use:"Reklam, film konsept, sinematik",color:"#00dcff",price:"$200/ay+"},
+    {name:"Runway Gen-3",icon:"🎥",status:"Aktif",desc:"Metin ve görsel → video. En gelişmiş inpainting ve motion brush.",use:"Sosyal medya, YouTube, sunum",color:"#34d399",price:"$12/ay"},
+    {name:"Kling AI",icon:"🎞️",status:"Aktif",desc:"Çin yapımı, ücretsiz deneme. Kuai-Shou tarafından geliştirildi.",use:"Sosyal medya kısa video",color:"#a855f7",price:"Ücretsiz+"},
+    {name:"Pika 2.0",icon:"⚡",status:"Aktif",desc:"Hızlı video üretimi. Pikalar ve efektler için ideal.",use:"Meme, kısa klip, efekt",color:"#fbbf24",price:"$8/ay"},
+    {name:"HeyGen",icon:"🤖",status:"Aktif",desc:"AI avatar video. Kendi yüzünüzü veya hazır avatar kullanın.",use:"Eğitim, pazarlama, sunum",color:"#f472b6",price:"$24/ay"},
+    {name:"Luma Dream Machine",icon:"🌙",status:"Aktif",desc:"Fotoğraftan gerçekçi video. Yüksek kalite, ücretsiz plan mevcut.",use:"Ürün tanıtım, sanat",color:"#fb923c",price:"Ücretsiz+"},
+  ];
+  return <div style={{padding:'24px 16px',maxWidth:1000,margin:'0 auto'}}>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#34d399',marginBottom:4}}>VIDEO AI REHBERİ</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 8px'}}>🎬 AI Video Üretimi — 2026 Rehberi</h1>
+      <p style={{fontSize:13,color:'#64748b',margin:0}}>Sora, Runway, Kling, Pika — metin ve fotoğraftan video üretme</p>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14,marginBottom:20}}>
+      {TOOLS.map(t=><div key={t.name} style={{background:t.color+'06',border:'1px solid '+t.color+'20',borderRadius:14,padding:'18px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <span style={{fontSize:26}}>{t.icon}</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:800,color:t.color}}>{t.name}</div>
+              <div style={{fontSize:9,color:'#475569'}}>{t.price}</div>
+            </div>
+          </div>
+          <span style={{fontSize:8,background:t.status==='Aktif'?'rgba(52,211,153,0.15)':'rgba(251,191,36,0.15)',color:t.status==='Aktif'?'#34d399':'#fbbf24',borderRadius:5,padding:'2px 7px',fontWeight:700,alignSelf:'flex-start'}}>{t.status}</span>
+        </div>
+        <div style={{fontSize:11,color:'#94a3b8',lineHeight:1.6,marginBottom:8}}>{t.desc}</div>
+        <div style={{fontSize:10,color:t.color,background:t.color+'10',borderRadius:6,padding:'5px 8px'}}>🎯 {t.use}</div>
+      </div>)}
+    </div>
+    <div style={{background:'rgba(52,211,153,0.05)',border:'1px solid rgba(52,211,153,0.15)',borderRadius:12,padding:'16px'}}>
+      <div style={{fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:10}}>📋 AI Video Prompt Şablonları</div>
+      {[["Ürün Tanıtım","A [ÜRÜN] floating in minimal white space, 360° rotation, soft lighting, product photography style, 4K"],["Haber/Açıklama","Professional Turkish presenter explaining [KONU], studio background, news channel style, talking head"],["Sosyal Medya","Viral TikTok style, quick cuts, [KONU] tutorial, text overlays, energetic music pacing"],["Sinematik","Cinematic shot of [SAHNE], Istanbul skyline, golden hour, drone footage style, epic music"]].map(([t,p])=><div key={t} style={{marginBottom:10}}>
+        <div style={{fontSize:11,fontWeight:700,color:'#34d399',marginBottom:3}}>{t}:</div>
+        <div style={{fontSize:10,color:'#475569',fontFamily:'monospace',background:'rgba(0,0,0,.3)',padding:'7px 10px',borderRadius:6}}>{p}</div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════
+// MESLEKLERE GÖRE AI
+// ═══════════════════════════════════════════════════
+function MeslekAIPage(){
+  const JOBS=[
+    {icon:"👨‍💻",title:"Yazılım Geliştirici",color:"#00dcff",tools:["Cursor","GitHub Copilot","Claude Code","Codeium"],prompts:["Bu Python kodunu refactor et ve test yaz","REST API için Swagger dokümantasyonu oluştur","Bu SQL sorgusunu optimize et"],tips:"Cursor + Claude Sonnet kombinasyonu şu an en güçlü. Günde 2+ saat tasarruf."},
+    {icon:"🎨",title:"Grafik Tasarımcı",color:"#a855f7",tools:["Adobe Firefly","Midjourney","DALL-E 3","Canva AI"],prompts:["Logo konsept: minimalist, modern, [sektör]","Sosyal medya paketi: Instagram, LinkedIn, Twitter boyutları","Marka renk paleti ve tipografi öneri"],tips:"Firefly ticari güvenli. Midjourney kalite için. İkisini birlikte kullan."},
+    {icon:"📝",title:"İçerik Yazarı",color:"#34d399",tools:["Claude","ChatGPT","Jasper","Perplexity"],prompts:["[KONU] hakkında SEO uyumlu 1500 kelime blog yaz","5 farklı LinkedIn hook cümlesi oluştur","Email bülten için 3 konu başlığı öner"],tips:"Claude uzun form için, ChatGPT hızlı taslak için, Perplexity araştırma için."},
+    {icon:"📊",title:"Pazarlama Uzmanı",color:"#fbbf24",tools:["ChatGPT","Midjourney","HeyGen","AdCreative"],prompts:["[ÜRÜN] için A/B test copy yaz (5 varyasyon)","Google Ads için 10 farklı başlık","Email kampanya sekansı: welcome, nurture, conversion"],tips:"AdCreative.ai ile reklam görseli + copy üretimi. ROAS 2x artış mümkün."},
+    {icon:"⚖️",title:"Avukat / Hukuk",color:"#f472b6",tools:["Claude","Harvey AI","CaseText","Lexis AI"],prompts:["Bu sözleşmede riskli maddeleri listele","KVKK uyumluluk kontrolü yap","Dava dilekçesi taslağı: [durum]"],tips:"Harvey AI Türkiye'de henüz yok ama Claude ile hukuk analizi çok güçlü. %100 onay zorunlu."},
+    {icon:"🏥",title:"Sağlık Profesyoneli",color:"#fb923c",tools:["Claude","Google Med-PaLM","Whisper","Nuance"],prompts:["Bu semptomlar için DDx listesi oluştur","Hasta özetini ICD-10 kodlarıyla hazırla","İlaç etkileşimi analizi: [ilaçlar]"],tips:"AI asistan, KARAR VERİCİ değil. Her çıktı uzman onayından geçmeli."},
+    {icon:"🎓",title:"Öğretmen / Akademisyen",color:"#00dcff",tools:["Claude","ChatGPT","Perplexity","Consensus"],prompts:["[Konu] için 45dk ders planı hazırla","10 soruluk quiz oluştur (A,B,C,D seçenekli)","Bu makaleyi öğrenci düzeyinde özetle"],tips:"Consensus.app akademik makaleler için. Plagiarism riski: öğrenci yazılarını AI'a yazdırma."},
+    {icon:"💼",title:"Girişimci",color:"#a855f7",tools:["Claude","ChatGPT","Notion AI","Gamma"],prompts:["Startup için pitch deck outline (YC formatı)","Rakip analizi: [sektör] için SWOT","Finansal model: 3 yıllık projeksiyon şablonu"],tips:"Gamma.app ile AI destekli sunum. Notion AI ile tüm iş süreçleri."},
+  ];
+  return <div style={{padding:'24px 16px',maxWidth:1000,margin:'0 auto'}}>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#fbbf24',marginBottom:4}}>MESLEĞE ÖZEL REHBERLİK</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 8px'}}>💼 Mesleklere Göre AI Rehberi</h1>
+      <p style={{fontSize:13,color:'#64748b',margin:0}}>Hangi meslek için hangi AI araçları — 8 meslek, hazır promptlar</p>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
+      {JOBS.map(j=><div key={j.title} style={{background:j.color+'06',border:'1px solid '+j.color+'18',borderRadius:14,padding:'18px'}}>
+        <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:10}}>
+          <span style={{fontSize:28}}>{j.icon}</span>
+          <div style={{fontSize:13,fontWeight:800,color:j.color,fontFamily:"'Space Grotesk',sans-serif"}}>{j.title}</div>
+        </div>
+        <div style={{marginBottom:8}}>
+          <div style={{fontSize:9,color:'#475569',marginBottom:4,fontWeight:700}}>ARAÇLAR:</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+            {j.tools.map(t=><span key={t} style={{fontSize:9,color:j.color,background:j.color+'12',borderRadius:4,padding:'2px 7px'}}>{t}</span>)}
+          </div>
+        </div>
+        <div style={{marginBottom:8}}>
+          <div style={{fontSize:9,color:'#475569',marginBottom:4,fontWeight:700}}>HAZIR PROMPTLAR:</div>
+          {j.prompts.map((p,i)=><div key={i} style={{fontSize:9,color:'#64748b',padding:'3px 0',borderBottom:'1px solid rgba(255,255,255,0.03)'}}>›  {p}</div>)}
+        </div>
+        <div style={{fontSize:10,color:j.color,background:j.color+'10',borderRadius:6,padding:'7px 9px',lineHeight:1.5}}>💡 {j.tips}</div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════
+// AI FİYAT KARŞILAŞTIRMA
+// ═══════════════════════════════════════════════════
+function AIFiyatPage(){
+  const MODELS=[
+    {name:"Claude Haiku 4.5",co:"Anthropic",in:0.80,out:4.00,ctx:"200K",free:"Evet",best:"Hızlı görevler",color:"#34d399"},
+    {name:"Claude Sonnet 4.5",co:"Anthropic",in:3.00,out:15.00,ctx:"200K",free:"Sınırlı",best:"Genel + Kod",color:"#00dcff"},
+    {name:"Claude Opus 4.5",co:"Anthropic",in:15.00,out:75.00,ctx:"200K",free:"Hayır",best:"Karmaşık görev",color:"#a855f7"},
+    {name:"GPT-4o mini",co:"OpenAI",in:0.15,out:0.60,ctx:"128K",free:"Evet",best:"Hızlı + Ucuz",color:"#34d399"},
+    {name:"GPT-4o",co:"OpenAI",in:2.50,out:10.00,ctx:"128K",free:"Sınırlı",best:"Multimodal",color:"#00dcff"},
+    {name:"Gemini 1.5 Flash",co:"Google",in:0.075,out:0.30,ctx:"1M",free:"Evet",best:"En ucuz uzun ctx",color:"#fbbf24"},
+    {name:"Gemini 1.5 Pro",co:"Google",in:1.25,out:5.00,ctx:"2M",free:"Sınırlı",best:"Uzun döküman",color:"#34d399"},
+    {name:"Grok-2",co:"xAI",in:2.00,out:10.00,ctx:"128K",free:"API yok",best:"Güncel bilgi",color:"#60a5fa"},
+    {name:"Llama 3.3 70B",co:"Meta",in:0.23,out:0.40,ctx:"128K",free:"Açık kaynak",best:"Self-hosted",color:"#fb923c"},
+    {name:"DeepSeek V3",co:"DeepSeek",in:0.27,out:1.10,ctx:"128K",free:"Ücretsiz",best:"En iyi fiyat/perf",color:"#00dcff"},
+  ];
+  return <div style={{padding:'24px 16px',maxWidth:1000,margin:'0 auto'}}>
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#00dcff',marginBottom:4}}>API FİYATLANDIRMA</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 8px'}}>💲 AI Model Fiyat Karşılaştırması — 2026</h1>
+      <p style={{fontSize:13,color:'#64748b',margin:'0 0 4px'}}>1M token başına USD · Kur: ₺38/$ · Güncel: Mayıs 2026</p>
+    </div>
+    <div style={{overflowX:'auto',borderRadius:12,border:'1px solid rgba(255,255,255,0.08)'}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+        <thead>
+          <tr style={{background:'rgba(0,220,255,0.06)'}}>
+            {['Model','Şirket','Input ($/1M)','Output ($/1M)','Context','Ücretsiz','En İyi İçin'].map(h=><th key={h} style={{padding:'10px 12px',textAlign:'left',color:'#475569',fontWeight:700,whiteSpace:'nowrap',borderBottom:'1px solid rgba(255,255,255,0.08)'}}>{h}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {MODELS.map((m,i)=><tr key={m.name} style={{background:i%2===0?'transparent':'rgba(255,255,255,0.015)'}}>
+            <td style={{padding:'9px 12px',fontWeight:700,color:m.color,whiteSpace:'nowrap'}}>{m.name}</td>
+            <td style={{padding:'9px 12px',color:'#475569',whiteSpace:'nowrap'}}>{m.co}</td>
+            <td style={{padding:'9px 12px',color:'#e2e8f0',fontFamily:'monospace'}}>${m.in}</td>
+            <td style={{padding:'9px 12px',color:'#e2e8f0',fontFamily:'monospace'}}>${m.out}</td>
+            <td style={{padding:'9px 12px',color:'#94a3b8'}}>{m.ctx}</td>
+            <td style={{padding:'9px 12px'}}><span style={{fontSize:9,color:['Evet','Açık kaynak','Ücretsiz'].includes(m.free)?'#34d399':m.free==='Sınırlı'?'#fbbf24':'#ff4444',background:['Evet','Açık kaynak','Ücretsiz'].includes(m.free)?'rgba(52,211,153,0.1)':m.free==='Sınırlı'?'rgba(251,191,36,0.1)':'rgba(255,68,68,0.1)',borderRadius:4,padding:'2px 6px'}}>{m.free}</span></td>
+            <td style={{padding:'9px 12px',color:'#64748b',fontSize:10}}>{m.best}</td>
+          </tr>)}
+        </tbody>
+      </table>
+    </div>
+    <div style={{marginTop:14,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:10}}>
+      {[['💡 En Ucuz Genel','Gemini 1.5 Flash — $0.075/1M token','#fbbf24'],['⚡ En İyi Fiyat/Performans','DeepSeek V3 — ücretsiz API','#00dcff'],['🏆 En Güçlü','Claude Opus 4.5 — %87.6 SWE','#a855f7'],['🆓 Ücretsiz Self-host','Llama 3.3 70B — Meta açık kaynak','#fb923c']].map(([t,d,c])=><div key={t} style={{background:c+'08',border:'1px solid '+c+'20',borderRadius:10,padding:'12px'}}>
+        <div style={{fontSize:11,fontWeight:700,color:c,marginBottom:4}}>{t}</div>
+        <div style={{fontSize:10,color:'#64748b'}}>{d}</div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════
+// İŞ BORSASI
+// ══════════════════════════════════════════════
+function IsBorsasiPage(){
+  const JOBS=[
+    {title:"AI Prompt Mühendisi",co:"[Yazılım Şirketi]",sal:"₺35-60K/ay",type:"Uzaktan",skills:["Claude","ChatGPT","Prompt Engineering"],hot:true,color:"#a855f7"},
+    {title:"ML Mühendisi",co:"Getir",sal:"₺45-80K/ay",type:"Hibrit",skills:["Python","TensorFlow","LLM"],hot:true,color:"#00dcff"},
+    {title:"AI İçerik Yazarı",co:"[Dijital Ajans]",sal:"₺20-35K/ay",type:"Uzaktan",skills:["ChatGPT","Midjourney","SEO"],hot:false,color:"#34d399"},
+    {title:"Veri Bilimcisi",co:"[Fintech Startup]",sal:"₺40-70K/ay",type:"İstanbul",skills:["Python","SQL","Claude API"],hot:true,color:"#fbbf24"},
+    {title:"AI Ürün Yöneticisi",co:"SaaS TR",sal:"₺50-90K/ay",type:"Hibrit",skills:["Agile","AI Araçlar","Roadmap"],hot:false,color:"#f472b6"},
+    {title:"Chatbot Geliştirici",co:"E-Ticaret Co",sal:"₺28-45K/ay",type:"Uzaktan",skills:["Langchain","OpenAI API","Node.js"],hot:false,color:"#fb923c"},
+  ];
+  return <div style={{padding:'24px 16px',maxWidth:960,margin:'0 auto'}}>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#fbbf24',marginBottom:4}}>İŞ İLANLARI</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 6px'}}>👔 AI Kariyer Fırsatları — Örnek İlanlar</h1>
+      <p style={{fontSize:12,color:'#64748b',margin:0}}>AI alanında Türkiye'deki fırsatlar · İllüstratif ilanlar — gerçek başvuru için LinkedIn ve kariyer sitelerini kullanın</p>
+    </div>
+    <div style={{display:'flex',gap:10,marginBottom:18,flexWrap:'wrap'}}>
+      {[['120K+','Açılan AI Pozisyon','#34d399'],['₺42K','Ortalama Maaş','#00dcff'],['%78','Uzaktan Çalışma','#a855f7'],['3dk','Ortalama Başvuru','#fbbf24']].map(([v,l,c])=><div key={l} style={{flex:'1 1 100px',background:c+'08',border:'1px solid '+c+'20',borderRadius:10,padding:'10px',textAlign:'center'}}>
+        <div style={{fontSize:18,fontWeight:900,color:c}}>{v}</div>
+        <div style={{fontSize:9,color:'#475569'}}>{l}</div>
+      </div>)}
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {JOBS.map(j=><div key={j.title} style={{background:j.color+'05',border:'1px solid '+j.color+'18',borderRadius:12,padding:'16px',display:'flex',gap:14,flexWrap:'wrap',alignItems:'center'}}>
+        {j.hot&&<div style={{position:'absolute',fontSize:9,color:'#ff4444',background:'rgba(255,68,68,0.12)',border:'1px solid rgba(255,68,68,0.3)',borderRadius:4,padding:'1px 6px',fontWeight:700}}>🔥 HOT</div>}
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{fontSize:13,fontWeight:800,color:j.color,marginBottom:3}}>{j.title}</div>
+          <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>{j.co} · {j.type}</div>
+          <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+            {j.skills.map(s=><span key={s} style={{fontSize:9,color:j.color,background:j.color+'12',borderRadius:4,padding:'2px 7px'}}>{s}</span>)}
+          </div>
+        </div>
+        <div style={{textAlign:'right',flexShrink:0}}>
+          <div style={{fontSize:14,fontWeight:900,color:j.color,marginBottom:6}}>{j.sal}</div>
+          <button style={{padding:'6px 16px',border:'1px solid '+j.color+'40',borderRadius:8,background:j.color+'10',color:j.color,fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>LinkedIn'de Ara →</button>
+        </div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════
+// SERTİFİKA
+// ══════════════════════════════════════════════
+function SertifikaPage(){
+  const[done,setDone]=useState({});
+  const TRACKS=[
+    {id:'t1',icon:'🌱',title:'AI Temeller',level:'Başlangıç',modules:['AI Nedir?','Prompt Temelleri','ChatGPT Kullanımı','Claude Rehberi'],color:'#34d399',pts:200},
+    {id:'t2',icon:'🚀',title:'Prompt Mühendisliği',level:'Orta',modules:['Chain of Thought','Few-shot','XML Tags','System Prompt'],color:'#00dcff',pts:350},
+    {id:'t3',icon:'💼',title:'AI ile İş Verimliliği',level:'Orta',modules:['AI Araçlar','Workflow Otomasyon','Zaman Tasarrufu','ROI Hesapla'],color:'#a855f7',pts:400},
+    {id:'t4',icon:'👑',title:'AI Uzmanı',level:'İleri',modules:['API Kullanımı','Fine-tuning Temelleri','AI Güvenlik','Etik AI'],color:'#fbbf24',pts:600},
+  ];
+  const total=TRACKS.reduce((s,t)=>s+(done[t.id]?t.pts:0),0);
+  return <div style={{padding:'24px 16px',maxWidth:900,margin:'0 auto'}}>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#fbbf24',marginBottom:4}}>SERTİFİKA PROGRAMI</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 6px'}}>🏅 IMDATAI AI Sertifika Programı</h1>
+      <div style={{display:'flex',gap:10,alignItems:'center'}}>
+        <div style={{flex:1,height:6,background:'rgba(255,255,255,0.08)',borderRadius:3,overflow:'hidden'}}>
+          <div style={{height:'100%',width:(total/1550*100)+'%',background:'linear-gradient(90deg,#34d399,#00dcff)',borderRadius:3,transition:'width .5s'}}/>
+        </div>
+        <span style={{fontSize:11,color:'#fbbf24',fontWeight:700}}>{total}/1550 puan</span>
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:14}}>
+      {TRACKS.map(t=><div key={t.id} style={{background:t.color+'06',border:'2px solid '+(done[t.id]?t.color+'60':t.color+'18'),borderRadius:14,padding:'18px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
+          <span style={{fontSize:28}}>{t.icon}</span>
+          <span style={{fontSize:9,color:t.color,background:t.color+'15',borderRadius:5,padding:'2px 8px',fontWeight:700}}>{t.level}</span>
+        </div>
+        <div style={{fontSize:13,fontWeight:800,color:t.color,marginBottom:4}}>{t.title}</div>
+        <div style={{marginBottom:10}}>
+          {t.modules.map(m=><div key={m} style={{fontSize:10,color:'#64748b',padding:'3px 0',borderBottom:'1px solid rgba(255,255,255,0.04)'}}>✓ {m}</div>)}
+        </div>
+        <button onClick={()=>setDone(d=>({...d,[t.id]:!d[t.id]}))} style={{width:'100%',padding:'8px',border:'none',borderRadius:8,background:done[t.id]?t.color:t.color+'25',color:done[t.id]?'#fff':t.color,fontSize:11,cursor:'pointer',fontWeight:700}}>
+          {done[t.id]?'✅ Tamamlandı — +'+t.pts+' puan':'Başla → '+t.pts+' puan'}
+        </button>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════
+// ŞABLONLAR
+// ══════════════════════════════════════════════
+function SablonlarPage(){
+  const[sel,setSel]=useState(null);
+  const[copied,setCopied]=useState('');
+
+  function copyTemplate(id, text){
+    navigator.clipboard?.writeText(text).then(()=>{setCopied(id);setTimeout(()=>setCopied(''),2000);});
+  }
+
+  const TEMPLATES=[
+    {id:"email1",icon:"📧",title:"Maaş Artışı Talebi",cat:"İş",color:"#00dcff",
+     desc:"Yöneticinize maaş artışı için profesyonel email",
+     template:`Konu: Maaş Değerlendirme Talebi - [ADINIZ]
+
+Sayın [YÖNETİCİ],
+
+[ÇALIŞMA SÜRESİ] süredir [ŞİRKET]'te çalışmaktayım. Bu sürede [BAŞARIM 1], [BAŞARIM 2] ve [BAŞARIM 3] katkılarımı sundum.
+
+Piyasa araştırmalarına göre [POZISYON] için ortalama maaş [RAKAM] bandında seyretmektedir. Mevcut maaşım [MEVCUT] olup [TALEP] düzeyinde bir güncelleme talep etmek istiyorum.
+
+Bu konuyu değerlendirmek üzere bir toplantı ayarlayabilir miyiz?
+
+Saygılarımla,
+[ADINIZ]`},
+    {id:"email2",icon:"🤝",title:"İş Ortaklığı Teklifi",cat:"İş",color:"#a855f7",
+     desc:"Potansiyel iş ortağına soğuk teklif emaili",
+     template:`Konu: [ŞİRKETİNİZ] × [ONLARIN ŞİRKETİ] — İş Birliği Fırsatı
+
+Merhaba [İSİM],
+
+[ORTAK BAĞLANTI/NEDEN ULAŞIYORUM] aracılığıyla size ulaşıyorum.
+
+[ŞİRKETİNİZ] olarak [NE YAPIYORSUNUZ, 1 CÜMLE]. [ONLARIN ŞİRKETİ]'nin [GÜÇLÜ YÖNLERİ] ile birlikte [ORTAK FAYDA] yaratma potansiyeli gördüm.
+
+Spesifik önerim: [SOMUT TEKLİF, 2 CÜMLE]
+
+Bu konuyu 20 dakikalık bir görüşmede ele almak ister misiniz?
+
+[ADI SOYADI]
+[UNVAN] | [ŞİRKET]
+[TELEFON]`},
+    {id:"linkedin1",icon:"💼",title:"LinkedIn Profil Özeti",cat:"Kariyer",color:"#0077b5",
+     desc:"Dikkat çeken LinkedIn About bölümü",
+     template:`[BAŞLIK — Kim olduğunuz + Ne yapıyorsunuz — 1 satır]
+
+🎯 [ANA UZMANLK ALANINI] alanında [DENEYIM] yıllık deneyimle [HEDEF KİTLE] için [ANA DEĞERİNİZ].
+
+💡 Benim farkım: [UNIQUE VALUE PROPOSITION — rakiplerinizden sizi ayıran şey]
+
+📊 Son [N] yılda:
+→ [ÖLÇÜLEBILIR BAŞARI 1]
+→ [ÖLÇÜLEBILIR BAŞARI 2]
+→ [ÖLÇÜLEBILIR BAŞARI 3]
+
+🛠️ Uzmanlıklar: [SKILL 1] · [SKILL 2] · [SKILL 3] · [SKILL 4]
+
+📬 Benimle çalışmak ister misiniz?
+[EMAIL] | [WEB SİTESİ]
+
+Bir şeyler inşa edelim. 🚀`},
+    {id:"blog1",icon:"✍️",title:"SEO Blog Yazısı Taslağı",cat:"İçerik",color:"#34d399",
+     desc:"Google'a uyumlu blog yazısı yapısı",
+     template:`BAŞLIK: [ANA ANAHTAR KELİME] — [MERAK UYANDIRAN ALT BAŞLIK]
+Meta Açıklama: [155 karakter, anahtar kelime içermeli]
+
+GİRİŞ (150 kelime):
+[Hook — şaşırtıcı istatistik veya soru]
+[Problem — okuyucunun acısını tanımla]
+[Vaat — bu yazıda ne öğrenecekler]
+
+BÖLÜM 1: [H2 — Anahtar Kelime Varyantı]
+[Alt başlık H3]
+[İçerik — 200 kelime]
+[Liste veya tablo]
+
+BÖLÜM 2: [H2]
+[İçerik]
+
+BÖLÜM 3: [H2]
+[Adım adım rehber veya örnekler]
+
+SONUÇ:
+[Ana fikrin özeti — 3 madde]
+[CTA — yorum yap, paylaş, abone ol]
+
+İç Linkler: [İLGİLİ YAZI 1] [İLGİLİ YAZI 2]
+Görsel Alt Metni: [Anahtar kelime içeren açıklama]`},
+    {id:"social1",icon:"📱",title:"Instagram Reels Scripti",cat:"Sosyal Medya",color:"#e1306c",
+     desc:"Viral Instagram Reels için konuşma metni",
+     template:`HOOK (0-3 saniye — scroll durdurucu):
+"[ŞOK EDİCİ SORU veya İDDİA]"
+
+ÖRNEK: "ChatGPT'ye yanlış soru soruyorsunuz" / "Bu hatayı yapan herkese söyleyin"
+
+BÖLÜM 1 (3-20 saniye):
+"Çoğu insan [YANLIŞ YAPILAN ŞEY]. Ama asıl mesele şu:"
+
+BÖLÜM 2 (20-45 saniye):
+"[ÇÖZÜM/DEĞER] — [SOMUT ÖRNEK veya RAKAM ile destekle]"
+
+SONUÇ + CTA (45-60 saniye):
+"[ÖZET]. Eğer bu işe yararsa kaydet 🔖, [BAŞKASINA] da gönder."
+
+#[HASHTAG1] #[HASHTAG2] #[HASHTAG3]`},
+    {id:"meeting1",icon:"📋",title:"Toplantı Ajandası",cat:"Yönetim",color:"#fbbf24",
+     desc:"Etkili toplantı için hazırlık şablonu",
+     template:`TOPLANTI: [BAŞLIK]
+Tarih: [TARİH] | Saat: [SAAT] | Süre: [SÜRE]
+Yer/Link: [KONUM]
+
+KATILIMCILAR:
+• [İSİM] — [ROLÜ/SORUMLULUĞU]
+• [İSİM] — [ROLÜ/SORUMLULUĞU]
+
+HAZIRLIK (katılmadan önce):
+□ [DÖKÜMAN/VERİ] inceleyin
+□ [SORU/GÖRÜŞ] hazırlayın
+
+AJANDA:
+09:00 — Giriş ve gündem (3 dk)
+09:03 — [KONU 1] — Karar: [NE KARAR ALINACAK] (15 dk)
+09:18 — [KONU 2] — Karar: [NE KARAR ALINACAK] (15 dk)
+09:33 — Aksiyon maddeleri ve kapanış (7 dk)
+
+BAŞARI KRİTERLERİ:
+Bu toplantı [KARAR VERİLİRSE / PLAN YAPILIRSA] başarılı sayılır.`},
+    {id:"prompt1",icon:"🤖",title:"AI Prompt Şablonu",cat:"AI",color:"#a855f7",
+     desc:"Güçlü AI prompts için evrensel şablon",
+     template:`ROL: Sen [UZMANLIK ALANI]'nda uzman bir [MESLEK]sın. [YIL] yıllık deneyime sahipsin.
+
+BAĞLAM: [DURUMU AÇIKLA — kim, ne, nerede, ne zaman]
+
+GÖREV: [NE YAPMASINI İSTİYORSUN — çok net ve spesifik]
+
+KISITLAMALAR:
+- Uzunluk: [KISA/ORTA/UZUN veya kelime sayısı]
+- Ton: [Resmi/Gayriresmi/Teknik/Samimi]
+- Format: [Paragraf/Liste/Tablo/JSON]
+- Dahil ETME: [İSTEMEDİKLERİN]
+
+ÖRNEK ÇIKTI: [İSTEDİĞİNİZ FORMATTA ÖRNEK — varsa]
+
+ÇIKTI: Yanıtını şu başlıklarla ver:
+1. [BÖLÜM 1]
+2. [BÖLÜM 2]
+3. [BÖLÜM 3]`},
+    {id:"report1",icon:"📊",title:"Haftalık Proje Raporu",cat:"Yönetim",color:"#fb923c",
+     desc:"Yöneticiye haftalık ilerleme raporu",
+     template:`HAFTALIK RAPOR — [PROJE ADI]
+Tarih: [TARİH] | Rapor No: [N]
+Hazırlayan: [ADI SOYADI]
+
+📊 GENEL DURUM: 🟢 İyi / 🟡 Dikkat / 🔴 Kritik
+
+✅ TAMAMLANANLAR (bu hafta):
+• [GÖREV] — [SONUÇ/ETKİSİ]
+• [GÖREV] — [SONUÇ/ETKİSİ]
+
+🔄 DEVAM EDENLER:
+• [GÖREV] — %[YÜZDE] tamamlandı — Sorumlu: [KİŞİ]
+
+📅 ÖNÜMÜZDEKI HAFTA:
+• [GÖREV] — Sorumlu: [KİŞİ] — Son tarih: [TARİH]
+
+⚠️ RİSKLER / BLOKERLAR:
+• [RİSK]: [ÇÖZÜM ÖNERİSİ]
+
+📈 METRİKLER:
+• Hedef: [HEDEF] | Gerçekleşen: [GERÇEK] | Fark: [%]`},
+    {id:"social2",icon:"🐦",title:"Twitter/X Thread Şablonu",cat:"Sosyal Medya",color:"#1da1f2",
+     desc:"Viral Twitter thread yapısı",
+     template:`Tweet 1/10 (HOOK):
+"[ŞOK EDİCİ İDDİA veya SORU]
+
+Çoğu insan bunu bilmiyor. 🧵👇"
+
+Tweet 2/10 (Problem):
+"[SORUNUN/KONUNUN BAĞLAMI]
+
+Bu neden önemli: [RAKAM veya İSTATİSTİK]"
+
+Tweet 3-8/10 (Değer):
+Her tweet TEK bir fikir içersin.
+"[FİKİR]
+
+Örnek: [SOMUT ÖRNEK]"
+
+Tweet 9/10 (Özet):
+"Özetle:
+→ [MADDE 1]
+→ [MADDE 2]
+→ [MADDE 3]"
+
+Tweet 10/10 (CTA):
+"Faydalı bulduysan RT at — başkasının da görmesini sağla.
+
+Ben [KONU] hakkında yazmaya devam ediyorum.
+Takip: @[HESAP]"`},
+    {id:"cv1",icon:"📄",title:"CV / Özgeçmiş Şablonu",cat:"Kariyer",color:"#34d399",
+     desc:"Modern ve ATS uyumlu CV yapısı",
+     template:`[ADI SOYADI]
+[E-POSTA] | [TELEFON] | [LİNKEDIN] | [ŞEHİR]
+
+ÖZET (2-3 cümle):
+[UNVAN] olarak [YIL] yıllık deneyimle [SEKTÖR] alanında uzmanlaştım. [ANA BECERİ 1] ve [ANA BECERİ 2] konularında güçlü bir geçmişe sahibim.
+
+DENEYİM:
+[ŞİRKET ADI] | [UNVAN] | [TARİH ARALIĞI]
+• [ÖLÇÜLEBILIR BAŞARI — rakamlar kullan]
+• [PROJE veya SORUMLULUK]
+• [TEKNIK BECERİ kullanımı]
+
+EĞİTİM:
+[ÜNİVERSİTE] | [BÖLÜM] | [YIL]
+GPA: [VARSA] | Önemli Dersler: [VARSA]
+
+BECERİLER:
+Teknik: [SKILL 1, SKILL 2, SKILL 3]
+Araçlar: [TOOL 1, TOOL 2]
+Diller: Türkçe (Ana dil), İngilizce ([SEVİYE])
+
+SERTİFİKALAR:
+• [SERTİFİKA ADI] — [KURUM] — [YIL]`},
+    {id:"brief1",icon:"🎨",title:"Tasarım Brifingi",cat:"Tasarım",color:"#f472b6",
+     desc:"Tasarımcıya proje brifingi şablonu",
+     template:`TASARIM PROJESİ BRIFING
+Proje: [PROJE ADI] | Tarih: [TARİH]
+
+MÜŞTERİ:
+Şirket: [ŞİRKET] | Sektör: [SEKTÖR]
+Web: [WEBSITE] | İletişim: [KİŞİ]
+
+PROJE AMACI:
+"Bu tasarımın amacı [HEDEF KİTLE]'nin [YAPMASINI İSTEDİĞİMİZ EYLEM] yapmasını sağlamak."
+
+HEDEF KİTLE:
+Yaş: [ARALIK] | Cinsiyet: [DAĞILIM]
+İlgi Alanları: [LISTE]
+Ağrı Noktaları: [PROBLEM]
+
+TASARIM GEREKSİNİMLERİ:
+Format: [WEB/MOBILE/PRINT/SOSYAL MEDYA]
+Boyutlar: [BOYUTLAR]
+Renkler: [MEVCUT MARKA RENKLERİ veya tercih]
+Font: [VARSA]
+
+REFERANS GÖRSELLER:
+• [URL veya AÇIKLAMA]
+• [URL veya AÇIKLAMA]
+
+TESLİMAT:
+Format: [PNG/SVG/PDF/PSD]
+Son Tarih: [TARİH]
+Revizyon Hakkı: [SAYI]`},
+    {id:"contract1",icon:"⚖️",title:"Freelance Sözleşme",cat:"İş",color:"#e879f9",
+     desc:"Basit freelance hizmet sözleşmesi özeti",
+     template:`FREELANCE HİZMET SÖZLEŞMESİ
+Tarih: [TARİH]
+
+TARAFLAR:
+Hizmet Veren: [ADINIZ/ŞİRKETİNİZ]
+Hizmet Alan: [MÜŞTERİ ADI/ŞİRKETİ]
+
+KAPSAM:
+[YAPILACAK İŞİN DETAYLI TANIMI]
+
+Kapsam DIŞI:
+• [DAHIL OLMAYAN ŞEYLER]
+
+ÜCRET VE ÖDEME:
+Toplam: [TUTAR] TL + KDV
+Ödeme: [ÖN ÖDEME %]% başlangıç, [KALAN %]% teslimat
+Ödeme Vadesi: Fatura tarihinden [N] iş günü
+
+TESLİMAT:
+Tahmini Teslim: [TARİH]
+Revizyonlar: [SAYI] kez dahil
+
+FİKRİ MÜLKİYET:
+Ödeme tamamlandığında tüm haklar müşteriye devredilir.
+
+İPTAL:
+[N] iş günü önceden bildirimle iptal edilebilir.
+Yapılan iş oranında ücret kesilir.`},
+  ];
+
+  const cats=['Tümü',...new Set(TEMPLATES.map(t=>t.cat))];
+  const[activeCat,setActiveCat]=useState('Tümü');
+  const filtered=activeCat==='Tümü'?TEMPLATES:TEMPLATES.filter(t=>t.cat===activeCat);
+
+  return <div style={{maxWidth:1000,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#34d399',marginBottom:4}}>HAZIR ŞABLONLAR</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 6px'}}>📄 Şablon Kütüphanesi</h1>
+      <p style={{fontSize:12,color:'#64748b',margin:0}}>AI ile doldurabileceğiniz hazır şablonlar — kopyala, AI'a ver, kullan</p>
+    </div>
+    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:18}}>
+      {cats.map(c=><button key={c} onClick={()=>setActiveCat(c)} style={{padding:'5px 12px',borderRadius:7,border:'1px solid '+(activeCat===c?'rgba(52,211,153,0.4)':'rgba(255,255,255,0.07)'),background:activeCat===c?'rgba(52,211,153,0.1)':'transparent',color:activeCat===c?'#34d399':'#64748b',fontSize:10,cursor:'pointer',fontFamily:'inherit'}}>{c}</button>)}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
+      {filtered.map(t=><div key={t.id} style={{background:t.color+'07',border:'1px solid '+(sel===t.id?t.color+'60':t.color+'18'),borderRadius:12,padding:'16px',cursor:'pointer',transition:'all .2s'}}
+        onMouseEnter={e=>{e.currentTarget.style.borderColor=t.color+'40';}}
+        onMouseLeave={e=>{e.currentTarget.style.borderColor=sel===t.id?t.color+'60':t.color+'18';}}>
+        <div style={{display:'flex',gap:10,marginBottom:8}}>
+          <span style={{fontSize:24}}>{t.icon}</span>
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:t.color}}>{t.title}</div>
+            <div style={{fontSize:9,color:'#475569'}}>{t.cat} · {t.desc}</div>
+          </div>
+        </div>
+        {sel===t.id&&<div style={{background:'rgba(0,0,0,0.4)',borderRadius:7,padding:'10px',fontSize:9,color:'#64748b',fontFamily:'monospace',lineHeight:1.6,marginBottom:8,whiteSpace:'pre-wrap',maxHeight:160,overflow:'auto'}}>{t.template}</div>}
+        <button onClick={()=>{setSel(s=>s===t.id?null:t.id);copyTemplate(t.id,t.template);}}
+          style={{width:'100%',padding:'7px',border:'1px solid '+t.color+'30',borderRadius:7,background:copied===t.id?t.color+'25':'transparent',color:t.color,fontSize:10,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
+          {copied===t.id?'✅ Kopyalandı!':sel===t.id?'📋 Tekrar Kopyala':'👁️ Göster & Kopyala'}
+        </button>
+      </div>)}
+    </div>
+    <div style={{marginTop:20,background:'rgba(52,211,153,0.04)',border:'1px solid rgba(52,211,153,0.15)',borderRadius:12,padding:'14px'}}>
+      <div style={{fontSize:11,fontWeight:700,color:'#34d399',marginBottom:8}}>💡 Nasıl Kullanılır?</div>
+      <div style={{fontSize:10,color:'#64748b',lineHeight:1.7}}>
+        1. Şablonu kopyalayın<br/>
+        2. Claude veya ChatGPT'ye yapıştırın<br/>
+        3. Köşeli parantezler içindeki [ALANLAR]'ı doldurun<br/>
+        4. "Bu şablonu kullanarak benim için doldur" deyin
+      </div>
+    </div>
+  </div>;
+}
+
+function GunlukOzetPage(){
+  const TODAY=new Date().toLocaleDateString('tr-TR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const ITEMS=[
+    {time:"07:00",icon:"🔥",title:"Gün Sözü",content:"AI'ı kullananlar değil, AI'ı iyi kullananlar öne geçecek."},
+    {time:"08:00",icon:"📰",title:"Bugünün Haberi",content:"GPT-5.5 Türkiye'de aktif. Claude Opus kod yazmada %87.6 başarı. Gemini 2.5 Pro 2M token.",color:"#ff4444"},
+    {time:"09:00",icon:"💡",title:"Günün Promptu",content:"Benim için [GÖREV] yap. Adım adım düşün, en önemli 3 noktayı listele, bir sonraki aksiyonu belirt.",color:"#00dcff"},
+    {time:"12:00",icon:"🛠️",title:"Günün Aracı",content:"Julius AI — Excel/CSV dosyanızı yükleyin, AI otomatik analiz etsin ve grafik çizsin. Ücretsiz.",color:"#34d399"},
+    {time:"15:00",icon:"🎯",title:"Günün Görevi",content:"Claude'a bugün yaptığınız bir işi açıklayın ve 'Bu işi nasıl daha verimli yapabilirim?' diye sorun.",color:"#a855f7"},
+    {time:"18:00",icon:"🧠",title:"AI Gerçeği",content:"ChatGPT ilk 5 günde 1 milyon kullanıcıya ulaştı. Netflix buna 3.5 yıl harcadı!",color:"#fbbf24"},
+  ];
+  return <div style={{padding:'24px 16px',maxWidth:800,margin:'0 auto'}}>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#00dcff',marginBottom:4}}>BUGÜN</div>
+      <h1 style={{fontSize:22,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 4px'}}>📋 AI Günlük Rehberi</h1>
+      <div style={{fontSize:12,color:'#475569'}}>{TODAY}</div>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:12}}>
+      {ITEMS.map((item,i)=><div key={i} style={{display:'flex',gap:14,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'14px',alignItems:'flex-start'}}>
+        <div style={{flexShrink:0,textAlign:'center'}}>
+          <div style={{fontSize:9,color:'#334155',fontFamily:'monospace',marginBottom:3}}>{item.time}</div>
+          <div style={{fontSize:22}}>{item.icon}</div>
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:12,fontWeight:700,color:item.color||'#e2e8f0',marginBottom:4}}>{item.title}</div>
+          <div style={{fontSize:11,color:'#94a3b8',lineHeight:1.6}}>{item.content}</div>
+        </div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════
+// VİDEO REHBERİ
+// ══════════════════════════════════════════════
+function VideoRehberPage(){
+  const VIDS=[
+    {e:"▶️",title:"ChatGPT'ye Nasıl Prompt Yazılır?",dur:"12 dk",level:"Başlangıç",desc:"Sıfırdan etkili prompt yazma rehberi",color:"#34d399"},
+    {e:"▶️",title:"Claude ile Kod Yazma — Tam Rehber",dur:"18 dk",level:"Orta",desc:"Claude Sonnet ile gerçek proje geliştirme",color:"#a855f7"},
+    {e:"▶️",title:"Midjourney v7 — Görsel Üretme",dur:"22 dk",level:"Başlangıç",desc:"Midjourney prompt teknikleri ve örnekler",color:"#f472b6"},
+    {e:"▶️",title:"AI ile İçerik Stratejisi",dur:"15 dk",level:"Orta",desc:"1 haftada 30 içerik nasıl üretilir",color:"#fbbf24"},
+    {e:"▶️",title:"DeepSeek API — Ücretsiz Claude Alternatifi",dur:"10 dk",level:"Teknik",desc:"DeepSeek API kurulum ve kullanım",color:"#00dcff"},
+    {e:"▶️",title:"AI Güvenlik — Kendinizi Koruyun",dur:"8 dk",level:"Başlangıç",desc:"Deepfake, ses klonlama ve korunma yolları",color:"#ff4444"},
+  ];
+  return <div style={{padding:'24px 16px',maxWidth:900,margin:'0 auto'}}>
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:9,letterSpacing:'.2em',color:'#fb923c',marginBottom:4}}>VIDEO EĞİTİMLER</div>
+      <h1 style={{fontSize:24,fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif",margin:'0 0 6px'}}>📺 AI Video Rehberleri</h1>
+      <p style={{fontSize:12,color:'#64748b',margin:'0 0 4px'}}>IMDATAI YouTube kanalından Türkçe AI eğitim videoları</p>
+      <a href="https://youtube.com/@imdatai" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:'#ff4444',display:'inline-flex',gap:4,alignItems:'center',textDecoration:'none',background:'rgba(255,68,68,0.08)',border:'1px solid rgba(255,68,68,0.3)',borderRadius:6,padding:'4px 10px',marginTop:6}}>▶ YouTube Kanalımıza Abone Ol</a>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
+      {VIDS.map(v=><div key={v.title} style={{background:v.color+'06',border:'1px solid '+v.color+'20',borderRadius:12,overflow:'hidden'}}>
+        <div style={{height:100,background:'linear-gradient(135deg,'+v.color+'20,rgba(0,0,0,0.5))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:32}}>{v.e}</div>
+        <div style={{padding:'12px'}}>
+          <div style={{fontSize:12,fontWeight:700,color:v.color,marginBottom:4,lineHeight:1.4}}>{v.title}</div>
+          <div style={{fontSize:10,color:'#64748b',marginBottom:6}}>{v.desc}</div>
+          <div style={{display:'flex',gap:6,justifyContent:'space-between',alignItems:'center'}}>
+            <span style={{fontSize:9,color:'#475569'}}>⏱ {v.dur}</span>
+            <span style={{fontSize:8,color:v.color,background:v.color+'15',borderRadius:4,padding:'1px 6px',fontWeight:700}}>{v.level}</span>
+          </div>
+        </div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════
+// CURSOR IDE SAYFASI
+// ══════════════════════════════════════════
+function CursorPage({setPage}){
+  const[tab,setTab]=useState('genel');
+  const TABS=[{id:'genel',l:'⌨️ Genel'},{id:'ozellik',l:'🔥 Özellikler'},{id:'kurulum',l:'⚙️ Kurulum'},{id:'ipucu',l:'💡 İpuçları'}];
+  return <div style={{maxWidth:960,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{background:'linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.02))',border:'1px solid rgba(52,211,153,0.2)',borderRadius:18,padding:'22px',marginBottom:20}}>
+      <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#34d399,#059669)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 20px rgba(52,211,153,0.4)'}}>⌨️</div>
+        <div>
+          <h1 style={{margin:0,fontSize:'clamp(18px,4vw,28px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif"}}>Cursor IDE — AI Destekli Kod Editörü</h1>
+          <div style={{fontSize:11,color:'#34d399',marginTop:3}}>Claude + GPT-4o entegreli · VS Code tabanlı · 2026 en popüler AI kod aracı</div>
+        </div>
+      </div>
+      <p style={{margin:0,fontSize:12,color:'#94a3b8',lineHeight:1.7}}>Cursor, yapay zeka ile entegre kod editörüdür. <strong style={{color:'#e2e8f0'}}>GitHub Copilot araştırması</strong>: Cursor kullanan geliştiriciler %55 daha hızlı kod yazıyor.</p>
+    </div>
+    <div style={{display:'flex',gap:6,marginBottom:20,flexWrap:'wrap'}}>
+      {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'7px 13px',borderRadius:9,border:'1px solid '+(tab===t.id?'rgba(52,211,153,0.5)':'rgba(255,255,255,0.07)'),background:tab===t.id?'rgba(52,211,153,0.1)':'transparent',color:tab===t.id?'#34d399':'#64748b',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:tab===t.id?700:400}}>{t.l}</button>)}
+    </div>
+    {tab==='genel'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12}}>
+      {[['⌨️','Tab ile Tamamlama','Cursor yazmak istediğinizi tahmin eder. Tab basın, kod gelsin. Satır satır veya blok blok.','#34d399'],
+        ['💬','Ctrl+L Chat','Proje bağlamıyla Claude ile konuşun. "Bu bug neden var?" gibi sorular.','#00dcff'],
+        ['✏️','Ctrl+K Düzenleme','Seçili kodu dönüştürün. Refactor, çevir, optimize, dokümante.','#a855f7'],
+        ['🗂️','Codebase Anlayışı','@codebase ile tüm projeyi bağlam olarak ekler. Büyük projelerde güçlü.','#fbbf24'],
+        ['🌐','@web Arama','Güncel dokümantasyonu çeker. Stack Overflow, GitHub dahil.','#fb923c'],
+        ['📋','.cursorrules','Projeye özel AI kuralları. "Her zaman TypeScript kullan" gibi.','#f472b6'],
+      ].map(([e,t,d,c])=><div key={t} style={{background:c+'07',border:'1px solid '+c+'18',borderRadius:12,padding:'14px'}}>
+        <div style={{fontSize:22,marginBottom:8}}>{e}</div>
+        <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:5}}>{t}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+      </div>)}
+    </div>}
+    {tab==='ozellik'&&<div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {[['Ctrl+Tab','Bir sonraki önerilen değişikliği uygula'],['Ctrl+K','Seçili kodu AI ile düzenle'],['Ctrl+L','Chat paneli aç'],['Ctrl+Shift+L','Chat paneli büyüt'],['@codebase','Tüm projeyi bağlam ekle'],['@file','Belirli dosyayı ekle'],['@web','Web araması yap'],['@docs','Kütüphane dökümantasyonu çek']].map(([k,v])=><div key={k} style={{display:'flex',gap:12,alignItems:'center',padding:'10px 14px',background:'rgba(52,211,153,0.04)',border:'1px solid rgba(52,211,153,0.1)',borderRadius:9}}>
+        <code style={{fontSize:11,color:'#34d399',background:'rgba(52,211,153,0.1)',padding:'3px 8px',borderRadius:5,flexShrink:0}}>{k}</code>
+        <span style={{fontSize:11,color:'#94a3b8'}}>{v}</span>
+      </div>)}
+    </div>}
+    {tab==='kurulum'&&<div style={{display:'flex',flexDirection:'column',gap:12}}>
+      {[['1','cursor.com adresine gidin','Ücretsiz indirin. macOS, Windows, Linux destekleniyor.'],
+        ['2','VS Code ayarlarını import edin','"Import from VS Code" ile tema ve eklentileriniz gelir.'],
+        ['3','GitHub ile giriş yapın','Ücretsiz plan: 2000 tamamlama/ay yeterli başlangıç için.'],
+        ['4','Claude modelini seçin','Ayarlar > Model > Claude Sonnet 4.5 seçin.'],
+        ['5','.cursorrules oluşturun','Proje kök dizinine proje kurallarınızı yazın.']].map(([n,t,d])=><div key={n} style={{display:'flex',gap:14,padding:'14px',background:'rgba(52,211,153,0.04)',border:'1px solid rgba(52,211,153,0.1)',borderRadius:10}}>
+        <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(52,211,153,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#34d399',fontWeight:900,flexShrink:0}}>{n}</div>
+        <div><div style={{fontSize:12,fontWeight:700,color:'#34d399',marginBottom:4}}>{t}</div><div style={{fontSize:10,color:'#64748b'}}>{d}</div></div>
+      </div>)}
+      <a href="https://cursor.com" target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',gap:8,alignItems:'center',padding:'10px 20px',background:'linear-gradient(135deg,#34d399,#059669)',borderRadius:10,color:'#fff',textDecoration:'none',fontSize:12,fontWeight:700,alignSelf:'flex-start',marginTop:4}}>⌨️ Cursor'u İndir →</a>
+    </div>}
+    {tab==='ipucu'&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
+      {['"Ctrl+K ile seçili kodu Claude ile gonderin: Bunu TypeScript e cevir"',
+        '"@codebase ekleyip kodunuzu analiz ettirin: Bu projenin mimarisi nedir?"',
+        '".cursorrules dosyasina: Always use TypeScript. Always add JSDoc comments."',
+        '"Hata mesajını kopyalayıp Ctrl+L yapın. Claude otomatik debug eder"',
+        '"@web ile güncel kütüphane belgelerini çekin. Eski bilgi sorunu yok"',
+        '"Multi-file edit: Cursor birden fazla dosyayı aynı anda düzenleyebilir"'].map((tip,i)=><div key={i} style={{background:'rgba(52,211,153,0.04)',border:'1px solid rgba(52,211,153,0.12)',borderRadius:10,padding:'14px',display:'flex',gap:10}}>
+        <div style={{width:22,height:22,borderRadius:'50%',background:'rgba(52,211,153,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#34d399',fontWeight:700,flexShrink:0}}>{i+1}</div>
+        <div style={{fontSize:10,color:'#94a3b8',lineHeight:1.6}}>{tip}</div>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+// ══════════════════════════════════════════
+// PERPLEXITY AI SAYFASI
+// ══════════════════════════════════════════
+function PerplexityPage({setPage}){
+  return <div style={{maxWidth:960,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{background:'linear-gradient(135deg,rgba(168,85,247,0.1),rgba(168,85,247,0.02))',border:'1px solid rgba(168,85,247,0.2)',borderRadius:18,padding:'22px',marginBottom:20}}>
+      <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#a855f7,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 20px rgba(168,85,247,0.4)'}}>🔍</div>
+        <div>
+          <h1 style={{margin:0,fontSize:'clamp(18px,4vw,28px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif"}}>Perplexity AI — Akıllı Arama Motoru</h1>
+          <div style={{fontSize:11,color:'#a855f7',marginTop:3}}>Google alternatifi · Kaynak gösterir · Gerçek zamanlı web · Günlük 10M+ sorgu</div>
+        </div>
+      </div>
+      <p style={{margin:0,fontSize:12,color:'#94a3b8',lineHeight:1.7}}>Perplexity, web'i arayıp <strong style={{color:'#e2e8f0'}}>kaynaklarıyla birlikte özetleyen</strong> AI arama motorudur. Google'ın aksine bağlantı listesi değil, doğrudan yanıt sunar.</p>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12,marginBottom:20}}>
+      {[['🔍','Anlık Web Araması','Canlı internet verisiyle yanıt. Bilgi kesme tarihi yok, daima güncel.','#a855f7'],
+        ['📖','Kaynak Şeffaflığı','Her iddiaya kaynak gösterir. Gerçek mi değil mi kendiniz kontrol edin.','#34d399'],
+        ['🤖','Çoklu AI Modeli','Claude, GPT-4, Llama ile aynı arayüzde sorgu yapın.','#00dcff'],
+        ['📁','Spaces','Konuya özel araştırma alanları. Ekip ile paylaşın.','#fbbf24'],
+        ['🇹🇷','Türkçe Destek','Türkçe sorgular çalışır. Türk kaynakları da tarar.','#fb923c'],
+        ['💲','Ücretsiz Plan','Günlük 5 Pro sorgu ücretsiz. Standart sorgular sınırsız.','#f472b6'],
+      ].map(([e,t,d,c])=><div key={t} style={{background:c+'07',border:'1px solid '+c+'18',borderRadius:12,padding:'14px'}}>
+        <div style={{fontSize:22,marginBottom:8}}>{e}</div>
+        <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:5}}>{t}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+      </div>)}
+    </div>
+    <div style={{background:'rgba(168,85,247,0.05)',border:'1px solid rgba(168,85,247,0.15)',borderRadius:12,padding:'16px',marginBottom:16}}>
+      <div style={{fontSize:12,fontWeight:700,color:'#a855f7',marginBottom:10}}>🔍 Perplexity vs Google vs ChatGPT</div>
+      <div style={{overflowX:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:10}}>
+          <thead><tr style={{borderBottom:'1px solid rgba(255,255,255,0.06)'}}>{['Özellik','Perplexity','Google','ChatGPT'].map(h=><th key={h} style={{padding:'6px 10px',textAlign:'left',color:'#475569',fontWeight:700}}>{h}</th>)}</tr></thead>
+          <tbody>{[['Canlı Web','✅','✅','Sınırlı'],['Kaynak Gösterir','✅','✅ Link','❌'],['AI Özet','✅','Kısmi','✅'],['Ücretsiz','✅ Çoğu','✅','Sınırlı'],['Türkçe','İyi','Mükemmel','Mükemmel']].map((r,i)=><tr key={r[0]} style={{background:i%2?'rgba(255,255,255,0.01)':'transparent'}}>{r.map((c,j)=><td key={j} style={{padding:'6px 10px',color:j===1?'#a855f7':j===0?'#94a3b8':'#64748b',fontWeight:j===1?700:400}}>{c}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+    <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',gap:8,alignItems:'center',padding:'10px 20px',background:'linear-gradient(135deg,#a855f7,#7c3aed)',borderRadius:10,color:'#fff',textDecoration:'none',fontSize:12,fontWeight:700}}>🔍 Perplexity AI → Ücretsiz Dene</a>
+  </div>;
+}
+
+// ══════════════════════════════════════════
+// NOTEBOOKLM SAYFASI
+// ══════════════════════════════════════════
+function NotebookLMPage({setPage}){
+  return <div style={{maxWidth:960,margin:'0 auto',padding:'24px 16px'}}>
+    <div style={{background:'linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.02))',border:'1px solid rgba(251,191,36,0.2)',borderRadius:18,padding:'22px',marginBottom:20}}>
+      <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap',marginBottom:12}}>
+        <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#fbbf24,#d97706)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 20px rgba(251,191,36,0.4)'}}>📓</div>
+        <div>
+          <h1 style={{margin:0,fontSize:'clamp(18px,4vw,28px)',fontWeight:900,color:'#e2e8f0',fontFamily:"'Space Grotesk',sans-serif"}}>Google NotebookLM — AI Araştırma Asistanı</h1>
+          <div style={{fontSize:11,color:'#fbbf24',marginTop:3}}>Google · Tamamen Ücretsiz · PDF/Döküman/YouTube · Podcast Modu</div>
+        </div>
+        <span style={{marginLeft:'auto',fontSize:9,background:'rgba(52,211,153,0.15)',color:'#34d399',border:'1px solid rgba(52,211,153,0.3)',borderRadius:5,padding:'3px 9px',fontWeight:700}}>🆓 Tamamen Ücretsiz</span>
+      </div>
+      <p style={{margin:0,fontSize:12,color:'#94a3b8',lineHeight:1.7}}>Kendi kaynaklarınızı yükleyin, yapay zeka ile konuşun. <strong style={{color:'#e2e8f0'}}>Hallüsinasyon minimaldır</strong> — yalnızca sizin verilerinizden yanıt üretir.</p>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12,marginBottom:20}}>
+      {[['📄','PDF & Döküman','Akademik makaleler, kitaplar, raporlar yükleyin. 200 kaynak/notebook.','#fbbf24'],
+        ['🎵','Podcast Modu','En viral özellik: kaynaklarınızı 2 AI sunucunun doğal sohbetine dönüştürür!','#a855f7'],
+        ['▶️','YouTube Transkript','Video URL yapıştırın, transcript otomatik çekilir. Analiz edin.','#ff4444'],
+        ['🌐','Web Sayfaları','URL ile web içeriği ekleyin. Blog, haber, dökümantasyon.','#34d399'],
+        ['💬','Kaynak Bazlı AI','Yanıtlar kaynak gösterir. Hangi dökümanın kaçıncı sayfası söyler.','#00dcff'],
+        ['👥','Paylaşım','Notebook paylaşın. Ekip araştırması için ideal.','#fb923c'],
+      ].map(([e,t,d,c])=><div key={t} style={{background:c+'07',border:'1px solid '+c+'18',borderRadius:12,padding:'14px'}}>
+        <div style={{fontSize:22,marginBottom:8}}>{e}</div>
+        <div style={{fontSize:12,fontWeight:700,color:c,marginBottom:5}}>{t}</div>
+        <div style={{fontSize:10,color:'#64748b',lineHeight:1.5}}>{d}</div>
+      </div>)}
+    </div>
+    <div style={{background:'rgba(251,191,36,0.05)',border:'1px solid rgba(251,191,36,0.15)',borderRadius:12,padding:'16px',marginBottom:14}}>
+      <div style={{fontSize:12,fontWeight:700,color:'#fbbf24',marginBottom:10}}>⚡ Pratik Kullanım Senaryoları</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:8}}>
+        {[['📚','Kitap Analizi','PDF yükle → "Ana temalar neler?" → "3. bölümü özetle"'],
+          ['🎓','Tez Araştırması','10 makale yükle → "Ortak bulgular neler?" → "Boşluklar?"'],
+          ['📋','Toplantı Özeti','Transkript yükle → "Alınan kararlar?" → "Aksiyon maddeleri?"'],
+          ['🎙️','Podcast Üretimi','Araştırmanı yükle → Audio Overview → 15dk podcast hazır!'],
+        ].map(([e,t,d])=><div key={t} style={{padding:'10px',background:'rgba(0,0,0,0.2)',borderRadius:8}}>
+          <div style={{fontSize:11,fontWeight:700,color:'#fbbf24',marginBottom:4}}>{e} {t}</div>
+          <div style={{fontSize:9,color:'#64748b',lineHeight:1.5}}>{d}</div>
+        </div>)}
+      </div>
+    </div>
+    <a href="https://notebooklm.google.com" target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',gap:8,alignItems:'center',padding:'10px 20px',background:'linear-gradient(135deg,#fbbf24,#d97706)',borderRadius:10,color:'#000',textDecoration:'none',fontSize:12,fontWeight:700}}>📓 NotebookLM → Ücretsiz Başla</a>
+  </div>;
+}
+
+
 const NAV_GROUPS=[
-  {id:"home",label:"Ana Sayfa"},
-  {id:"haberler",label:"Haberler"},
-  {id:"blog",label:"Blog"},
-  {id:"ai_m",label:"🤖 AI Modeller",sub:[
-    {id:"claude",label:"Claude",icon:"🧠",desc:"Kodlamada #1 · 1M token"},
-    {id:"chatgpt",label:"ChatGPT",icon:"🤖",desc:"900M kullanıcı · GPT-5.5"},
-    {id:"gemini",label:"Gemini",icon:"🌟",desc:"2M token · Google ekosistemi"},
-    {id:"grok",label:"Grok 3",icon:"⚡",desc:"xAI · X/Twitter verisi"},
-    {id:"deepseek",label:"DeepSeek",icon:"🔬",desc:"Açık kaynak · Matematik #1"},
-    {id:"mistral",label:"Mistral",icon:"🇫🇷",desc:"Avrupa AI · GDPR uyumlu"},
-    {id:"llama",label:"Llama 4",icon:"🦙",desc:"Meta · Tamamen ücretsiz"},
-    {id:"karsilastirma",label:"Karşılaştır",icon:"🆚",desc:"Tüm modeller yan yana"},
-  ]},
-  {id:"eg",label:"🎓 Öğren",sub:[
-    {id:"ogrenme",label:"AI Öğren",icon:"🎓",desc:"Sıfırdan uzmanlığa"},
-    {id:"prompt",label:"Prompt Rehberi",icon:"💡",desc:"75 örnek · 13 kategori"},
-    {id:"sozluk",label:"AI Sözlük",icon:"📖",desc:"69 AI terimi"},
-    {id:"flashcard",label:"AI Flashcard",icon:"🃏",desc:"Kart çevirerek öğren"},
-    {id:"mitler",label:"AI Mitleri",icon:"🔍",desc:"Doğru/yanlış ayırt et"},
-    {id:"para",label:"Para Kazan",icon:"💰",desc:"AI gelir rehberi"},
-    {id:"kariyer",label:"Kariyer",icon:"🚀",desc:"AI meslekleri · Maaşlar"},
-  ]},
-  {id:"oy",label:"🎮 Oyun & Araçlar",sub:[
-    {id:"oyunlar",label:"Tüm Oyunlar",icon:"🎮",desc:"10 oyun bir arada"},
-    {id:"trivia",label:"AI Trivia",icon:"🏆",desc:"50 soru · Streak sistemi"},
-    {id:"roulette",label:"Prompt Roulette",icon:"🎡",desc:"30sn yarışması"},
-    {id:"dedektif",label:"Model Dedektif",icon:"🔍",desc:"GPT mi Claude mi?"},
-    {id:"emoji",label:"Emoji Tahmin",icon:"😄",desc:"AI kelime bul"},
-    {id:"iqtest",label:"AI IQ Testi",icon:"🧠",desc:"Paylaşılabilir kart"},
-    {id:"cark",label:"Şans Çarkı",icon:"🎰",desc:"Rastgele içerik kazan"},
-    {id:"flashcard",label:"AI Flashcard",icon:"🃏",desc:"16 AI terimi öğren"},
-    {id:"puan",label:"Prompt Puanla",icon:"💡",desc:"Gemini AI analizi"},
-    {id:"zaman",label:"Zaman Hesapla",icon:"⏱️",desc:"AI tasarruf hesabı"},
-    {id:"maliyet",label:"Maliyet Hesapla",icon:"💸",desc:"API maliyet karşılaştır"},
-    {id:"gorev",label:"Günlük Görev",icon:"📋",desc:"XP kazan · Rozet"},
-  ]},
-  {id:"ar",label:"🛠️ Araçlar",sub:[
-    {id:"tools",label:"Tools Dizini",icon:"🛠️",desc:"45+ AI aracı rehberi"},
-    {id:"animasyon",label:"Animasyon Galerisi",icon:"🎬",desc:"8 fullscreen animasyon"},
-    {id:"aistatus",label:"AI Durumu",icon:"📡",desc:"Canlı araç durumu"},
-    {id:"galeri",label:"AI Galeri",icon:"🎨",desc:"Görsel koleksiyonu"},
-    {id:"topluluk",label:"Topluluk",icon:"💬",desc:"Prompt paylaşım"},
-    {id:"guvenlik",label:"AI Güvenlik",icon:"🛡️",desc:"Deepfake ve AI dolandırıcılığı"},
-    {id:"turkiyeai",label:"Türkiye AI",icon:"🇹🇷",desc:"Yerli AI ekosistemi"},
-    {id:"hukuk",label:"AI Hukuk",icon:"⚖️",desc:"KVKK, telif, AB AI Act"},
-    {id:"yarisma",label:"Prompt Yarışması",icon:"🏆",desc:"En iyi promptlar"},
-    {id:"oneri",label:"Kişisel Öneri",icon:"🎯",desc:"Sana özel AI paketi"},
-    {id:"dizin",label:"Araç Dizini",icon:"🗂️",desc:"Kategorili araç listesi"},
-    {id:"pro",label:"Pro Araçlar",icon:"⭐",desc:"Yakında"},
-  ]},
+  // ── Ana ────────────────────────────────
+  {id:"home",label:"Ana Sayfa",icon:"🏠",desc:"IMDATAI ana sayfa"},
+  {id:"haberler",label:"Haberler",icon:"📰",desc:"Güncel AI haberleri"},
+  {id:"blog",label:"Blog",icon:"✍️",desc:"AI yazıları ve rehberler"},
+  {id:"gunlukezet",label:"Günlük Özet",icon:"📋",desc:"Günün AI özeti"},
+  // ── AI Modeller ────────────────────────
+  {id:"claude",label:"Claude AI",icon:"🧠",desc:"Anthropic Claude rehberi ve testi"},
+  {id:"chatgpt",label:"ChatGPT",icon:"🤖",desc:"OpenAI ChatGPT rehberi"},
+  {id:"gemini",label:"Gemini AI",icon:"🌟",desc:"Google Gemini rehberi"},
+  {id:"grok",label:"Grok AI",icon:"⚡",desc:"xAI Grok rehberi"},
+  {id:"deepseek",label:"DeepSeek",icon:"🔬",desc:"DeepSeek rehberi"},
+  {id:"mistral",label:"Mistral AI",icon:"🌊",desc:"Mistral AI rehberi"},
+  {id:"llama",label:"Meta Llama",icon:"🦙",desc:"Meta Llama rehberi"},
+  {id:"karsilastirma",label:"Model Karşılaştır",icon:"🆚",desc:"AI modelleri karşılaştır"},
+  // ── Öğren ──────────────────────────────
+  {id:"ogrenme",label:"AI Öğren",icon:"🎓",desc:"Yapay zeka öğrenme rehberi"},
+  {id:"prompt",label:"Prompt Rehberi",icon:"💡",desc:"113+ Türkçe prompt örneği"},
+  {id:"sozluk",label:"AI Sözlük",icon:"📖",desc:"80 AI terimi Türkçe açıklama"},
+  {id:"flashcard",label:"AI Flashcard",icon:"🃏",desc:"Flashcard ile AI öğren"},
+  {id:"mitler",label:"AI Mitleri",icon:"💡",desc:"Yapay zeka mitleri ve gerçekler"},
+  // ── Görsel & Video AI ──────────────────
+  {id:"gorselai",label:"Görsel AI",icon:"🎨",desc:"Midjourney DALL-E Stable Diffusion"},
+  {id:"videorehai",label:"AI Video",icon:"🎬",desc:"Sora Runway Kling Pika rehberi"},
+  // ── Araçlar ────────────────────────────
+  {id:"tools",label:"AI Araçlar",icon:"🛠️",desc:"50+ AI araç dizini"},
+  {id:"dizin",label:"Araç Dizini",icon:"📋",desc:"Kategoriye göre AI araçlar"},
+  {id:"aistatus",label:"AI Durum",icon:"🟢",desc:"Canlı AI servis durumu"},
+  {id:"cursor",label:"Cursor IDE Rehberi",icon:"⌨️",desc:"AI destekli kod editörü tam rehberi"},
+  {id:"perplexity",label:"Perplexity AI",icon:"🔍",desc:"Google alternatifi AI arama motoru"},
+  {id:"notebooklm",label:"NotebookLM Rehberi",icon:"📓",desc:"Google'ın ücretsiz AI not aracı"},
+  {id:"aifiyat",label:"AI Fiyat Karşılaştır",icon:"💲",desc:"Tüm model API fiyatları"},
+  {id:"maliyet",label:"Maliyet Hesapla",icon:"💰",desc:"AI kullanım maliyeti hesapla"},
+  {id:"zaman",label:"Zaman Hesapla",icon:"⏱️",desc:"AI zaman tasarrufu hesapla"},
+  // ── Kariyer & Para ─────────────────────
+  {id:"para",label:"AI ile Para Kazan",icon:"💰",desc:"Freelance AI, prompt satışı"},
+  {id:"kariyer",label:"AI Kariyer",icon:"💼",desc:"AI kariyer rehberi"},
+  {id:"isborsasi",label:"İş Borsası",icon:"👔",desc:"AI iş ilanları"},
+  {id:"meslekAI",label:"Mesleklere Göre AI",icon:"👔",desc:"8 meslek için AI araç seti"},
+  // ── Oyunlar ────────────────────────────
+  {id:"oyunlar",label:"Oyunlar",icon:"🎮",desc:"AI oyun galerisi"},
+  {id:"trivia",label:"AI Trivia",icon:"🎯",desc:"60 soruluk AI bilgi yarışması"},
+  {id:"iqtest",label:"AI IQ Testi",icon:"🧠",desc:"Yapay zeka IQ testi"},
+  {id:"roulette",label:"Prompt Ruleti",icon:"🎰",desc:"Rastgele prompt keşfet"},
+  {id:"dedektif",label:"Model Dedektif",icon:"🔍",desc:"AI modeli tahmin oyunu"},
+  {id:"cark",label:"Çark",icon:"🎡",desc:"Şans çarkı"},
+  {id:"puan",label:"Prompt Skorer",icon:"⭐",desc:"Promptunu puanla"},
+  {id:"kisilik",label:"Kişilik Testi",icon:"🧪",desc:"AI kişilik analizi"},
+  {id:"animasyon",label:"AI Animasyonlar",icon:"🎬",desc:"25 canlı AI animasyonu"},
+  {id:"galeri",label:"AI Galerisi",icon:"🖼️",desc:"AI görsel galerisi"},
+  // ── Topluluk ───────────────────────────
+  {id:"topluluk",label:"Topluluk",icon:"👥",desc:"AI topluluğu ve tartışma"},
+  {id:"yarisma",label:"Prompt Yarışması",icon:"🏆",desc:"Topluluk en iyi promptları"},
+  {id:"oneri",label:"Öneri",icon:"💬",desc:"Kişisel AI önerileri"},
+  {id:"sertifika",label:"AI Sertifika",icon:"🏅",desc:"AI sertifika programı"},
+  {id:"videorehber",label:"Video Rehberi",icon:"📺",desc:"AI video rehberleri"},
+  {id:"sablonlar",label:"Şablonlar",icon:"📄",desc:"Hazır AI şablonları"},
+  {id:"gorev",label:"Görevler",icon:"📋",desc:"Günlük AI görevleri"},
+  // ── Güvenlik & Hukuk ──────────────────
+  {id:"guvenlik",label:"AI Güvenlik",icon:"🛡️",desc:"Deepfake ve dolandırıcılık korunma"},
+  {id:"turkiyeai",label:"Türkiye AI",icon:"🇹🇷",desc:"Türk AI ekosistemi startuplar"},
+  {id:"hukuk",label:"AI Hukuk",icon:"⚖️",desc:"KVKK telif AB AI Act"},
+  // ── Site ───────────────────────────────
+  {id:"pro",label:"Pro Üyelik",icon:"⭐",desc:"Premium özellikler"},
+  {id:"hakkimizda",label:"Hakkımızda",icon:"ℹ️",desc:"IMDATAI hakkında"},
+  {id:"iletisim",label:"İletişim",icon:"📧",desc:"Bize ulaşın"},
+  {id:"gizlilik",label:"Gizlilik",icon:"🔒",desc:"Gizlilik politikası"},
 ];
+
 const NAV_ITEMS=NAV_GROUPS;const NAV=NAV_GROUPS;
 
 
@@ -5390,6 +7296,64 @@ const ALL_TOOLS=[
     {n:"Tableau AI",e:"📊",d:"Veri görselleştirme platformu AI destekli.",url:"https://tableau.com",free:false,tag:"BI"},
     {n:"DataRobot",e:"🤖",d:"Otomatik ML modeli oluşturma platformu.",url:"https://datarobot.com",free:false,tag:"ML"},
     {n:"Obviously AI",e:"🔮",d:"Kod yazmadan ML tahmin modeli kur.",url:"https://obviously.ai",free:false,tag:"AutoML"},
+  ]},
+  {cat:"🤖 Otomasyon & İş Akışı",tools:[
+    {n:"Zapier",e:"⚡",d:"5000+ uygulama entegrasyonu. AI ile tetikleyici ve eylem zinciri kur.",url:"https://zapier.com",free:true,tag:"Otomasyon"},
+    {n:"Make (Integromat)",e:"🔧",d:"Görsel iş akışı otomasyon. Zapier'den daha esnekli ve uygun fiyatlı.",url:"https://make.com",free:true,tag:"Otomasyon"},
+    {n:"n8n",e:"🌿",d:"Açık kaynak otomasyon. Self-host seçeneği. Geliştiriciler için ideal.",url:"https://n8n.io",free:true,tag:"Otomasyon"},
+    {n:"Taskade",e:"✅",d:"AI destekli görev yönetimi ve proje planlama. Takım işbirliği.",url:"https://taskade.com",free:true,tag:"Verimlilik"},
+  ]},
+  {cat:"📊 Analiz & BI",tools:[
+    {n:"Julius AI",e:"📈",d:"CSV/Excel yükle, AI analiz etsin. Grafik + insight + Python kodu.",url:"https://julius.ai",free:true,tag:"Veri"},
+    {n:"Equals",e:"📉",d:"AI destekli spreadsheet. Veri bağlantısı + otomatik raporlama.",url:"https://equals.com",free:true,tag:"BI"},
+    {n:"Polymer",e:"🔮",d:"Veri setini yükle, AI dashboard oluştursun. Kod yok.",url:"https://polymersearch.com",free:true,tag:"Veri"},
+    {n:"Chartable",e:"🎙️",d:"Podcast analytics AI. Dinleyici davranışı + büyüme tahminleri.",url:"https://chartable.com",free:false,tag:"Analiz"},
+  ]},
+  {cat:"🧑‍💼 İnsan Kaynakları AI",tools:[
+    {n:"HireVue",e:"👥",d:"AI video mülakat. Yüz ifadesi ve konuşma analizi.",url:"https://hirevue.com",free:false,tag:"İK"},
+    {n:"Textio",e:"✍️",d:"İş ilanı yazımını optimize eden AI. Bias tespiti.",url:"https://textio.com",free:false,tag:"İK"},
+    {n:"Eightfold",e:"🎯",d:"Yetenek zekası platformu. CV analizi ve kariyer patika.",url:"https://eightfold.ai",free:false,tag:"İK"},
+    {n:"Paradox",e:"🤖",d:"Olivia AI - işe alım chatbotu. Otomatik mülakat planlama.",url:"https://paradox.ai",free:false,tag:"İK"},
+  ]},
+  {cat:"🛒 E-Ticaret AI",tools:[
+    {n:"Nosto",e:"🛍️",d:"E-ticaret kişiselleştirme. AI ürün öneri motoru.",url:"https://nosto.com",free:false,tag:"E-Ticaret"},
+    {n:"Vue.ai",e:"🛒",d:"Retail AI platformu. Görsel arama + kişiselleştirme.",url:"https://vue.ai",free:false,tag:"E-Ticaret"},
+    {n:"Octane AI",e:"💬",d:"Shopify için AI quiz ve chatbot. Kişiselleştirilmiş alışveriş.",url:"https://octaneai.com",free:true,tag:"E-Ticaret"},
+    {n:"Roktum",e:"📦",d:"Türk e-ticaret için AI içerik üretimi. Trendyol/Hepsiburada.",url:"https://roktum.com",free:true,tag:"TR"},
+  ]},
+  {cat:"🏥 Sağlık & Wellness",tools:[
+    {n:"Ada Health",e:"🩺",d:"AI semptom kontrolcü. 30+ dil, Türkçe dahil.",url:"https://ada.com",free:true,tag:"Sağlık"},
+    {n:"Suki",e:"🎤",d:"Doktor için AI sesli not asistanı. EHR entegrasyonu.",url:"https://suki.ai",free:false,tag:"Tıp"},
+    {n:"Woebot",e:"🧠",d:"AI destekli mental sağlık chatbotu. CBT tabanlı.",url:"https://woebothealth.com",free:true,tag:"Mental"},
+    {n:"Lark",e:"🏃",d:"Kronik hastalık yönetimi AI koçu. Diyabet + hipertansiyon.",url:"https://lark.com",free:true,tag:"Sağlık"},
+  ]},
+  {cat:"🧠 Üretkenlik AI",tools:[
+    {n:"Notion AI",e:"📓",d:"Notion içinde AI yazı asistanı. Özet, taslak, çeviri. Türkçe destekli.",url:"https://notion.so",free:true,tag:"Verimlilik"},
+    {n:"Otter.ai",e:"🎙️",d:"Toplantı transkripti ve özet AI. Türkçe hâlâ sınırlı.",url:"https://otter.ai",free:true,tag:"Ses"},
+    {n:"Mem.ai",e:"🧠",d:"AI destekli not alma. Otomatik bağlantı kurma ve hatırlatma.",url:"https://mem.ai",free:true,tag:"Not"},
+    {n:"Reclaim.ai",e:"⏰",d:"AI takvim optimizasyonu. Toplantı ve odak bloklarını otomatik planlar.",url:"https://reclaim.ai",free:true,tag:"Takvim"},
+    {n:"Magical",e:"⚡",d:"Browser extension — metin şablonları ve otomasyon. CRM doldurma.",url:"https://magical.com",free:true,tag:"Otomasyon"},
+  ]},
+  {cat:"🎨 Tasarım AI",tools:[
+    {n:"Canva AI",e:"🖌️",d:"Magic Design ile saniyede profesyonel tasarım. Türkçe destekli.",url:"https://canva.com",free:true,tag:"Tasarım"},
+    {n:"Adobe Firefly",e:"🔥",d:"Adobe'un AI görsel üreticisi. Telif güvenli, Photoshop entegreli.",url:"https://firefly.adobe.com",free:true,tag:"Görsel"},
+    {n:"Looka",e:"👁️",d:"AI logo tasarımı. 500+ kombinasyon, marka kiti dahil.",url:"https://looka.com",free:false,tag:"Logo"},
+    {n:"Remove.bg",e:"✂️",d:"Fotoğraftan arka planı anında kaldır. API mevcut.",url:"https://remove.bg",free:true,tag:"Fotoğraf"},
+    {n:"Krea.ai",e:"✨",d:"Gerçek zamanlı AI görsel üretimi. Çizimden fotoğrafa.",url:"https://krea.ai",free:true,tag:"Görsel"},
+  ]},
+  {cat:"📝 Yazı AI",tools:[
+    {n:"Jasper",e:"✍️",d:"Pazarlama içeriği için AI. Blog, sosyal medya, reklam metinleri.",url:"https://jasper.ai",free:false,tag:"İçerik"},
+    {n:"Copy.ai",e:"📋",d:"Satış ve pazarlama metni oluşturucu. 90+ şablon.",url:"https://copy.ai",free:true,tag:"Metin"},
+    {n:"Grammarly",e:"📖",d:"AI yazım ve ton denetleyici. Türkçe desteği sınırlı.",url:"https://grammarly.com",free:true,tag:"Yazım"},
+    {n:"Hemingway App",e:"📝",d:"Yazıyı sadeleştiren AI editör. Okunabilirlik skoru.",url:"https://hemingwayapp.com",free:true,tag:"Yazım"},
+    {n:"Sudowrite",e:"🖋️",d:"Roman ve hikaye yazarları için AI asistan.",url:"https://sudowrite.com",free:false,tag:"Yaratıcı"},
+  ]},
+  {cat:"🔊 Ses & Müzik AI",tools:[
+    {n:"ElevenLabs",e:"🎤",d:"3 sn kayıtla ses klonlama. 30+ dil. En gelişmiş TTS.",url:"https://elevenlabs.io",free:true,tag:"Ses"},
+    {n:"Suno AI",e:"🎵",d:"Sözlü şarkı üretimi. Prompt yaz, müzik çıksın.",url:"https://suno.ai",free:true,tag:"Müzik"},
+    {n:"Udio",e:"🎼",d:"Suno alternatifi müzik AI. Yüksek kalite stüdyo sesi.",url:"https://udio.com",free:true,tag:"Müzik"},
+    {n:"Descript",e:"🎬",d:"Video/podcast editör. Metni silerek video kesme.",url:"https://descript.com",free:true,tag:"Video"},
+    {n:"Adobe Podcast",e:"🎙️",d:"Ses kalitesini profesyonel stüdyo seviyesine çıkar. Ücretsiz.",url:"https://podcast.adobe.com",free:true,tag:"Ses"},
   ]}
 ];
 
@@ -5454,10 +7418,17 @@ export default function App(){
   if(page==="llama"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><LlamaPage setPage={nav}/></Wrapper>;}
   if(page==="dashboard"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><DashboardPage setPage={nav}/></Wrapper>;}
   if(page==="kisilik"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><KisilikPage setPage={nav}/></Wrapper>;}
-    {page==="guvenlik"    &&<AIGuvenlikPage/>}
-    {page==="turkiyeai"   &&<TurkiyeAIPage/>}
-    {page==="hukuk"       &&<AIHukukPage/>}
-    {page==="yarisma"     &&<YarismPage/>}
+  if(page==="guvenlik"){  return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><AIGuvenlikPage setPage={nav}/></Wrapper>;}
+  if(page==="turkiyeai"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><TurkiyeAIPage setPage={nav}/></Wrapper>;}
+  if(page==="hukuk"){    return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><AIHukukPage setPage={nav}/></Wrapper>;}
+  if(page==="yarisma"){  return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><YarismPage setPage={nav}/></Wrapper>;}
+  if(page==="gorselai"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><GorselAIPage setPage={nav}/></Wrapper>;}
+  if(page==="videorehai"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><AIVideoPage setPage={nav}/></Wrapper>;}
+  if(page==="meslekAI"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><MeslekAIPage setPage={nav}/></Wrapper>;}
+  if(page==="aifiyat"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><AIFiyatPage setPage={nav}/></Wrapper>;}
+    if(page==="cursor"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><CursorPage setPage={nav}/></Wrapper>;}
+    if(page==="perplexity"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><PerplexityPage setPage={nav}/></Wrapper>;}
+    if(page==="notebooklm"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><NotebookLMPage setPage={nav}/></Wrapper>;}
   if(page==="grok"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><GrokPage setPage={nav}/></Wrapper>;}
   if(page==="deepseek"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><DeepSeekPage setPage={nav}/></Wrapper>;}
   if(page==="mistral"){return <Wrapper nav={nav} page={page} cookie={cookie} setCookie={setCookie}><MistralPage setPage={nav}/></Wrapper>;}
@@ -5481,14 +7452,14 @@ export default function App(){
     {page==="oyunlar"       &&<OyunlarPage setPage={nav}/>}
     {page==="trivia"        &&<TriviaMarathon/>}
     {page==="roulette"      &&<PromptRoulette/>}
-    {page==="emoji"         &&<EmojiGuess/>}
+    {page==="emoji"         &&<EmojiTahmin/>}
     {page==="dedektif"      &&<ModelDedektifPage/>}
     {page==="kariyer_sim"   &&<KariyerSimPage/>}
     {page==="cark"          &&<LuckyWheelPage/>}
     {page==="animasyon"     &&<AnimasyonPage/>}
     {page==="flashcard"     &&<FlashcardPage/>}
     {page==="maliyet"       &&<MaliyetPage/>}
-    {page==="gorev"         &&<div style={{padding:"28px 20px",textAlign:"center"}}><DailyMissionsWidget setPage={nav}/><div style={{fontSize:14,color:"#64748b",marginTop:60}}>Görev widget'ı sağ alt köşede! 📋</div></div>}
+        {page==="gorev" &&<div style={{padding:"24px 16px",maxWidth:800,margin:"0 auto"}}><div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:".2em",color:"#34d399",marginBottom:4}}>GÜNLÜK GÖREVLER</div><h1 style={{fontSize:24,fontWeight:900,color:"#e2e8f0",fontFamily:"'Space Grotesk',sans-serif",margin:"0 0 8px"}}>📋 Günlük AI Görevleri</h1><p style={{fontSize:12,color:"#64748b",margin:0}}>Yapay zeka öğrenme içerikleri — günlük ilham ve pratik</p></div><DailyMissionsWidget setPage={nav}/></div>}
     {page==="dashboard"     &&<DashboardPage setPage={nav}/>}
     {page==="kisilik"       &&<KisilikPage setPage={nav}/>}
     {page==="topluluk"      &&<ToplulukPage/>}
@@ -5504,6 +7475,11 @@ export default function App(){
     {page==="iletisim"      &&<IletisimPage/>}
     {page==="gizlilik"      &&<GizlilikPage/>}
     {page==="pro"           &&<ProPage/>}
+    {page==="isborsasi"   &&<IsBorsasiPage/>}
+    {page==="sertifika"   &&<SertifikaPage/>}
+    {page==="sablonlar"   &&<SablonlarPage/>}
+    {page==="gunlukezet"  &&<GunlukOzetPage/>}
+    {page==="videorehber" &&<VideoRehberPage/>}
   </Wrapper>;
 }
 
@@ -5667,7 +7643,7 @@ function ChatGPTPage({setPage}){
         <div><div style={{fontSize:28,fontWeight:900,color:"#00dcff",marginBottom:4}}>ChatGPT — OpenAI</div><div style={{fontSize:14,color:"#94a3b8"}}>Dünyanın En Popüler AI · 900M Haftalık Kullanıcı · GPT-5.5 · DALL-E 3 · Sesli Sohbet</div></div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10}}>
-        {[["👥","900M+","Haftalık kullanıcı"],["🌍","175+","Ülke"],["🖼️","DALL-E 3","Görsel üretim"],["🎙️","Ses Modu","Konuşma AI"],["🔌","Plugin","Ekosistemi"],["💾","Hafıza","Kişiselleşme"]].map(([e,t,d])=>(
+        {[["👥","480+","Haftalık kullanıcı"],["🌍","1113+","Ülke"],["🖼️","DALL-E 3","Görsel üretim"],["🎙️","Ses Modu","Konuşma AI"],["🔌","Plugin","Ekosistemi"],["💾","Hafıza","Kişiselleşme"]].map(([e,t,d])=>(
           <div key={t} style={{background:"rgba(0,220,255,0.08)",border:"1px solid rgba(0,220,255,0.2)",borderRadius:10,padding:"12px",textAlign:"center"}}>
             <div style={{fontSize:18,marginBottom:4}}>{e}</div><div style={{fontSize:12,fontWeight:700,color:"#00dcff",marginBottom:2}}>{t}</div><div style={{fontSize:10,color:"#475569"}}>{d}</div>
           </div>
@@ -5834,98 +7810,147 @@ function GeminiPage({setPage}){
   </div>;
 }
 
+
 function NavSearchBar({nav}){
   const[open,setOpen]=useState(false);
   const[q,setQ]=useState('');
+  const[activeTab,setActiveTab]=useState('🧠');
   const ref=useRef();
 
-  // Build search index from ALL data sources
+  const C={Model:'#a855f7',Öğren:'#34d399',Araç:'#00dcff',Oyun:'#f472b6',
+    Kariyer:'#fbbf24',Güvenlik:'#ff6b6b',Topluluk:'#a855f7',Site:'#64748b',
+    Sözlük:'#60a5fa',Prompt:'#fb923c',Haber:'#ff4444'};
+
+  // Tüm sayfalar + tam içerik indeksi
   const INDEX=useMemo(()=>{
     const items=[];
-    // Pages
     const PAGES=[
-      {p:'home',t:'Ana Sayfa',e:'🏠',cat:'Sayfa'},
-      {p:'haberler',t:'Haberler',e:'📰',cat:'Sayfa'},
-      {p:'blog',t:'Blog',e:'✍️',cat:'Sayfa'},
-      {p:'claude',t:'Claude AI',e:'🧠',cat:'Model'},
-      {p:'chatgpt',t:'ChatGPT',e:'🤖',cat:'Model'},
-      {p:'gemini',t:'Gemini AI',e:'🌟',cat:'Model'},
-      {p:'grok',t:'Grok AI',e:'⚡',cat:'Model'},
-      {p:'deepseek',t:'DeepSeek',e:'🔬',cat:'Model'},
-      {p:'mistral',t:'Mistral AI',e:'🌊',cat:'Model'},
-      {p:'llama',t:'Meta Llama',e:'🦙',cat:'Model'},
-      {p:'karsilastirma',t:'AI Karşılaştır',e:'🆚',cat:'Araç'},
-      {p:'tools',t:'Tools Dizini',e:'🛠️',cat:'Sayfa'},
-      {p:'animasyon',t:'Animasyon Galerisi',e:'🎬',cat:'Sayfa'},
-      {p:'oyunlar',t:'Oyunlar',e:'🎮',cat:'Oyun'},
-      {p:'trivia',t:'AI Trivia',e:'🎯',cat:'Oyun'},
-      {p:'iqtest',t:'IQ Testi',e:'🧠',cat:'Oyun'},
-      {p:'prompt',t:'Prompt Rehberi',e:'💡',cat:'Öğren'},
-      {p:'sozluk',t:'AI Sözlük',e:'📖',cat:'Öğren'},
-      {p:'ogrenme',t:'AI Öğren',e:'🎓',cat:'Öğren'},
-      {p:'para',t:'Para Kazan',e:'💰',cat:'Kariyer'},
-      {p:'kariyer',t:'Kariyer',e:'💼',cat:'Kariyer'},
-      {p:'isborsasi',t:'İş Borsası',e:'👔',cat:'Kariyer'},
-      {p:'videorehber',t:'Video Rehberi',e:'📺',cat:'Sayfa'},
-      {p:'kisilik',t:'Kişilik Testi',e:'🧪',cat:'Test'},
-      {p:'sertifika',t:'AI Sertifika',e:'🏆',cat:'Test'},
-      {p:'wizard',t:'AI Sihirbazı',e:'🔮',cat:'Araç'},
-      {p:'kehanet',t:'AI Kehanet',e:'🔮',cat:'Araç'},
-      {p:'sablonlar',t:'Şablon Kütüphanesi',e:'📋',cat:'Araç'},
-      {p:'gunlukezet',t:'Günlük Özet',e:'📰',cat:'Sayfa'},
-      {p:'mitler',t:'AI Mitleri',e:'💡',cat:'Öğren'},
-      {p:'flashcard',t:'AI Flashcard',e:'🃏',cat:'Öğren'},
+      {p:'home',t:'Ana Sayfa',e:'🏠',cat:'Site'},
+      {p:'haberler',t:'Haberler',e:'📰',cat:'Haber',sub:'Güncel AI haberleri 2026'},
+      {p:'blog',t:'Blog',e:'✍️',cat:'Site',sub:'12 AI blog yazısı'},
+      {p:'gunlukezet',t:'Günlük Özet',e:'📋',cat:'Site',sub:'Günün AI özeti'},
+      {p:'claude',t:'Claude AI',e:'🧠',cat:'Model',sub:'Anthropic · Constitutional AI · 1M token',keywords:'anthropic sonnet opus haiku'},
+      {p:'chatgpt',t:'ChatGPT',e:'🤖',cat:'Model',sub:'OpenAI GPT-4o · Türkçe mükemmel',keywords:'openai gpt-4o dall-e'},
+      {p:'gemini',t:'Gemini AI',e:'🌟',cat:'Model',sub:'Google · 2M token · Video analizi',keywords:'google bard deepmind'},
+      {p:'grok',t:'Grok AI',e:'⚡',cat:'Model',sub:'xAI · Güncel Twitter verisi',keywords:'elon musk x twitter'},
+      {p:'deepseek',t:'DeepSeek',e:'🔬',cat:'Model',sub:'Çin · Ücretsiz · GPT-4 kalitesi',keywords:'çin r1 v3 ücretsiz açık kaynak'},
+      {p:'mistral',t:'Mistral AI',e:'🌊',cat:'Model',sub:'Fransa · GDPR uyumlu · Açık kaynak',keywords:'fransa avrupa le chat codestral'},
+      {p:'llama',t:'Meta Llama',e:'🦙',cat:'Model',sub:'Meta · Tamamen açık kaynak · Self-host',keywords:'meta facebook açık kaynak'},
+      {p:'karsilastirma',t:'Model Karşılaştırma',e:'🆚',cat:'Model',sub:'7 model · 6 kategori · Benchmark skorları'},
+      {p:'ogrenme',t:'AI Öğren',e:'🎓',cat:'Öğren',sub:'Başlangıçtan ileri seviyeye'},
+      {p:'prompt',t:'Prompt Rehberi',e:'💡',cat:'Öğren',sub:'113 hazır Türkçe prompt şablonu',keywords:'komut örnek şablon ipucu'},
+      {p:'sozluk',t:'AI Sözlük',e:'📖',cat:'Öğren',sub:'110 terim · LLM RAG MoE Constitutional AI',keywords:'terim tanım açıklama'},
+      {p:'flashcard',t:'AI Flashcard',e:'🃏',cat:'Öğren',sub:'Kart sistemi ile AI öğren'},
+      {p:'mitler',t:'AI Mitleri',e:'💡',cat:'Öğren',sub:'Yapay zeka efsaneleri çürütülüyor'},
+      {p:'gorselai',t:'Görsel AI Rehberi',e:'🎨',cat:'Öğren',sub:'Midjourney · DALL-E 3 · Stable Diffusion',keywords:'midjourney dalle stable görsel üret'},
+      {p:'videorehai',t:'AI Video Rehberi',e:'🎬',cat:'Öğren',sub:'Sora · Runway · Kling · HeyGen',keywords:'sora runway kling pika video'},
+      {p:'tools',t:'AI Araçlar Dizini',e:'🛠️',cat:'Araç',sub:'79 araç · 10 kategori',keywords:'cursor copilot elevenlabs'},
+      {p:'dizin',t:'Araç Kategorileri',e:'📋',cat:'Araç'},
+      {p:'aistatus',t:'AI Durum',e:'🟢',cat:'Araç',sub:'Canlı servis durumu'},
+      {p:'aifiyat',t:'AI Fiyat Karşılaştırma',e:'💲',cat:'Araç',sub:'10 model API fiyatı',keywords:'fiyat maliyet token ucuz'},
+      {p:'maliyet',t:'Maliyet Hesapla',e:'💰',cat:'Araç'},
       {p:'zaman',t:'Zaman Hesapla',e:'⏱️',cat:'Araç'},
-      {p:'maliyet',t:'Maliyet Hesapla',e:'💲',cat:'Araç'},
-      {p:'aistatus',t:'AI Durum',e:'🟢',cat:'Araç'},
-      {p:'galeri',t:'AI Galeri',e:'🖼️',cat:'Sayfa'},
-      {p:'topluluk',t:'Topluluk',e:'👥',cat:'Sayfa'},
-      {p:'dizin',t:'Araç Dizini',e:'📋',cat:'Araç'},
+      {p:'sablonlar',t:'Şablonlar',e:'📄',cat:'Araç',sub:'6 hazır iş şablonu'},
+      {p:'para',t:'AI ile Para Kazan',e:'💰',cat:'Kariyer',sub:'Freelance · Prompt satışı · Danışmanlık',keywords:'gelir kazanmak iş'},
+      {p:'kariyer',t:'AI Kariyer',e:'💼',cat:'Kariyer'},
+      {p:'isborsasi',t:'İş Borsası',e:'👔',cat:'Kariyer',sub:'AI iş ilanları Türkiye'},
+      {p:'meslekAI',t:'Mesleklere Göre AI',e:'👔',cat:'Kariyer',sub:'8 meslek için araç seti',keywords:'doktor avukat mühendis meslek'},
+      {p:'oyunlar',t:'Oyun Galerisi',e:'🎮',cat:'Oyun',sub:'12 interaktif AI oyunu'},
+      {p:'trivia',t:'AI Trivia',e:'🎯',cat:'Oyun',sub:'60 soru bilgi yarışması'},
+      {p:'iqtest',t:'IQ Testi',e:'🧠',cat:'Oyun'},
+      {p:'roulette',t:'Prompt Ruleti',e:'🎰',cat:'Oyun'},
+      {p:'dedektif',t:'Model Dedektif',e:'🔍',cat:'Oyun'},
+      {p:'cark',t:'Şans Çarkı',e:'🎡',cat:'Oyun'},
+      {p:'puan',t:'Prompt Skorer',e:'⭐',cat:'Oyun'},
+      {p:'kisilik',t:'Kişilik Testi',e:'🧪',cat:'Oyun'},
+      {p:'emoji',t:'Emoji Tahmin',e:'😀',cat:'Oyun'},
+      {p:'quiz',t:'AI Quiz',e:'❓',cat:'Oyun'},
+      {p:'animasyon',t:'AI Animasyonlar',e:'✨',cat:'Oyun',sub:'25 canlı canvas animasyonu'},
+      {p:'galeri',t:'AI Galerisi',e:'🖼️',cat:'Oyun'},
+      {p:'guvenlik',t:'AI Güvenlik',e:'🛡️',cat:'Güvenlik',sub:'Deepfake · Ses klonlama · Phishing korunma',keywords:'deepfake sahte dolandırıcılık güvenlik'},
+      {p:'hukuk',t:'AI Hukuk',e:'⚖️',cat:'Güvenlik',sub:'KVKK · Telif · AB AI Act',keywords:'kvkk telif hukuki yasal kanun'},
+      {p:'turkiyeai',t:'Türkiye AI Ekosistemi',e:'🇹🇷',cat:'Güvenlik',sub:'250+ startup · Üniversiteler · Yatırım',keywords:'türk yerli startup girişim'},
+      {p:'topluluk',t:'Topluluk',e:'👥',cat:'Topluluk'},
+      {p:'yarisma',t:'Prompt Yarışması',e:'🏆',cat:'Topluluk',sub:'9 topluluk promptu · Oy ver'},
+      {p:'oneri',t:'Öneri',e:'💬',cat:'Topluluk'},
+      {p:'sertifika',t:'AI Sertifika',e:'🏅',cat:'Topluluk'},
+      {p:'videorehber',t:'Video Rehberi',e:'📺',cat:'Topluluk',sub:'YouTube AI eğitim videoları'},
+      {p:'gorev',t:'Günlük Görevler',e:'✅',cat:'Site'},
+      {p:'pro',t:'Pro Üyelik',e:'⭐',cat:'Site'},
+      {p:'hakkimizda',t:'Hakkımızda',e:'ℹ️',cat:'Site'},
+      {p:'iletisim',t:'İletişim',e:'📧',cat:'Site'},
+      {p:'gizlilik',t:'Gizlilik',e:'🔒',cat:'Site'},
     ];
     items.push(...PAGES);
-
-    // GLOSSARY terms - full definition searchable
-    if(typeof GLOSSARY_DATA!=='undefined'){
-      GLOSSARY_DATA.forEach(g=>{
-        items.push({p:'sozluk',t:g.term,e:'📖',cat:'Sözlük',sub:g.def?.slice(0,80),def:g.def,keywords:(g.en||'')});
-      });
-    }
-    // PROMPTS - tüm içerik searchable
-    if(typeof PROMPTS_DATA!=='undefined'){
-      PROMPTS_DATA.forEach(cat=>{
-        (cat.items||[]).forEach(p=>{
-          items.push({p:'prompt',t:p.title,e:'💡',cat:'Prompt',sub:(cat.cat||'').replace(/[^\w\s]/g,''),def:(p.iyi||p.kotu||'').slice(0,100),keywords:cat.cat});
-        });
-      });
-    }
-    // ALL_TOOLS - full desc searchable
-    if(typeof ALL_TOOLS!=='undefined'){
-      ALL_TOOLS.forEach(cat=>{
-        (cat.tools||[]).forEach(t=>{
-          items.push({p:'tools',t:t.n,e:'🛠️',cat:'Araç',sub:t.d?.slice(0,70),def:t.d,keywords:(t.tag||'')+(cat.cat||'')});
-        });
-      });
-    }
-    // NEWS
-    if(typeof NEWS!=='undefined'){
-      NEWS.slice(0,10).forEach(n=>{
-        items.push({p:'haberler',t:n.title||n.t,e:'📰',cat:'Haber'});
-      });
-    }
-    // TRIVIA topics
-    if(typeof TRIVIA_Q!=='undefined'){
-      TRIVIA_Q.slice(0,15).forEach(q=>{
-        items.push({p:'trivia',t:q.q?.slice(0,50)+'...',e:'🎯',cat:'Trivia'});
-      });
-    }
+    // Obsidian içerikleri
+    [{p:'blog',t:'Obsidian + AI: İkinci Beyin Rehberi',e:'💎',cat:'Rehber',sub:'Obsidian note taking + Claude entegrasyonu PKM'},
+     {p:'blog',t:'Zettelkasten Yöntemi ve AI',e:'🔗',cat:'Rehber',sub:'Bağlantılı not alma sistemi'},
+     {p:'prompt',t:'Obsidian Smart Composer Kullanımı',e:'💡',cat:'Prompt',sub:'Obsidian AI plugin kullanım promptları'},
+     {p:'tools',t:'Obsidian',e:'💎',cat:'Araç',sub:'Kişisel bilgi yönetimi - markdown tabanlı - ücretsiz'},
+     {p:'ogrenme',t:'PKM - Kişisel Bilgi Yönetimi',e:'📚',cat:'Öğren',sub:'Second brain, Zettelkasten, Obsidian'},
+    ].forEach(i=>items.push(i));
+    if(typeof GLOSSARY_DATA!=='undefined')GLOSSARY_DATA.forEach(g=>items.push({p:'sozluk',t:g.term,e:'📖',cat:'Sözlük',sub:(g.def||'').slice(0,80),keywords:g.en||''}));
+    if(typeof PROMPTS_DATA!=='undefined')PROMPTS_DATA.forEach(cat=>(cat.items||[]).forEach(p=>items.push({p:'prompt',t:p.title,e:'💡',cat:'Prompt',sub:cat.cat,keywords:cat.cat})));
+    if(typeof ALL_TOOLS!=='undefined')ALL_TOOLS.forEach(cat=>(cat.tools||[]).forEach(t=>items.push({p:'tools',t:t.n,e:'🛠️',cat:'Araç',sub:(t.d||'').slice(0,60),keywords:(t.tag||'')})));
+    if(typeof NEWS!=='undefined')NEWS.forEach(n=>items.push({p:'haberler',t:n.title||n.t||'',e:'📰',cat:'Haber'}));
     return items;
   },[]);
 
+  // Arama sonuçları
   const results=q.length>1?INDEX.filter(item=>{
-    const s=q.toLowerCase();
-    const searchIn=[item.t,item.sub,item.cat,item.def,item.keywords].filter(Boolean).join(' ').toLowerCase();
-    return searchIn.includes(s);
-  }).slice(0,12):[];
+    const s=q.toLowerCase().trim();
+    return [item.t,item.sub,item.cat,item.keywords].filter(Boolean).join(' ').toLowerCase().includes(s);
+  }).slice(0,14):[];
+
+  // Sekmeli hızlı erişim grupları
+  const QA_TABS=[
+    {id:'🧠',label:'Modeller',color:'#a855f7',items:[
+      {p:'claude',t:'Claude',e:'🧠'},{p:'chatgpt',t:'ChatGPT',e:'🤖'},{p:'gemini',t:'Gemini',e:'🌟'},
+      {p:'grok',t:'Grok',e:'⚡'},{p:'deepseek',t:'DeepSeek',e:'🔬'},{p:'mistral',t:'Mistral',e:'🌊'},
+      {p:'llama',t:'Llama',e:'🦙'},{p:'karsilastirma',t:'Karşılaştır',e:'🆚'},
+    ]},
+    {id:'🎓',label:'Öğren',color:'#34d399',items:[
+      {p:'ogrenme',t:'AI Öğren',e:'🎓'},{p:'prompt',t:'Prompt (113)',e:'💡'},
+      {p:'sozluk',t:'Sözlük (110)',e:'📖'},{p:'flashcard',t:'Flashcard',e:'🃏'},
+      {p:'mitler',t:'Mitler',e:'💡'},{p:'gorselai',t:'Görsel AI',e:'🎨'},
+      {p:'videorehai',t:'Video AI',e:'🎬'},
+    ]},
+    {id:'🛠️',label:'Araçlar',color:'#00dcff',items:[
+      {p:'tools',t:'Araçlar (79)',e:'🛠️'},{p:'dizin',t:'Kategoriler',e:'📋'},
+      {p:'aifiyat',t:'Fiyatlar',e:'💲'},{p:'maliyet',t:'Maliyet',e:'💰'},
+      {p:'zaman',t:'Zaman',e:'⏱️'},{p:'aistatus',t:'AI Durum',e:'🟢'},
+      {p:'sablonlar',t:'Şablonlar',e:'📄'},
+    ]},
+    {id:'🎮',label:'Oyunlar',color:'#f472b6',items:[
+      {p:'oyunlar',t:'Tüm Oyunlar',e:'🎮'},{p:'trivia',t:'Trivia (60)',e:'🎯'},
+      {p:'iqtest',t:'IQ Testi',e:'🧠'},{p:'roulette',t:'Prompt Rulet',e:'🎰'},
+      {p:'dedektif',t:'Dedektif',e:'🔍'},{p:'cark',t:'Şans Çarkı',e:'🎡'},
+      {p:'puan',t:'Skorer',e:'⭐'},{p:'kisilik',t:'Kişilik',e:'🧪'},
+      {p:'emoji',t:'Emoji Tahmin',e:'😀'},{p:'quiz',t:'AI Quiz',e:'❓'},
+      {p:'animasyon',t:'Animasyonlar',e:'✨'},{p:'galeri',t:'Galeri',e:'🖼️'},
+    ]},
+    {id:'💼',label:'Kariyer',color:'#fbbf24',items:[
+      {p:'para',t:'Para Kazan',e:'💰'},{p:'kariyer',t:'Kariyer',e:'💼'},
+      {p:'isborsasi',t:'İş Borsası',e:'👔'},{p:'meslekAI',t:'Meslek AI',e:'👔'},
+    ]},
+    {id:'🛡️',label:'Güvenlik',color:'#ff6b6b',items:[
+      {p:'guvenlik',t:'AI Güvenlik',e:'🛡️'},{p:'hukuk',t:'AI Hukuk',e:'⚖️'},
+      {p:'turkiyeai',t:'Türkiye AI',e:'🇹🇷'},
+    ]},
+    {id:'👥',label:'Topluluk',color:'#a855f7',items:[
+      {p:'topluluk',t:'Topluluk',e:'👥'},{p:'yarisma',t:'Yarışma',e:'🏆'},
+      {p:'oneri',t:'Öneri',e:'💬'},{p:'sertifika',t:'Sertifika',e:'🏅'},
+      {p:'videorehber',t:'Video Rehber',e:'📺'},
+    ]},
+    {id:'📰',label:'Diğer',color:'#64748b',items:[
+      {p:'haberler',t:'Haberler',e:'📰'},{p:'blog',t:'Blog (12)',e:'✍️'},
+      {p:'gunlukezet',t:'Günlük Özet',e:'📋'},{p:'gorev',t:'Görevler',e:'✅'},
+      {p:'pro',t:'Pro Üyelik',e:'⭐'},{p:'hakkimizda',t:'Hakkımızda',e:'ℹ️'},
+      {p:'iletisim',t:'İletişim',e:'📧'},{p:'gizlilik',t:'Gizlilik',e:'🔒'},
+    ]},
+  ];
+
+  const activeTabData=QA_TABS.find(t=>t.id===activeTab)||QA_TABS[0];
 
   useEffect(()=>{
     if(!open)return;
@@ -5934,61 +7959,86 @@ function NavSearchBar({nav}){
     return()=>document.removeEventListener('mousedown',h);
   },[open]);
 
-  const catColor={Model:'#a855f7',Araç:'#00dcff',Oyun:'#f472b6',Öğren:'#34d399',Kariyer:'#fbbf24',Sözlük:'#60a5fa',Prompt:'#fb923c',Haber:'#ff4444',Trivia:'#f472b6',Test:'#fbbf24',Sayfa:'#475569'};
-
   return <div ref={ref} style={{position:'relative',flexShrink:0}}>
-    <button onClick={()=>setOpen(o=>!o)} style={{width:34,height:34,border:'1px solid rgba(0,220,255,.2)',borderRadius:8,background:open?'rgba(0,220,255,.1)':'transparent',color:'#64748b',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>🔍</button>
-    {open&&<div style={{position:'fixed',top:52,right:50,zIndex:99999,width:'min(300px,90vw)',background:'rgba(4,8,20,.99)',border:'1px solid rgba(0,220,255,.3)',borderRadius:14,boxShadow:'0 24px 80px rgba(0,0,0,.95)',overflow:'hidden'}}>
-      <div style={{padding:'10px 14px',borderBottom:'1px solid rgba(0,220,255,.1)',display:'flex',alignItems:'center',gap:8,background:'rgba(0,220,255,.03)'}}>
-        <span style={{color:'#334155',fontSize:14,flexShrink:0}}>🔍</span>
-        <input autoFocus value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);setQ('');}}} placeholder='Sayfa, araç, prompt, sözlük...' style={{flex:1,background:'none',border:'none',outline:'none',color:'#e2e8f0',fontSize:12,fontFamily:'inherit'}}/>
-        {q&&<button onClick={()=>setQ('')} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>}
+    <button onClick={()=>setOpen(o=>!o)} style={{width:34,height:34,border:'1px solid rgba(0,220,255,.22)',borderRadius:8,background:open?'rgba(0,220,255,.1)':'transparent',color:open?'#00dcff':'#64748b',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}>🔍</button>
+
+    {open&&<div style={{position:'fixed',top:52,right:14,zIndex:99999,width:'min(380px,96vw)',background:'rgba(3,7,18,.99)',border:'1px solid rgba(0,220,255,.25)',borderRadius:16,boxShadow:'0 24px 80px rgba(0,0,0,.95)',display:'flex',flexDirection:'column',maxHeight:'88vh',overflow:'hidden'}}>
+
+      {/* Arama kutusu */}
+      <div style={{padding:'10px 14px',borderBottom:'1px solid rgba(0,220,255,.08)',background:'rgba(0,220,255,.03)',flexShrink:0}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <span style={{fontSize:14,color:'#334155',flexShrink:0}}>🔍</span>
+          <input autoFocus value={q} onChange={e=>setQ(e.target.value)}
+            onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);setQ('');}}}
+            placeholder='Sayfa, araç, prompt, sözlük...'
+            style={{flex:1,background:'none',border:'none',outline:'none',color:'#e2e8f0',fontSize:12,fontFamily:'inherit'}}/>
+          {q&&<button onClick={()=>setQ('')} style={{background:'none',border:'none',color:'#334155',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>}
+        </div>
       </div>
-      <div style={{maxHeight:320,overflowY:'auto'}}>
-        {q.length>1&&results.length===0&&<div style={{padding:'18px',textAlign:'center',fontSize:11,color:'#475569'}}>Sonuç bulunamadı: "{q}"</div>}
-        {q.length<=1&&<>
-          <div style={{padding:'8px 14px 4px',fontSize:8,color:'#334155',letterSpacing:'.1em',fontWeight:700}}>HIZLI ERİŞİM</div>
-          {[{p:'prompt',t:'Prompt Rehberi',e:'💡',cat:'Öğren'},{p:'tools',t:'Tools Dizini',e:'🛠️',cat:'Araç'},{p:'sozluk',t:'AI Sözlük',e:'📖',cat:'Öğren'},{p:'trivia',t:'AI Trivia',e:'🎯',cat:'Oyun'},{p:'animasyon',t:'Animasyonlar',e:'🎬',cat:'Sayfa'},{p:'haberler',t:'Haberler',e:'📰',cat:'Haber'}].map(r=>(
-            <div key={r.p} onClick={()=>{nav(r.p);setOpen(false);setQ('');}} style={{display:'flex',gap:10,alignItems:'center',padding:'8px 14px',cursor:'pointer',fontSize:12,color:'#94a3b8',transition:'background .1s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-              <span style={{fontSize:15}}>{r.e}</span><span style={{flex:1}}>{r.t}</span><span style={{fontSize:8,color:catColor[r.cat]||'#475569',background:(catColor[r.cat]||'#475569')+'15',padding:'1px 5px',borderRadius:3}}>{r.cat}</span>
-            </div>
-          ))}
-        </>}
-        {results.map((r,i)=>(
-          <div key={i} onClick={()=>{nav(r.p);setOpen(false);setQ('');}} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'8px 14px',cursor:'pointer',fontSize:11,color:'#e2e8f0',borderTop:'1px solid rgba(255,255,255,.04)',transition:'background .1s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,.06)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-            <span style={{fontSize:14,flexShrink:0}}>{r.e}</span>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:11,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.t}</div>
-              {r.sub&&<div style={{fontSize:9,color:'#475569',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.sub}</div>}
-            </div>
-            <span style={{fontSize:8,color:catColor[r.cat]||'#475569',background:(catColor[r.cat]||'#475569')+'15',padding:'1px 5px',borderRadius:3,flexShrink:0,whiteSpace:'nowrap'}}>{r.cat}</span>
+
+      {/* ARAMA SONUÇLARI */}
+      {q.length>1&&<div style={{overflowY:'auto',flex:1,maxHeight:'75vh'}}>
+        {results.length===0&&<div style={{padding:'20px',textAlign:'center',fontSize:11,color:'#334155'}}>"{q}" için sonuç yok</div>}
+        {results.map((r,i)=><div key={i} onClick={()=>{nav(r.p);setOpen(false);setQ('');}}
+          style={{display:'flex',gap:10,alignItems:'flex-start',padding:'8px 14px',cursor:'pointer',borderTop:'1px solid rgba(255,255,255,.03)'}}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(0,220,255,.05)'}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+          <span style={{fontSize:15,flexShrink:0}}>{r.e}</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:11,fontWeight:600,color:'#e2e8f0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.t}</div>
+            {r.sub&&<div style={{fontSize:9,color:'#475569',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.sub}</div>}
           </div>
-        ))}
-      </div>
-      {q.length>1&&results.length>0&&<div style={{padding:'6px 14px',borderTop:'1px solid rgba(255,255,255,.05)',fontSize:9,color:'#334155',textAlign:'right'}}>{results.length} sonuç</div>}
+          <span style={{fontSize:8,color:C[r.cat]||'#475569',background:(C[r.cat]||'#475569')+'18',padding:'1px 6px',borderRadius:3,flexShrink:0,whiteSpace:'nowrap'}}>{r.cat}</span>
+        </div>)}
+        {results.length>0&&<div style={{padding:'5px 14px',fontSize:9,color:'#1e293b',borderTop:'1px solid rgba(255,255,255,.04)'}}>{results.length} sonuç</div>}
+      </div>}
+
+      {/* HIZLI ERİŞİM — Sekmeli */}
+      {q.length<=1&&<>
+        {/* Sekme başlıkları */}
+        <div style={{display:'flex',overflowX:'auto',borderBottom:'1px solid rgba(255,255,255,.06)',flexShrink:0,scrollbarWidth:'none'}}>
+          {QA_TABS.map(tab=><button key={tab.id} onClick={()=>setActiveTab(tab.id)}
+            style={{display:'flex',flexDirection:'column',alignItems:'center',gap:1,padding:'7px 10px',border:'none',borderBottom:'2px solid '+(activeTab===tab.id?tab.color:'transparent'),background:'transparent',color:activeTab===tab.id?tab.color:'#334155',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',flexShrink:0,transition:'all .15s'}}>
+            <span style={{fontSize:13}}>{tab.id}</span>
+            <span style={{fontSize:8,fontWeight:activeTab===tab.id?700:400}}>{tab.label}</span>
+          </button>)}
+        </div>
+        {/* Aktif sekme içeriği */}
+        <div style={{padding:'10px 12px',overflowY:'auto',flex:1}}>
+          <div style={{fontSize:9,color:activeTabData.color,fontWeight:700,marginBottom:8,letterSpacing:'.08em'}}>{activeTabData.id} {activeTabData.label.toUpperCase()}</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:5}}>
+            {activeTabData.items.map(item=><div key={item.p} onClick={()=>{nav(item.p);setOpen(false);setQ('');}}
+              style={{display:'flex',gap:6,alignItems:'center',padding:'7px 10px',cursor:'pointer',borderRadius:8,border:'1px solid rgba(255,255,255,.05)',background:'rgba(255,255,255,.02)',transition:'all .15s'}}
+              onMouseEnter={e=>{e.currentTarget.style.background=activeTabData.color+'18';e.currentTarget.style.borderColor=activeTabData.color+'40';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,.02)';e.currentTarget.style.borderColor='rgba(255,255,255,.05)';}}>
+              <span style={{fontSize:14,flexShrink:0}}>{item.e}</span>
+              <span style={{fontSize:10,color:'#94a3b8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.t}</span>
+            </div>)}
+          </div>
+        </div>
+      </>}
     </div>}
   </div>;
-}
-
-// ── Global Click Sound ─────────────────────────────────
-function playClick(type='soft'){
-  try{
-    const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
-    const ctx=new AC();
-    const o=ctx.createOscillator();
-    const g=ctx.createGain();
-    o.connect(g);g.connect(ctx.destination);
-    if(type==='soft'){o.frequency.value=800;o.type='sine';g.gain.setValueAtTime(.08,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.08);o.start();o.stop(ctx.currentTime+.08);}
-    else if(type==='success'){[523,659,784].forEach((f,i)=>{const o2=ctx.createOscillator(),g2=ctx.createGain();o2.frequency.value=f;o2.type='sine';g2.gain.setValueAtTime(.06,ctx.currentTime+i*.08);g2.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.08+.12);o2.connect(g2);g2.connect(ctx.destination);o2.start(ctx.currentTime+i*.08);o2.stop(ctx.currentTime+i*.08+.15);});}
-    else if(type==='game'){o.frequency.value=440;o.type='square';g.gain.setValueAtTime(.05,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);o.start();o.stop(ctx.currentTime+.12);}
-  }catch(e){}
 }
 
 function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
   const[email,setEmail]=useState("");const[sent,setSent]=useState(false);
   const[openMenu,setOpenMenu]=useState(null);
   const[mobileOpen,setMobileOpen]=useState(false);
+  const[showInstall,setShowInstall]=useState(false);
+  const[installPrompt,setInstallPrompt]=useState(null);
+  const[openGroups,setOpenGroups]=useState({'🧠 AI Modeller':true,'🎮 Oyunlar (12)':false,'🎓 Öğren & Rehber':false,'🛠️ Araçlar':false,'💼 Kariyer & Para':false,'🛡️ Güvenlik & Hukuk':false,'👥 Topluluk & Site':false});
+  const toggleGroup=(g)=>setOpenGroups(p=>({...p,[g]:!p[g]}));
+  // PWA install — 5 dakika sonra göster
+  useEffect(()=>{
+    const h=(e)=>{
+      e.preventDefault();
+      setInstallPrompt(e);
+      setTimeout(()=>setShowInstall(true), 300000);
+    };
+    window.addEventListener('beforeinstallprompt', h);
+    return()=>window.removeEventListener('beforeinstallprompt', h);
+  },[]);
   useBadges(page);
   useParallax();
   useSesliKarsilama();
@@ -5996,7 +8046,7 @@ function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
   useEffect(()=>{
     const h=e=>{if(!e.target.closest('[data-nav]'))setOpenMenu(null);};
     document.addEventListener('click',h);
-    return()=>document.removeEventListener('click',h);
+  return()=>document.removeEventListener('click',h);
   },[]);
   return <div style={{minHeight:"100vh",background:"#060a14",color:"#e2e8f0",fontFamily:"'Inter',system-ui,sans-serif"}}>
     <style>{`
@@ -6063,20 +8113,98 @@ function Wrapper({children,nav,page,user,setUser,cookie,setCookie}){
           <span style={{fontSize:13,fontWeight:700,color:"#00dcff",fontFamily:"Space Grotesk,sans-serif"}}>🗺️ Tüm Sayfalar</span>
           <button onClick={()=>setMobileOpen(false)} style={{background:"none",border:"none",color:"#475569",fontSize:20,cursor:"pointer",lineHeight:1}}>✕</button>
         </div>
-        <div style={{padding:"12px"}}>
-          {NAV_GROUPS.map(g=>(
-            <div key={g.id||g.label} style={{marginBottom:14}}>
-              {!g.sub
-                ?<button onClick={()=>{nav(g.id);setMobileOpen(false);}} style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1px solid rgba(0,220,255,0.1)",background:page===g.id?"rgba(0,220,255,0.08)":"rgba(255,255,255,0.02)",color:page===g.id?"#00dcff":"#94a3b8",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",fontWeight:page===g.id?700:400}}>{g.label}</button>
-                :<><div style={{fontSize:9,color:"#334155",letterSpacing:".12em",padding:"2px 4px 7px",fontWeight:700,textTransform:"uppercase"}}>{g.label}</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
-                  {g.sub.map(s=><button key={s.id} onClick={()=>{nav(s.id);setMobileOpen(false);}} style={{padding:"8px 10px",borderRadius:9,border:"1px solid rgba(255,255,255,0.05)",background:page===s.id?"rgba(0,220,255,0.08)":"rgba(255,255,255,0.02)",color:page===s.id?"#00dcff":"#64748b",fontSize:10,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",gap:5,alignItems:"center",fontWeight:page===s.id?600:400}}>
-                    <span style={{fontSize:13,flexShrink:0}}>{s.icon}</span><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.label}</span>
-                  </button>)}
-                </div></>
-              }
-            </div>
-          ))}
+        <div style={{padding:"8px"}}>
+          {[
+            {group:"🧠 AI Modeller",color:"#a855f7",items:[
+              {id:"claude",label:"Claude AI",icon:"🧠",info:"Constitutional AI · 1M token · Kodlama #1"},
+              {id:"chatgpt",label:"ChatGPT",icon:"🤖",info:"GPT-4o · DALL-E · Türkçe mükemmel"},
+              {id:"gemini",label:"Gemini AI",icon:"🌟",info:"Google · 2M token · Video analizi"},
+              {id:"grok",label:"Grok AI",icon:"⚡",info:"xAI · Güncel Twitter verisi"},
+              {id:"deepseek",label:"DeepSeek",icon:"🔬",info:"Ücretsiz API · GPT-4 kalitesi"},
+              {id:"mistral",label:"Mistral AI",icon:"🌊",info:"Fransız · GDPR uyumlu · Açık kaynak"},
+              {id:"llama",label:"Meta Llama",icon:"🦙",info:"Meta · Açık kaynak · Self-host"},
+              {id:"karsilastirma",label:"Model Karşılaştır",icon:"🆚",info:"7 model · 6 kategoride benchmark"},
+            ]},
+            {group:"🎓 Öğren & Rehber",color:"#34d399",items:[
+              {id:"ogrenme",label:"AI Öğren",icon:"🎓",info:"Yapay zekaya başlangıç rehberi"},
+              {id:"prompt",label:"Prompt Rehberi",icon:"💡",info:"113+ Türkçe hazır şablon"},
+              {id:"sozluk",label:"AI Sözlük",icon:"📖",info:"110 teknik terim Türkçe açıklama"},
+              {id:"flashcard",label:"AI Flashcard",icon:"🃏",info:"Kart sistemi ile AI öğren"},
+              {id:"mitler",label:"AI Mitleri",icon:"💡",info:"Yanlış bilinenler ve gerçekler"},
+              {id:"gorselai",label:"Görsel AI",icon:"🎨",info:"Midjourney · DALL-E 3 · Firefly"},
+              {id:"videorehai",label:"Video AI",icon:"🎬",info:"Sora · Runway · Kling · Pika"},
+            ]},
+            {group:"🛠️ Araçlar",color:"#00dcff",items:[
+              {id:"tools",label:"AI Araç Dizini",icon:"🛠️",info:"79 araç · 10 kategori"},
+              {id:"aifiyat",label:"AI Fiyat Karşılaştır",icon:"💲",info:"10 model API fiyatı tablosu"},
+              {id:"maliyet",label:"Maliyet Hesapla",icon:"💰",info:"AI kullanım maliyeti hesapla"},
+              {id:"zaman",label:"Zaman Hesapla",icon:"⏱️",info:"AI ile tasarruf hesapla"},
+              {id:"aistatus",label:"AI Durum",icon:"🟢",info:"Canlı servis durum takibi"},
+              {id:"sablonlar",label:"Şablonlar",icon:"📄",info:"Hazır iş şablonları kütüphanesi"},
+            ]},
+            {group:"🎮 Oyunlar (12)",color:"#f472b6",items:[
+              {id:"oyunlar",label:"Oyun Galerisi",icon:"🎮",info:"12 farklı AI oyunu"},
+              {id:"trivia",label:"AI Trivia",icon:"🎯",info:"60 soruluk bilgi yarışması"},
+              {id:"iqtest",label:"IQ Testi",icon:"🧠",info:"Yapay zeka IQ ölçümü"},
+              {id:"roulette",label:"Prompt Ruleti",icon:"🎰",info:"Rastgele prompt keşfet"},
+              {id:"dedektif",label:"Model Dedektif",icon:"🔍",info:"AI modelini tahmin et"},
+              {id:"cark",label:"Şans Çarkı",icon:"🎡",info:"Çarkı çevir, prompt kazan"},
+              {id:"kisilik",label:"Kişilik Testi",icon:"🧪",info:"AI kişilik analizi"},
+              {id:"animasyon",label:"Animasyonlar",icon:"✨",info:"25 canlı canvas animasyonu"},
+              {id:"emoji",label:"Emoji Tahmin",icon:"😀",info:"Emoji ipuçlarıyla AI kavramı bul"},
+              {id:"quiz",label:"AI Quiz",icon:"❓",info:"Çoktan seçmeli AI testi"},
+            ]},
+            {group:"💼 Kariyer & Para",color:"#fbbf24",items:[
+              {id:"para",label:"AI ile Para Kazan",icon:"💰",info:"Freelance · Danışmanlık · Prompt satışı"},
+              {id:"kariyer",label:"Kariyer Rehberi",icon:"💼",info:"AI alanında kariyer fırsatları"},
+              {id:"isborsasi",label:"İş Borsası",icon:"👔",info:"AI kariyer fırsatları"},
+              {id:"meslekAI",label:"Mesleklere Göre AI",icon:"👔",info:"8 meslek için AI araç seti"},
+            ]},
+            {group:"🛡️ Güvenlik & Hukuk",color:"#ff6b6b",items:[
+              {id:"guvenlik",label:"AI Güvenlik",icon:"🛡️",info:"Deepfake · Ses klonlama · Korunma"},
+              {id:"hukuk",label:"AI Hukuk",icon:"⚖️",info:"KVKK · Telif · AB AI Act"},
+              {id:"turkiyeai",label:"Türkiye AI",icon:"🇹🇷",info:"250+ startup · Ekosistem"},
+            ]},
+            {group:"👥 Topluluk & Site",color:"#a855f7",items:[
+              {id:"haberler",label:"Haberler",icon:"📰",info:"16 kaynaktan canlı RSS haberleri"},
+              {id:"blog",label:"Blog & Rehberler",icon:"✍️",info:"AI rehber yazıları"},
+              {id:"topluluk",label:"Topluluk",icon:"👥",info:"AI topluluk tartışmaları"},
+              {id:"yarisma",label:"Prompt Yarışması",icon:"🏆",info:"En iyi Türkçe promptlar"},
+              {id:"sertifika",label:"AI Sertifika",icon:"🏅",info:"Puan kazanarak sertifika al"},
+              {id:"pro",label:"Pro Üyelik",icon:"⭐",info:"Premium özellikler"},
+            ]},
+          ].map(group=><div key={group.group} style={{marginBottom:14}}>
+            {/* Accordion grup başlığı */}
+            <button onClick={()=>toggleGroup(group.group)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 8px",background:"rgba(255,255,255,0.02)",border:"1px solid "+group.color+"20",borderRadius:8,cursor:"pointer",marginBottom:2}}>
+              <span style={{fontSize:10,fontWeight:800,color:group.color,letterSpacing:".06em"}}>{group.group}</span>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <span style={{fontSize:8,color:group.color+"80",background:group.color+"12",borderRadius:4,padding:"1px 6px"}}>{group.items.length}</span>
+                <span style={{fontSize:10,color:group.color,transition:"transform .2s",display:"inline-block",transform:openGroups[group.group]?"rotate(180deg)":"rotate(0deg)"}}>▼</span>
+              </div>
+            </button>
+            {/* Alt öğeler - accordion */}
+            {openGroups[group.group]&&group.items.map(item=><div key={item.id}
+              style={{position:"relative"}} className="nav-item-wrap">
+              <button
+                onClick={()=>{nav(item.id);setMobileOpen(false);}}
+                style={{width:"100%",padding:"8px 10px",borderRadius:8,
+                  border:"1px solid "+(page===item.id?group.color+"50":"rgba(255,255,255,0.05)"),
+                  background:page===item.id?group.color+"12":"rgba(255,255,255,0.02)",
+                  color:page===item.id?group.color:"#94a3b8",
+                  cursor:"pointer",fontFamily:"inherit",
+                  display:"flex",alignItems:"center",gap:8,textAlign:"left",
+                  transition:"all .15s"}}>
+                <span style={{fontSize:14,flexShrink:0}}>{item.icon}</span>
+                <span style={{fontSize:11,flex:1,fontWeight:page===item.id?700:400}}>{item.label}</span>
+                {/* (i) bilgi ikonu */}
+                <span title={item.info}
+                  style={{fontSize:9,color:group.color,background:group.color+"15",
+                    borderRadius:"50%",width:16,height:16,display:"flex",alignItems:"center",
+                    justifyContent:"center",flexShrink:0,cursor:"help",fontWeight:700,
+                    border:"1px solid "+group.color+"30"}}>i</span>
+              </button>
+            </div>)}
+          </div>)}
           <div style={{borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:12,marginTop:4}}>
             <div style={{fontSize:9,color:"#334155",letterSpacing:".12em",marginBottom:8,fontWeight:700}}>SOSYAL MEDYA</div>
             <div style={{display:"flex",gap:8}}>
